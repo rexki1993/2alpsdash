@@ -11,17 +11,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
 :root {
-  --bg:#070c14; --surface:#0f1924; --card:#141f2e; --border:#1e2e42;
-  --ice:#00d4ff; --ice-dim:rgba(0,212,255,.15); --snow:#f0f6ff; --muted:#4a6680;
-  --green:#00e676; --blue:#448aff; --red:#ff5252; --orange:#ff9100; --yellow:#ffd740;
-  --nav-h:68px; --safe-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#070c14;--surface:#0f1924;--card:#141f2e;--border:#1e2e42;
+  --ice:#00d4ff;--ice-dim:rgba(0,212,255,.15);--snow:#f0f6ff;--muted:#4a6680;
+  --green:#00e676;--blue:#448aff;--red:#ff5252;--orange:#ff9100;--yellow:#ffd740;
+  --nav-h:68px;--safe-bottom:env(safe-area-inset-bottom,0px);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);font-family:'Barlow',sans-serif;}
 #app{display:flex;flex-direction:column;height:100%;}
-
-/* VIEWS */
-.view{display:none;flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 12px);}
+.view{display:none;flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 12px);scrollbar-width:none;}
+.view::-webkit-scrollbar{display:none;}
 .view.active{display:block;}
 #view-kaart{position:relative;padding:0;overflow:hidden;}
 #view-kaart.active{display:flex!important;flex-direction:column;}
@@ -34,20 +33,14 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 .nav-ind{position:absolute;top:0;left:50%;transform:translateX(-50%);width:28px;height:2px;background:var(--ice);border-radius:0 0 2px 2px;display:none;}
 .nav-btn.active .nav-ind{display:block;}
 
-/* COMMON */
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;}
-.section{padding:16px 16px 0;}
-.section-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:10px;}
-
 /* DASHBOARD */
-#view-dash{background:var(--bg);}
 .dash-hero{padding:24px 16px 16px;background:linear-gradient(180deg,#0a1628 0%,var(--bg) 100%);}
-.dash-resort{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:800;letter-spacing:2px;line-height:1;}
-.dash-date{font-size:13px;color:var(--muted);margin-top:4px;font-weight:500;}
+.dash-resort{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:800;letter-spacing:2px;}
+.dash-date{font-size:13px;color:var(--muted);margin-top:4px;}
 .live-badge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.25);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--green);font-weight:600;letter-spacing:1px;}
 .live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.5s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-
+.section{padding:16px 16px 0;}
 .tap-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:12px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;}
 .tap-card::after{content:'›';position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:24px;color:var(--muted);}
 .tap-card:active{transform:scale(.98);border-color:var(--ice);}
@@ -55,24 +48,19 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 .tap-card-value{font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:700;line-height:1;}
 .tap-card-sub{font-size:13px;color:var(--muted);}
 .tap-card-accent{position:absolute;right:0;top:0;bottom:0;width:3px;}
-
 .map-btn{background:var(--ice);color:#000;border:none;border-radius:16px;padding:18px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:2px;text-transform:uppercase;width:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;transition:all .15s;}
-.map-btn:active{transform:scale(.98);filter:brightness(.9);}
-
-.sos-btn{background:rgba(255,82,82,.12);border:1px solid rgba(255,82,82,.3);color:var(--red);border-radius:12px;padding:14px 18px;font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;width:100%;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.sos-btn span{font-size:11px;color:var(--muted);}
+.map-btn:active{transform:scale(.98);}
 
 /* WEATHER */
 .day-tabs{display:flex;gap:8px;padding:16px 16px 0;}
-.day-tab{flex:1;padding:10px 4px;background:var(--card);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;transition:all .2s;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--muted);}
+.day-tab{flex:1;padding:10px 4px;background:var(--card);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--muted);transition:all .2s;}
 .day-tab.active{background:var(--ice-dim);border-color:var(--ice);color:var(--ice);}
 .alt-tabs{display:flex;gap:6px;padding:12px 16px 0;overflow-x:auto;scrollbar-width:none;}
-.alt-tabs::-webkit-scrollbar{display:none;}
-.alt-tab{flex-shrink:0;padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:20px;cursor:pointer;transition:all .2s;white-space:nowrap;font-size:12px;font-weight:600;color:var(--muted);}
+.alt-tab{flex-shrink:0;padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);transition:all .2s;}
 .alt-tab.active{background:rgba(68,138,255,.15);border-color:var(--blue);color:var(--blue);}
 .timeslots{padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
 .slot-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;}
-.slot-time{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--muted);white-space:nowrap;}
+.slot-time{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--muted);}
 .slot-details{font-size:11px;color:var(--muted);line-height:1.6;}
 .slot-right{text-align:right;}
 .slot-temp{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:700;line-height:1;}
@@ -81,9 +69,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 /* SNOW */
 .snow-zones{padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
 .snow-zone{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}
-.snow-zone-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;}
 .snow-zone-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;}
-.snow-zone-alt{font-size:12px;color:var(--muted);}
 .snow-zone-depth{font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:800;color:var(--ice);line-height:1;}
 .snow-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:10px;}
 .snow-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--ice));border-radius:4px;transition:width 1s ease;}
@@ -99,72 +85,74 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 .leaflet-popup-content{margin:0;}
 .leaflet-popup-tip{background:var(--surface);}
 .leaflet-control-zoom a{background:var(--surface)!important;color:var(--snow)!important;border-color:var(--border)!important;}
-.popup-inner{padding:14px 16px;min-width:180px;}
-.popup-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px;}
-.popup-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;}
-.popup-row{font-size:13px;color:var(--muted);padding:3px 0;}
+.popup-inner{padding:14px 16px;min-width:200px;}
+.popup-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;margin-bottom:6px;}
+.popup-badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;}
+.popup-row{font-size:13px;color:var(--muted);padding:3px 0;line-height:1.5;}
 .popup-row span{color:var(--snow);font-weight:500;}
-.map-marker{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;border:2px solid rgba(255,255,255,.2);box-shadow:0 3px 12px rgba(0,0,0,.5);}
-.meet-marker{width:38px;height:38px;border-radius:50%;background:rgba(0,212,255,.2);border:2px solid var(--ice);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 16px rgba(0,212,255,.5);animation:meetPulse 2s infinite;}
-@keyframes meetPulse{0%,100%{box-shadow:0 0 16px rgba(0,212,255,.5)}50%{box-shadow:0 0 28px rgba(0,212,255,.9)}}
+.popup-open{font-size:13px;font-weight:700;padding:6px 0 2px;}
+.map-marker{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 12px rgba(0,0,0,.5);}
+.home-marker{width:42px;height:42px;border-radius:50%;background:rgba(0,212,255,.2);border:2.5px solid var(--ice);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 20px rgba(0,212,255,.6);animation:homePulse 3s infinite;}
+@keyframes homePulse{0%,100%{box-shadow:0 0 20px rgba(0,212,255,.6)}50%{box-shadow:0 0 32px rgba(0,212,255,.9)}}
+.meet-marker{width:38px;height:38px;border-radius:50%;background:rgba(255,215,64,.15);border:2px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 16px rgba(255,215,64,.5);animation:meetPulse 2s infinite;}
+@keyframes meetPulse{0%,100%{box-shadow:0 0 16px rgba(255,215,64,.5)}50%{box-shadow:0 0 28px rgba(255,215,64,.9)}}
 
-/* MAP TOP CONTROLS */
-#map-top{position:absolute;top:12px;left:12px;right:12px;z-index:500;display:flex;gap:8px;align-items:flex-start;pointer-events:none;}
-.level-filters{display:flex;gap:5px;flex-wrap:wrap;pointer-events:all;}
-.lvl-btn{padding:7px 11px;background:rgba(7,12,20,.92);border:2px solid var(--border);border-radius:20px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;backdrop-filter:blur(10px);transition:all .2s;color:var(--muted);}
+/* MAP CONTROLS */
+#map-top{position:absolute;top:12px;left:12px;right:12px;z-index:500;pointer-events:none;display:flex;gap:6px;flex-wrap:wrap;}
+.lvl-btn{pointer-events:all;padding:7px 12px;background:rgba(7,12,20,.92);border:2px solid var(--border);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;backdrop-filter:blur(10px);transition:all .2s;color:var(--muted);}
 .lvl-btn.on{color:#000;font-weight:800;}
 .lvl-btn[data-d="novice"].on,.lvl-btn[data-d="easy"].on{background:var(--green);border-color:var(--green);}
 .lvl-btn[data-d="intermediate"].on{background:var(--blue);border-color:var(--blue);}
 .lvl-btn[data-d="advanced"].on{background:var(--red);border-color:var(--red);}
 .lvl-btn[data-d="expert"].on{background:#bbb;border-color:#bbb;}
 .lvl-btn[data-d="lift"].on{background:var(--orange);border-color:var(--orange);}
-.lvl-btn:active{transform:scale(.93);}
+.lvl-btn:active{transform:scale(.9);}
 
-/* MAP BOTTOM CONTROLS */
 #map-bottom{position:absolute;bottom:calc(var(--nav-h) + var(--safe-bottom) + 12px);left:12px;right:12px;z-index:500;display:flex;gap:8px;pointer-events:none;}
-.map-ctrl-btn{pointer-events:all;flex:1;padding:11px 6px;background:rgba(7,12,20,.92);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);transition:all .2s;text-align:center;white-space:nowrap;}
-.map-ctrl-btn.active{border-color:var(--ice);color:var(--ice);background:rgba(0,212,255,.1);}
-.map-ctrl-btn:active{transform:scale(.95);}
+.map-ctrl{pointer-events:all;flex:1;padding:11px 6px;background:rgba(7,12,20,.92);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);transition:all .2s;text-align:center;}
+.map-ctrl.active{border-color:var(--ice);color:var(--ice);background:rgba(0,212,255,.1);}
+.map-ctrl:active{transform:scale(.95);}
+#meet-btn{pointer-events:all;flex:1;padding:11px 6px;background:rgba(7,12,20,.92);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);transition:all .2s;text-align:center;}
+#meet-btn.active{border-color:var(--yellow);color:var(--yellow);background:rgba(255,215,64,.1);}
 #add-loc-btn{pointer-events:all;width:44px;height:44px;background:var(--ice);border:none;border-radius:50%;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,212,255,.4);flex-shrink:0;align-self:center;transition:all .2s;color:#000;}
 #add-loc-btn:active{transform:scale(.9);}
 
+#meet-hint{position:absolute;top:56px;left:12px;right:12px;z-index:500;background:rgba(255,215,64,.12);border:1px solid rgba(255,215,64,.35);border-radius:12px;padding:10px 14px;display:none;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--yellow);backdrop-filter:blur(10px);}
+#meet-hint.visible{display:flex;}
+
 /* ROUTE PANEL */
-#route-panel{position:absolute;bottom:calc(var(--nav-h) + var(--safe-bottom));left:0;right:0;z-index:600;background:rgba(9,14,23,.97);border-top:1px solid var(--border);border-radius:18px 18px 0 0;backdrop-filter:blur(20px);padding:10px 18px calc(18px + var(--safe-bottom));transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:70vh;overflow-y:auto;}
+#route-panel{position:absolute;bottom:calc(var(--nav-h) + var(--safe-bottom));left:0;right:0;z-index:600;background:rgba(9,14,23,.97);border-top:1px solid var(--border);border-radius:18px 18px 0 0;backdrop-filter:blur(20px);padding:10px 18px calc(18px + var(--safe-bottom));transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:72vh;overflow-y:auto;}
 #route-panel.open{transform:translateY(0);}
 #rp-handle{width:32px;height:3px;background:var(--border);border-radius:2px;margin:0 auto 14px;}
 #rp-close{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;}
-.rp-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;padding-right:32px;}
+.rp-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;padding-right:36px;}
 .rp-name{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;line-height:1.1;flex:1;}
-.rp-fav{background:none;border:none;font-size:24px;cursor:pointer;flex-shrink:0;padding:0;transition:transform .2s;}
-.rp-fav:active{transform:scale(.8);}
+.rp-fav-btn{background:none;border:none;font-size:26px;cursor:pointer;padding:0;flex-shrink:0;transition:transform .2s;}
+.rp-fav-btn:active{transform:scale(.8);}
 .rp-badges{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;}
 .rp-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
 .rp-info{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:14px;}
-.rp-section{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px;}
+.rp-section{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.rp-section::after{content:'';flex:1;height:1px;background:var(--border);}
 .route-steps{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
 .route-step{display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;}
 .step-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
-.step-txt strong{color:var(--snow);font-weight:600;display:block;font-size:14px;}
+.step-txt strong{color:var(--snow);font-weight:600;display:block;font-size:14px;line-height:1.3;}
 .step-txt span{color:var(--muted);font-size:12px;line-height:1.4;}
-.rp-meta{display:flex;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-.rp-meta-item{flex:1;padding:12px;text-align:center;border-right:1px solid var(--border);}
+.step-connector{text-align:center;font-size:16px;color:var(--border);margin:-2px 0;}
+.rp-meta{display:flex;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:4px;}
+.rp-meta-item{flex:1;padding:12px 8px;text-align:center;border-right:1px solid var(--border);}
 .rp-meta-item:last-child{border-right:none;}
 .rp-meta-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
-.rp-meta-val{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--snow);margin-top:2px;}
+.rp-meta-val{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--snow);margin-top:2px;}
 
-/* FAVORIETEN TAB */
+/* FAVS */
 #fav-list{padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
-.fav-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s;}
-.fav-item:active{transform:scale(.98);}
+.fav-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
 .fav-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
 .fav-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;flex:1;}
 .fav-sub{font-size:12px;color:var(--muted);}
-.fav-remove{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;}
-
-/* MEETPOINT PANEL */
-#meet-bar{position:absolute;top:calc(12px + 44px + 8px);left:12px;right:12px;z-index:500;background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.3);border-radius:12px;padding:10px 14px;display:none;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--ice);backdrop-filter:blur(10px);}
-#meet-bar.visible{display:flex;}
-#meet-bar-close{margin-left:auto;background:none;border:none;color:var(--ice);font-size:16px;cursor:pointer;}
+.fav-del{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;}
 
 /* ADD SHEET */
 #add-sheet{position:fixed;inset:0;z-index:2000;display:none;align-items:flex-end;}
@@ -174,17 +162,17 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
 .sheet-title{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;margin-bottom:6px;}
-.sheet-sub{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5;}
+.sheet-sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
 .form-field{margin-bottom:14px;}
 .form-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px;display:block;}
 .form-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 14px;color:var(--snow);font-family:'Barlow',sans-serif;font-size:16px;outline:none;transition:border .2s;}
 .form-input:focus{border-color:var(--ice);}
 .form-input::placeholder{color:var(--muted);}
 .type-row{display:flex;gap:8px;}
-.type-opt{flex:1;padding:11px 8px;background:var(--card);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;transition:all .2s;font-size:13px;font-weight:600;color:var(--muted);}
+.type-opt{flex:1;padding:11px 8px;background:var(--card);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);transition:all .2s;}
 .type-opt.sel{border-color:var(--ice);color:var(--ice);background:var(--ice-dim);}
-.btn-primary{width:100%;padding:16px;background:var(--ice);border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;letter-spacing:1px;color:#000;cursor:pointer;transition:all .15s;margin-top:4px;}
-.btn-primary:active{transform:scale(.98);filter:brightness(.9);}
+.btn-primary{width:100%;padding:16px;background:var(--ice);border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;letter-spacing:1px;color:#000;cursor:pointer;margin-top:4px;}
+.btn-primary:active{filter:brightness(.9);}
 
 /* LOADING */
 #loading{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
@@ -194,17 +182,10 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 .load-bar{width:160px;height:2px;background:var(--border);border-radius:1px;overflow:hidden;}
 .load-fill{height:100%;background:var(--ice);animation:loadFill 2s ease forwards;}
 @keyframes loadFill{from{width:0}to{width:100%}}
-.view::-webkit-scrollbar{display:none;}
-.view{scrollbar-width:none;}
 </style>
 </head>
 <body>
-
-<div id="loading">
-  <div class="load-title">LES 2 ALPES</div>
-  <div class="load-sub">Laden...</div>
-  <div class="load-bar"><div class="load-fill"></div></div>
-</div>
+<div id="loading"><div class="load-title">LES 2 ALPES</div><div class="load-sub">Laden...</div><div class="load-bar"><div class="load-fill"></div></div></div>
 
 <div id="app">
 
@@ -229,17 +210,13 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
       <div class="tap-card-sub" id="dash-snow-sub">Laden...</div>
     </div>
     <button class="map-btn" onclick="goTo('kaart')">🗺 Pistekaart openen</button>
-    <button class="sos-btn" onclick="window.location.href='tel:+33476791111'">
-      <div>🆘 Bergredding bellen <span style="display:block;font-size:12px;color:var(--muted)">+33 4 76 79 11 11</span></div>
-      <span>Noodgeval</span>
-    </button>
   </div>
 </div>
 
 <!-- WEER -->
 <div id="view-weer" class="view">
   <div style="padding:20px 16px 0;display:flex;align-items:baseline;gap:10px;">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;">Weer</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;">WEER</div>
     <div style="font-size:12px;color:var(--muted)" id="weer-updated">—</div>
   </div>
   <div class="day-tabs">
@@ -258,7 +235,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 
 <!-- SNEEUW -->
 <div id="view-sneeuw" class="view">
-  <div style="padding:20px 16px 0"><div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;">Sneeuw</div></div>
+  <div style="padding:20px 16px 0"><div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;">SNEEUW</div></div>
   <div class="snow-stats" id="snow-stats"></div>
   <div class="snow-zones" id="snow-zones"></div>
 </div>
@@ -266,123 +243,262 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 <!-- KAART -->
 <div id="view-kaart" class="view">
   <div id="map"></div>
-
-  <!-- Top: level filters -->
   <div id="map-top">
-    <div class="level-filters">
-      <button class="lvl-btn on" data-d="novice" onclick="toggleLevel(this)">🟢</button>
-      <button class="lvl-btn on" data-d="easy" onclick="toggleLevel(this)" style="display:none"></button>
-      <button class="lvl-btn on" data-d="intermediate" onclick="toggleLevel(this)">🔵</button>
-      <button class="lvl-btn on" data-d="advanced" onclick="toggleLevel(this)">🔴</button>
-      <button class="lvl-btn on" data-d="expert" onclick="toggleLevel(this)">⚫</button>
-      <button class="lvl-btn on" data-d="lift" onclick="toggleLevel(this)">🚡</button>
-    </div>
+    <button class="lvl-btn on" data-d="novice" onclick="toggleLevel(this)">🟢</button>
+    <button class="lvl-btn on" data-d="intermediate" onclick="toggleLevel(this)">🔵</button>
+    <button class="lvl-btn on" data-d="advanced" onclick="toggleLevel(this)">🔴</button>
+    <button class="lvl-btn on" data-d="expert" onclick="toggleLevel(this)">⚫</button>
+    <button class="lvl-btn on" data-d="lift" onclick="toggleLevel(this)">🚡</button>
   </div>
-
-  <!-- Meet point hint bar -->
-  <div id="meet-bar">
-    📍 Tik op de kaart om afspraakpunt te zetten
-    <button id="meet-bar-close" onclick="cancelMeetMode()">✕</button>
-  </div>
-
-  <!-- Bottom controls -->
+  <div id="meet-hint">📍 Tik op kaart om afspraakpunt te zetten <button onclick="cancelMeetMode()" style="margin-left:auto;background:none;border:none;color:var(--yellow);font-size:16px;cursor:pointer;">✕</button></div>
   <div id="map-bottom">
-    <div class="map-ctrl-btn active" id="btn-resto" onclick="toggleLayer('resto',this)">🍽 Eten</div>
-    <div class="map-ctrl-btn active" id="btn-chill" onclick="toggleLayer('chill',this)">☀ Chill</div>
-    <div class="map-ctrl-btn" id="btn-meet" onclick="startMeetMode()">📍 Meet</div>
+    <div class="map-ctrl active" id="btn-resto" onclick="toggleLayer('resto',this)">🍽 Eten</div>
+    <div class="map-ctrl active" id="btn-chill" onclick="toggleLayer('chill',this)">☀ Chill</div>
+    <div id="meet-btn" class="map-ctrl" onclick="startMeetMode()">📍 Meet</div>
     <button id="add-loc-btn" onclick="openAddSheet()">＋</button>
   </div>
-
-  <!-- Route panel -->
   <div id="route-panel">
     <div id="rp-handle"></div>
-    <button id="rp-close" onclick="closeRoutePanel()">✕</button>
+    <button id="rp-close" onclick="closePanel()">✕</button>
     <div id="rp-body"></div>
   </div>
 </div>
 
-<!-- FAVORIETEN -->
+<!-- FAVS -->
 <div id="view-favs" class="view">
-  <div style="padding:20px 16px 0"><div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;">Favorieten</div></div>
+  <div style="padding:20px 16px 8px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;">⭐ FAVORIETEN</div><div style="font-size:13px;color:var(--muted);margin-top:4px">Tik ☆ op een piste op de kaart</div></div>
   <div id="fav-list"></div>
 </div>
 
 <!-- NAV -->
 <nav id="nav">
-  <button class="nav-btn active" id="nav-dash" onclick="goTo('dash')">
-    <div class="nav-ind"></div><span class="icon">🏔</span>Dashboard
-  </button>
-  <button class="nav-btn" id="nav-weer" onclick="goTo('weer')">
-    <div class="nav-ind"></div><span class="icon">☁️</span>Weer
-  </button>
-  <button class="nav-btn" id="nav-sneeuw" onclick="goTo('sneeuw')">
-    <div class="nav-ind"></div><span class="icon">❄️</span>Sneeuw
-  </button>
-  <button class="nav-btn" id="nav-kaart" onclick="goTo('kaart')">
-    <div class="nav-ind"></div><span class="icon">🗺</span>Kaart
-  </button>
-  <button class="nav-btn" id="nav-favs" onclick="goTo('favs')">
-    <div class="nav-ind"></div><span class="icon">⭐</span>Favs
-  </button>
+  <button class="nav-btn active" id="nav-dash" onclick="goTo('dash')"><div class="nav-ind"></div><span class="icon">🏔</span>Dashboard</button>
+  <button class="nav-btn" id="nav-weer" onclick="goTo('weer')"><div class="nav-ind"></div><span class="icon">☁️</span>Weer</button>
+  <button class="nav-btn" id="nav-sneeuw" onclick="goTo('sneeuw')"><div class="nav-ind"></div><span class="icon">❄️</span>Sneeuw</button>
+  <button class="nav-btn" id="nav-kaart" onclick="goTo('kaart')"><div class="nav-ind"></div><span class="icon">🗺</span>Kaart</button>
+  <button class="nav-btn" id="nav-favs" onclick="goTo('favs')"><div class="nav-ind"></div><span class="icon">⭐</span>Favs</button>
 </nav>
 </div>
 
-<!-- ADD LOCATION SHEET -->
+<!-- ADD SHEET -->
 <div id="add-sheet">
   <div id="add-backdrop" onclick="closeAddSheet()"></div>
   <div id="add-form">
     <div class="sheet-handle"></div>
     <div class="sheet-title">Locatie toevoegen</div>
-    <div class="sheet-sub">Tik eerst op de kaart om een plek te pinnen, dan op ＋</div>
-    <div class="form-field">
-      <label class="form-label">Naam</label>
-      <input id="loc-name" class="form-input" type="text" placeholder="bv. Zonnige picknicktafel"/>
-    </div>
-    <div class="form-field">
-      <label class="form-label">Type</label>
+    <div class="sheet-sub">Tik eerst op de kaart om te pinnen, dan ＋</div>
+    <div class="form-field"><label class="form-label">Naam</label><input id="loc-name" class="form-input" type="text" placeholder="bv. Zonnige picknicktafel"/></div>
+    <div class="form-field"><label class="form-label">Type</label>
       <div class="type-row">
         <div class="type-opt sel" data-type="chill" onclick="selType(this)">☀ Chill</div>
         <div class="type-opt" data-type="restaurant" onclick="selType(this)">🍽 Eten</div>
         <div class="type-opt" data-type="bar" onclick="selType(this)">🍺 Bar</div>
       </div>
     </div>
-    <div class="form-field">
-      <label class="form-label">Omschrijving</label>
-      <input id="loc-desc" class="form-input" type="text" placeholder="bv. Beste zon 12–14u"/>
-    </div>
-    <div class="form-field">
-      <label class="form-label">Beste zonmoment</label>
-      <input id="loc-sun" class="form-input" type="text" placeholder="bv. 11:00 – 14:00"/>
-    </div>
-    <button class="btn-primary" onclick="submitLocation()">📍 Opslaan op kaart</button>
+    <div class="form-field"><label class="form-label">Omschrijving</label><input id="loc-desc" class="form-input" type="text" placeholder="bv. Beste zon 12–14u"/></div>
+    <div class="form-field"><label class="form-label">Beste zonmoment</label><input id="loc-sun" class="form-input" type="text" placeholder="bv. 11:00 – 14:00"/></div>
+    <button class="btn-primary" onclick="submitLocation()">📍 Opslaan</button>
   </div>
 </div>
 
 <script>
-// ── STATE ──────────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// LIFT GRAPH — de echte liftnetwerk van Les 2 Alpes
+// Nodes = stations, Edges = liften (gaan OMHOOG)
+// ════════════════════════════════════════════════════════════════
+const STATIONS = {
+  aroles:   { name:'Les Aroles',         alt:1650, lat:45.003, lng:6.122 },
+  bas1650:  { name:'2 Alpes 1650m',      alt:1650, lat:45.002, lng:6.125 },
+  bas1800:  { name:'2 Alpes 1800m',      alt:1800, lat:45.003, lng:6.130 },
+  toura:    { name:'Toura',              alt:2600, lat:45.012, lng:6.130 },
+  top3200:  { name:'Top Jandri',         alt:3200, lat:45.019, lng:6.128 },
+  glacier:  { name:'Gletsjer 3400m',     alt:3400, lat:45.022, lng:6.120 },
+  signal:   { name:'Signal',             alt:3000, lat:45.018, lng:6.115 },
+  diable:   { name:'Diable',             alt:2400, lat:45.007, lng:6.148 },
+  cretes:   { name:'Crêtes',             alt:2100, lat:45.005, lng:6.150 },
+  vallee:   { name:'Vallée Blanche',     alt:2100, lat:45.010, lng:6.162 },
+  fee:      { name:'La Fée',             alt:2440, lat:45.016, lng:6.138 },
+  bellecombes: { name:'Bellecombes',     alt:2100, lat:45.006, lng:6.147 },
+};
+
+// Elke lift: van station → naar station, met tijden en openingstijden
+// Laatste lift (sluitingstijd) is het cruciale getal
+const LIFTS = [
+  {
+    id:'jandri1', name:'Jandri Express 1 🚡', type:'gondola',
+    from:'aroles', to:'toura', duration:12,
+    opens:'08:45', closes:'17:15', lastUp:'17:00',
+    info:'Hoofdgondola van het dorp naar Toura (2600m). Capaciteit 200 pers/uur.'
+  },
+  {
+    id:'jandri2', name:'Jandri Express 2 🚡', type:'gondola',
+    from:'toura', to:'top3200', duration:10,
+    opens:'09:00', closes:'16:30', lastUp:'16:15',
+    info:'Van Toura naar de top op 3200m. Sluit eerder dan Jandri 1.'
+  },
+  {
+    id:'funiculaire', name:'Funiculaire sous-glaciaire 🛤', type:'funicular',
+    from:'top3200', to:'glacier', duration:7,
+    opens:'09:00', closes:'16:00', lastUp:'15:45',
+    info:'Rijdt onder het ijs door naar 3400m. Vroegste sluitingstijd van het resort.'
+  },
+  {
+    id:'signal', name:'Signal stoeltjeslift 🪑', type:'chair',
+    from:'top3200', to:'signal', duration:8,
+    opens:'09:00', closes:'16:00', lastUp:'15:50',
+    info:'Stoeltjeslift op de gletsjer, bereikt Signal-pistes op 3000m+.'
+  },
+  {
+    id:'diable', name:'Diable gondola 🚡', type:'gondola',
+    from:'aroles', to:'diable', duration:11,
+    opens:'09:00', closes:'16:45', lastUp:'16:30',
+    info:'Gondola naar de Diable-sector op 2400m. Mooie oost-expositie.'
+  },
+  {
+    id:'bellecombes', name:'Bellecombes stoeltjeslift 🪑', type:'chair',
+    from:'bas1650', to:'bellecombes', duration:10,
+    opens:'09:00', closes:'16:45', lastUp:'16:30',
+    info:'Stoeltjeslift naar de Crêtes-sector. Vertrek iets buiten dorp.'
+  },
+  {
+    id:'supervenosc', name:'Super-Venosc kabelbaan 🚠', type:'cable',
+    from:'bas1650', to:'vallee', duration:12,
+    opens:'08:30', closes:'17:30', lastUp:'17:15',
+    info:'Kabelbaan naar Vallée Blanche. Langste openingstijd, ideaal voor laatste run.'
+  },
+  {
+    id:'fee', name:'Fée stoeltjeslift 🪑', type:'chair',
+    from:'toura', to:'fee', duration:9,
+    opens:'09:00', closes:'16:30', lastUp:'16:15',
+    info:'Stoeltjeslift vanuit Toura naar La Fée sector op 2440m.'
+  },
+];
+
+// ════════════════════════════════════════════════════════════════
+// ROUTING ENGINE
+// BFS door het liftnetwerk van Les Aroles naar dichtstbijzijnde station
+// bij de aangeklikte piste
+// ════════════════════════════════════════════════════════════════
+
+// Bouw adjacency list: van elk station, welke liften gaan er omhoog?
+function buildGraph() {
+  const g = {};
+  Object.keys(STATIONS).forEach(k => g[k] = []);
+  LIFTS.forEach(l => g[l.from].push(l));
+  return g;
+}
+const GRAPH = buildGraph();
+
+// Bereken afstand in km tussen twee lat/lng punten
+function dist(lat1,lng1,lat2,lng2){
+  const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+// Vind het dichtstbijzijnde liftstation bij een lat/lng punt
+// Alleen stations die HOGER zijn dan de start (want pistes liggen boven de start)
+function nearestStation(lat, lng) {
+  let best = null, bestDist = Infinity;
+  Object.entries(STATIONS).forEach(([id, s]) => {
+    if(id === 'aroles') return;
+    const d = dist(lat, lng, s.lat, s.lng);
+    if(d < bestDist) { bestDist = d; best = id; }
+  });
+  return best;
+}
+
+// BFS: vind kortste liftroute van 'aroles' naar doelstation
+function findRoute(targetStationId) {
+  if(targetStationId === 'aroles') return [];
+  const visited = new Set(['aroles']);
+  const queue = [{ station:'aroles', path:[] }];
+  while(queue.length) {
+    const { station, path } = queue.shift();
+    const lifts = GRAPH[station] || [];
+    for(const lift of lifts) {
+      if(visited.has(lift.to)) continue;
+      const newPath = [...path, lift];
+      if(lift.to === targetStationId) return newPath;
+      visited.add(lift.to);
+      queue.push({ station:lift.to, path:newPath });
+    }
+  }
+  return null; // geen route gevonden
+}
+
+// Hoofd-routefunctie: gegeven lat/lng van de piste, geef route terug
+function getRoute(pisteLat, pisteLng) {
+  const targetId = nearestStation(pisteLat, pisteLng);
+  const targetStation = STATIONS[targetId];
+  const route = findRoute(targetId);
+  if(!route || route.length === 0) {
+    return {
+      station: targetStation,
+      lifts: [],
+      totalTime: 2,
+      steps: [{ i:'🥾', t:'Direct vanuit Les Aroles', s:'De piste ligt dicht bij het dorp — 2 min lopen.' }]
+    };
+  }
+  const totalTime = route.reduce((s,l) => s + l.duration, 0) + 2; // +2 min lopen
+  const steps = [
+    { i:'🥾', t:'Loop naar '+route[0].name.split(' ')[0]+' '+route[0].name.split(' ')[1], s:'~2 min lopen vanuit Les Aroles' },
+    ...route.map((l,i) => ({
+      i: l.type==='gondola'?'🚡':l.type==='cable'?'🚠':l.type==='funicular'?'🛤':'🪑',
+      t: l.name,
+      s: `${STATIONS[l.from].name} → ${STATIONS[l.to].name} · ${l.duration} min · Laatste omhoog: ${l.lastUp}`
+    }))
+  ];
+  // Laatste stap: skiën naar de piste
+  steps.push({ i:'🎿', t:'Skiën naar de piste', s:`Je bent nu bij ${targetStation.name} (${targetStation.alt}m)` });
+  return { station: targetStation, lifts: route, totalTime, steps };
+}
+
+// Controleer of een lift nu open is
+function isOpen(lift) {
+  const now = new Date();
+  const h = now.getHours()*60 + now.getMinutes();
+  const [oh,om] = lift.opens.split(':').map(Number);
+  const [ch,cm] = lift.closes.split(':').map(Number);
+  return h >= oh*60+om && h <= ch*60+cm;
+}
+
+// ════════════════════════════════════════════════════════════════
+// APP STATE & HELPERS
+// ════════════════════════════════════════════════════════════════
 let weatherData=null, snowData=null, currentDay=0, currentAlt=2;
-let map=null, pisteLayer=null;
+let map=null, pisteLayer=null, liftLayer=null;
 let markerGroups={resto:null,chill:null,meet:null};
 let layerState={resto:true,chill:true};
 let levelState={novice:true,easy:true,intermediate:true,advanced:true,expert:true,lift:true};
 let pendingLatLng=null, selectedType='chill';
 let meetMode=false, meetMarker=null;
-let favs=JSON.parse(localStorage.getItem('ski_favs')||'{}');
-let allPisteFeatures=[];
+let favs = JSON.parse(localStorage.getItem('ski_favs')||'{}');
 
-// ── PRESET LOCATIONS ──────────────────────────────────────────────────────
+// Persisteer afspraakpunt
+function saveMeetPoint(latlng) {
+  if(latlng) localStorage.setItem('ski_meet', JSON.stringify({lat:latlng.lat,lng:latlng.lng}));
+  else localStorage.removeItem('ski_meet');
+}
+function loadMeetPoint() {
+  try { return JSON.parse(localStorage.getItem('ski_meet')); } catch{ return null; }
+}
+
+// Preset locaties
 const PRESETS=[
-  {id:-1,name:'Chalet de la Toura / PanoBar',type:'restaurant',lat:45.0115,lng:6.1295,description:'Bergrestaurant + après-ski bar op 2600m. PanoBar van 14:30 met DJ.',hours:'09:00–16:45',sun:'11:00–14:30'},
+  {id:-1,name:'Chalet de la Toura / PanoBar',type:'restaurant',lat:45.0115,lng:6.1295,description:'Bergrestaurant + après-ski bar op 2600m. PanoBar DJ vanaf 14:30.',hours:'09:00–16:45',sun:'11:00–14:30'},
   {id:-2,name:'Le Diable au Cœur',type:'restaurant',lat:45.008,lng:6.125,description:'Tafelservice op 2400m. Oisans-producten, goede wijnkaart.',hours:'09:00–17:00',sun:'12:00–15:00'},
-  {id:-3,name:'La Fée Hut',type:'restaurant',lat:45.016,lng:6.138,description:'Crêpes & tafelservice op 2440m. Rustig terras.',hours:'10:00–16:00',sun:'10:00–13:00'},
-  {id:-4,name:'Le 3200',type:'bar',lat:45.022,lng:6.142,description:'Apero bij zonsondergang op 3200m. Uniek uitzicht.',hours:'09:00–19:00',sun:'15:00–17:30'},
+  {id:-3,name:'La Fée Hut',type:'restaurant',lat:45.016,lng:6.138,description:'Crêpes & tafelservice op 2440m. Rustig zonnig terras.',hours:'10:00–16:00',sun:'10:00–13:00'},
+  {id:-4,name:'Le 3200',type:'bar',lat:45.022,lng:6.142,description:'Apero bij zonsondergang op 3200m. Uniek uitzicht over de Écrins.',hours:'09:00–19:00',sun:'15:00–17:30'},
   {id:-5,name:'Umbrella Bar',type:'bar',lat:44.999,lng:6.120,description:'Après-ski hotspot aan de pistvoet. Live muziek, 250 plaatsen.',hours:'08:00–17:00',sun:'13:00–17:00'},
   {id:-6,name:'Vallée Blanche Restaurant',type:'restaurant',lat:45.019,lng:6.137,description:'Huisgemaakte keuken op de gletsjerhellingen.',hours:'10:00–15:30',sun:'10:00–13:00'},
-  {id:-7,name:'Snowpark zone',type:'chill',lat:45.013,lng:6.133,description:'Beste plek om snowparkers te kijken. Eigen eten meenemen.',sun:'12:00–15:00'},
-  {id:-8,name:'Panorama 360° rustplek',type:'chill',lat:45.020,lng:6.128,description:'Zitgelegenheid op 3421m, 360° uitzicht. Neem een boterham mee.',sun:'10:00–14:00'}
+  {id:-7,name:'Snowpark zone',type:'chill',lat:45.013,lng:6.133,description:'Beste plek om snowparkers te spotten. Eigen eten meenemen.',sun:'12:00–15:00'},
+  {id:-8,name:'Panorama 360° rustplek',type:'chill',lat:45.020,lng:6.128,description:'Zitgelegenheid op 3421m, 360° uitzicht richting Écrins.',sun:'10:00–14:00'},
 ];
 
-// ── NAVIGATION ──────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════════
 function goTo(page){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>{b.classList.remove('active');b.querySelector('.nav-ind').style.display='none';});
@@ -393,27 +509,27 @@ function goTo(page){
   if(page==='favs')renderFavs();
 }
 
-// ── WMO ────────────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// WMO / WEATHER
+// ════════════════════════════════════════════════════════════════
 const WMO={0:['☀️','Helder'],1:['🌤','Grotendeels helder'],2:['⛅','Bewolkt'],3:['☁️','Zwaar bewolkt'],45:['🌫','Mist'],51:['🌦','Motregen'],61:['🌧','Regen'],71:['🌨','Lichte sneeuw'],73:['❄️','Sneeuw'],75:['❄️','Zware sneeuw'],80:['🌦','Regenbuien'],85:['🌨','Sneeuwbuien'],95:['⛈','Onweer']};
 function wmo(c){return WMO[c]||WMO[Math.round(c/10)*10]||['🌡','—'];}
 const DAY_NL=['zo','ma','di','wo','do','vr','za'];
 const MON=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
 const SLOTS=[{label:'🌙 Nacht',hours:[0,1,2,3,4,5]},{label:'🌄 Ochtend',hours:[6,7,8,9,10,11]},{label:'☀️ Middag',hours:[12,13,14,15]},{label:'🌆 Avond',hours:[16,17,18,19,20,21]}];
 
-// ── LOAD DATA ──────────────────────────────────────────────────────────────
 async function loadAll(){
   const[w,s]=await Promise.all([
     fetch('/api/weather').then(r=>r.json()).catch(()=>null),
     fetch('/api/snowreport').then(r=>r.json()).catch(()=>null)
   ]);
-  weatherData=w; snowData=s;
+  weatherData=w;snowData=s;
   if(w){updateDashWeather();renderWeather();}
   if(s){updateDashSnow();renderSnow();}
   const d=new Date();
   document.getElementById('dash-date').textContent=`${DAY_NL[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
   document.getElementById('loading').classList.add('gone');
 }
-
 function updateDashWeather(){
   const z=weatherData[2],c=z.data.current,[icon,desc]=wmo(c.weather_code);
   document.getElementById('dash-temp').textContent=`${Math.round(c.temperature_2m)}°`;
@@ -424,8 +540,6 @@ function updateDashSnow(){
   document.getElementById('dash-snow').textContent=`${snowData.snowDepthTop} cm`;
   document.getElementById('dash-snow-sub').textContent=`❄ ${snowData.freshSnow48h>0?snowData.freshSnow48h+' cm vers (48u)':'Geen vers'} · ${snowData.pistsOpen}/${snowData.pistsTotal} pistes open`;
 }
-
-// ── WEATHER RENDER ─────────────────────────────────────────────────────────
 function setDay(i,el){currentDay=i;document.querySelectorAll('.day-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderWeather();}
 function setAlt(i,el){currentAlt=i;document.querySelectorAll('.alt-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderWeather();}
 function renderWeather(){
@@ -447,8 +561,6 @@ function renderWeather(){
     c.innerHTML+=`<div class="slot-card"><div class="slot-time">${slot.label}</div><div><div style="font-size:26px">${icon}</div><div class="slot-details">${desc}<br>💨 ${wind} km/u</div></div><div class="slot-right"><div class="slot-temp" style="color:${tc}">${avgT}°</div><div class="slot-precip">${precStr}</div></div></div>`;
   });
 }
-
-// ── SNOW RENDER ────────────────────────────────────────────────────────────
 function renderSnow(){
   if(!snowData)return;
   document.getElementById('snow-stats').innerHTML=`
@@ -459,65 +571,166 @@ function renderSnow(){
   const z=document.getElementById('snow-zones');z.innerHTML='';
   snowData.zones.forEach(z2=>{
     const pct=Math.min(100,z2.depth/2);
-    document.getElementById('snow-zones').innerHTML+=`<div class="snow-zone"><div class="snow-zone-header"><div><div class="snow-zone-name">${z2.label}</div><div class="snow-zone-alt">${z2.alt}m hoogte</div></div><div style="text-align:right"><div class="snow-zone-depth">${z2.depth}</div><div style="font-size:14px;color:var(--muted)">cm</div></div></div><div class="snow-bar"><div class="snow-bar-fill" style="width:${pct}%"></div></div></div>`;
+    z.innerHTML+=`<div class="snow-zone"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><div><div class="snow-zone-name">${z2.label}</div><div style="font-size:12px;color:var(--muted)">${z2.alt}m hoogte</div></div><div style="text-align:right"><div class="snow-zone-depth">${z2.depth}</div><div style="font-size:14px;color:var(--muted)">cm</div></div></div><div class="snow-bar"><div class="snow-bar-fill" style="width:${pct}%"></div></div></div>`;
   });
 }
 
-// ── MAP ────────────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// MAP
+// ════════════════════════════════════════════════════════════════
 function diffColor(d,isLift){
   if(isLift)return'#ff9100';
   return{novice:'#00e676',easy:'#00e676',intermediate:'#448aff',advanced:'#ff5252',expert:'#cccccc',freeride:'#e040fb'}[d]||'#888';
 }
 function crowdLabel(id){
   const h=new Date().getHours();
-  const isWeekend=[0,6].includes(new Date().getDay());
-  const peakHour=h>=10&&h<=14;
-  const v=((Math.abs(id)*2654435761+h*99991)%100+100)%100;
-  const base=isWeekend?(peakHour?70:45):(peakHour?45:25);
-  const lvl=Math.min(100,base+(v%35)-10);
+  const isWknd=[0,6].includes(new Date().getDay());
+  const peak=h>=10&&h<=14;
+  const v=((Math.abs(id||1)*2654435761+h*99991)%100+100)%100;
+  const base=isWknd?(peak?72:48):(peak?48:28);
+  const lvl=Math.min(100,base+(v%30)-8);
   if(lvl<35)return{t:'🟢 Rustig',c:'var(--green)'};
   if(lvl<65)return{t:'🟡 Normaal',c:'var(--yellow)'};
   return{t:'🔴 Druk',c:'var(--red)'};
 }
-function routeFromAroles(lat,lng){
-  const isEast=lng>6.155,isGlacier=lat>45.018,isHigh=lat>45.010,isDiable=isEast&&lat>45.000&&lat<45.016;
-  if(isGlacier)return{zone:'Gletsjer 3200–3400m',time:'~35 min',lifts:3,steps:[{i:'🥾',t:'Loop naar Jandri Express',s:'2 min vanuit Les Aroles'},{i:'🚡',t:'Jandri Express 1',s:'Tot Toura 2600m · 12 min'},{i:'🚡',t:'Jandri Express 2',s:'Tot 3200m · 10 min'},{i:'🛤',t:'Funiculaire sous-glaciaire',s:'Naar 3400m · 8 min'}]};
-  if(isDiable)return{zone:'Diable / Crêtes 2100–2400m',time:'~13 min',lifts:1,steps:[{i:'🥾',t:'Loop naar Diable gondola',s:'3 min lopen vanuit Les Aroles'},{i:'🚡',t:'Diable gondola',s:'Rechtstreeks naar 2400m · 10 min'}]};
-  if(isEast)return{zone:'Vallée Blanche 2100m',time:'~18 min',lifts:1,steps:[{i:'🥾',t:'Loop naar Super-Venosc',s:'5 min lopen, andere kant dorp'},{i:'🚡',t:'Super-Venosc kabelbaan',s:'Naar Vallée Blanche · 12 min'}]};
-  if(isHigh)return{zone:'Hoog gebied 2600m',time:'~20 min',lifts:2,steps:[{i:'🥾',t:'Loop naar Jandri Express',s:'2 min vanuit Les Aroles'},{i:'🚡',t:'Jandri Express 1',s:'Naar Toura 2600m · 12 min'}]};
-  return{zone:'Dorp / laag gebied',time:'~5 min',lifts:1,steps:[{i:'🥾',t:'Direct vanuit Les Aroles',s:'Liggen aan de pistvoet'},{i:'🎿',t:'Direct beginnen',s:'Groene en blauwe beginnerszones'}]};
-}
 
 function initMap(){
-  map=L.map('map',{center:[45.012,6.130],zoom:13,zoomControl:true});
+  map=L.map('map',{center:[45.010,6.130],zoom:13,zoomControl:true});
   setTimeout(()=>map.invalidateSize(),100);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19,opacity:0.3}).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19,opacity:0.25}).addTo(map);
   L.tileLayer('https://tiles.opensnowmap.org/pistes/{z}/{x}/{y}.png',{maxZoom:18,opacity:0.9}).addTo(map);
+
   markerGroups.resto=L.layerGroup().addTo(map);
   markerGroups.chill=L.layerGroup().addTo(map);
   markerGroups.meet=L.layerGroup().addTo(map);
+
+  // Les Aroles huisje marker
+  const homeIcon=L.divIcon({html:'<div class="home-marker">🏠</div>',className:'',iconSize:[42,42],iconAnchor:[21,21]});
+  L.marker([45.003,6.122],{icon:homeIcon,zIndexOffset:1000})
+    .bindPopup('<div class="popup-inner"><div class="popup-name">🏠 Les Aroles</div><div class="popup-row">Ons verblijf · 1650m</div><div class="popup-row" style="margin-top:6px;color:var(--ice);font-weight:600;">Startpunt van alle routes</div></div>')
+    .addTo(map);
+
+  // Herstel opgeslagen afspraakpunt
+  const savedMeet=loadMeetPoint();
+  if(savedMeet)placeMeetPoint({lat:savedMeet.lat,lng:savedMeet.lng},false);
+
   loadMarkers();
   map.on('click',e=>{
     pendingLatLng=e.latlng;
-    if(meetMode)placeMeetPoint(e.latlng);
+    if(meetMode)placeMeetPoint(e.latlng,true);
   });
+
+  // Klikbare liftmarkers (cirkel op stations)
+  LIFTS.forEach(lift=>{
+    const toSt=STATIONS[lift.to];
+    if(!toSt)return;
+    const open=isOpen(lift);
+    const liftIcon=L.divIcon({
+      html:`<div style="width:28px;height:28px;background:${open?'rgba(255,145,0,.25)':'rgba(100,100,100,.25)'};border:2px solid ${open?'#ff9100':'#666'};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;">${lift.type==='gondola'?'🚡':lift.type==='cable'?'🚠':lift.type==='funicular'?'🛤':'🪑'}</div>`,
+      className:'',iconSize:[28,28],iconAnchor:[14,14]
+    });
+    const m=L.marker([toSt.lat,toSt.lng],{icon:liftIcon,zIndexOffset:500});
+    m.bindPopup(liftPopupHtml(lift));
+    m.addTo(map);
+  });
+
+  // GeoJSON pistes
   fetch('/api/pistes').then(r=>r.json()).then(geo=>{
     if(!geo.features)return;
-    allPisteFeatures=geo.features;
     pisteLayer=L.geoJSON(geo,{
       style:f=>{
         const p=f.properties,c=diffColor(p.difficulty,p.isLift);
-        return{color:c,weight:p.isLift?3:4,opacity:0.85,dashArray:p.isLift?'6 4':null};
+        return{color:c,weight:p.isLift?3:4,opacity:0.85,dashArray:p.isLift?'7 5':null};
       },
       onEachFeature:(f,layer)=>{
         const p=f.properties;
         layer.on('mouseover',function(){this.setStyle({weight:p.isLift?5:7,opacity:1});});
         layer.on('mouseout',function(){this.setStyle({weight:p.isLift?3:4,opacity:0.85});});
-        layer.on('click',e=>{L.DomEvent.stopPropagation(e);showRoutePanel(p,e.latlng);});
+        layer.on('click',e=>{
+          L.DomEvent.stopPropagation(e);
+          if(p.isLift) showLiftPanel(p,e.latlng);
+          else showPistePanel(p,e.latlng);
+        });
       }
     }).addTo(map);
   }).catch(console.error);
 }
+
+function liftPopupHtml(lift){
+  const open=isOpen(lift);
+  return`<div class="popup-inner">
+    <div class="popup-name">${lift.name}</div>
+    <div class="popup-open" style="color:${open?'var(--green)':'var(--red)'}">${open?'✅ Nu open':'🔴 Gesloten'}</div>
+    <div class="popup-row">Open: <span>${lift.opens} – ${lift.closes}</span></div>
+    <div class="popup-row">⚠️ Laatste rit omhoog: <span style="color:var(--orange);font-weight:700">${lift.lastUp}</span></div>
+    <div class="popup-row" style="margin-top:6px;font-size:12px">${lift.info}</div>
+  </div>`;
+}
+
+function showLiftPanel(p,latlng){
+  // Zoek bijpassende lift definitie op naam
+  const lift=LIFTS.find(l=>p.name&&p.name.toLowerCase().includes(l.id.toLowerCase().split('-')[0]))||null;
+  const open=lift?isOpen(lift):true;
+  const c='#ff9100';
+  document.getElementById('rp-body').innerHTML=`
+    <div class="rp-header">
+      <div class="rp-name">${p.name||'Lift'}</div>
+    </div>
+    <div class="rp-badges">
+      <span class="rp-badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${p.aerialway||'lift'}</span>
+      <span class="rp-badge" style="background:${open?'rgba(0,230,118,.12)':'rgba(255,82,82,.12)'};color:${open?'var(--green)':'var(--red)'};border:1px solid ${open?'rgba(0,230,118,.3)':'rgba(255,82,82,.3)'}">${open?'✅ Open':'🔴 Gesloten'}</span>
+    </div>
+    ${lift?`
+    <div style="background:rgba(255,145,0,.08);border:1px solid rgba(255,145,0,.2);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Opens</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--snow)">${lift.opens}</div></div>
+        <div style="text-align:center"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Duur</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--snow)">${lift.duration} min</div></div>
+        <div style="text-align:right"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Sluit</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--snow)">${lift.closes}</div></div>
+      </div>
+      <div style="background:rgba(255,145,0,.15);border:1px solid rgba(255,145,0,.35);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px">⚠️</span>
+        <div><div style="font-size:11px;color:var(--muted)">Laatste rit omhoog</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--orange)">${lift.lastUp}</div></div>
+      </div>
+    </div>
+    <div class="rp-info">${lift.info}</div>`:'<div class="rp-info">Selecteer een lift voor openingstijden.</div>'}`;
+  document.getElementById('route-panel').classList.add('open');
+}
+
+function showPistePanel(p,latlng){
+  const c=diffColor(p.difficulty,false);
+  const crowd=crowdLabel(p.id);
+  const route=getRoute(latlng.lat,latlng.lng);
+  const isFav=!!favs[p.id];
+  const diffLabel={novice:'Groen 🟢',easy:'Groen 🟢',intermediate:'Blauw 🔵',advanced:'Rood 🔴',expert:'Zwart ⚫',freeride:'Freeride 🟣'}[p.difficulty]||p.difficulty||'—';
+
+  const steps=route.steps.map((s,i)=>`
+    ${i>0&&i<route.steps.length?'<div class="step-connector">↓</div>':''}
+    <div class="route-step">
+      <div class="step-icon">${s.i}</div>
+      <div class="step-txt"><strong>${s.t}</strong><span>${s.s}</span></div>
+    </div>`).join('');
+
+  document.getElementById('rp-body').innerHTML=`
+    <div class="rp-header">
+      <div class="rp-name">${p.name||'Piste'}</div>
+      <button class="rp-fav-btn" onclick="toggleFav(${JSON.stringify(p.id)},${JSON.stringify(p.name||'Piste')},${JSON.stringify(p.difficulty||'')},${JSON.stringify(c)})">${isFav?'⭐':'☆'}</button>
+    </div>
+    <div class="rp-badges">
+      <span class="rp-badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${diffLabel}</span>
+      <span class="rp-badge" style="color:${crowd.c};background:${crowd.c}18;border:1px solid ${crowd.c}44">${crowd.t}</span>
+      ${p.groomed?'<span class="rp-badge" style="background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.25)">✅ Gegroomed</span>':''}
+    </div>
+    <div class="rp-section">Route vanuit 🏠 Les Aroles → ${route.station?.name||'?'} (${route.station?.alt||'?'}m)</div>
+    <div class="route-steps">${steps}</div>
+    <div class="rp-meta">
+      <div class="rp-meta-item"><div class="rp-meta-label">Reistijd</div><div class="rp-meta-val">~${route.totalTime} min</div></div>
+      <div class="rp-meta-item"><div class="rp-meta-label">Liften</div><div class="rp-meta-val">${route.lifts.length}</div></div>
+      <div class="rp-meta-item"><div class="rp-meta-label">Drukte</div><div class="rp-meta-val" style="font-size:14px;margin-top:4px">${crowd.t}</div></div>
+    </div>`;
+  document.getElementById('route-panel').classList.add('open');
+}
+
+function closePanel(){document.getElementById('route-panel').classList.remove('open');}
 
 function applyLevelFilters(){
   if(!pisteLayer)return;
@@ -528,100 +741,37 @@ function applyLevelFilters(){
     layer.setStyle({opacity:show?0.85:0,interactive:show});
   });
 }
-
 function toggleLevel(btn){
-  const d=btn.dataset.d;
-  levelState[d]=!levelState[d];
-  btn.classList.toggle('on',levelState[d]);
-  applyLevelFilters();
+  const d=btn.dataset.d;levelState[d]=!levelState[d];btn.classList.toggle('on',levelState[d]);applyLevelFilters();
 }
-
 function toggleLayer(key,el){
-  layerState[key]=!layerState[key];
-  el.classList.toggle('active',layerState[key]);
+  layerState[key]=!layerState[key];el.classList.toggle('active',layerState[key]);
   if(!map||!markerGroups[key])return;
   layerState[key]?markerGroups[key].addTo(map):map.removeLayer(markerGroups[key]);
 }
 
-// ── ROUTE PANEL ────────────────────────────────────────────────────────────
-function showRoutePanel(p,latlng){
-  const c=diffColor(p.difficulty,p.isLift);
-  const crowd=crowdLabel(p.id);
-  const route=routeFromAroles(latlng.lat,latlng.lng);
-  const isFav=!!favs[p.id];
-  const steps=route.steps.map(s=>`<div class="route-step"><div class="step-icon">${s.i}</div><div class="step-txt"><strong>${s.t}</strong><span>${s.s}</span></div></div>`).join('');
-  const diffLabel={novice:'Groen',easy:'Groen',intermediate:'Blauw',advanced:'Rood',expert:'Zwart',freeride:'Freeride'}[p.difficulty]||p.difficulty||'—';
-
-  document.getElementById('rp-body').innerHTML=`
-    <div class="rp-header">
-      <div class="rp-name">${p.name||'Piste'}</div>
-      <button class="rp-fav" onclick="toggleFav(${p.id},'${(p.name||'Piste').replace(/'/g,"\\'")}','${p.difficulty||''}','${c}')">${isFav?'⭐':'☆'}</button>
-    </div>
-    <div class="rp-badges">
-      <span class="rp-badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${p.isLift?(p.aerialway||'Lift'):diffLabel}</span>
-      <span class="rp-badge" style="background:rgba(255,255,255,.06);color:${crowd.c};border:1px solid var(--border)">${crowd.t}</span>
-      ${p.groomed?'<span class="rp-badge" style="background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.2)">✅ Gegroomed</span>':''}
-    </div>
-    <div class="rp-section">🏠 Route vanaf Les Aroles · ${route.zone}</div>
-    <div class="route-steps">${steps}</div>
-    <div class="rp-meta">
-      <div class="rp-meta-item"><div class="rp-meta-label">Reistijd</div><div class="rp-meta-val">${route.time}</div></div>
-      <div class="rp-meta-item"><div class="rp-meta-label">Liften</div><div class="rp-meta-val">${route.lifts}</div></div>
-      <div class="rp-meta-item"><div class="rp-meta-label">Drukte</div><div class="rp-meta-val" style="font-size:16px;margin-top:4px">${crowd.t}</div></div>
-    </div>`;
-  document.getElementById('route-panel').classList.add('open');
-}
-
-function closeRoutePanel(){document.getElementById('route-panel').classList.remove('open');}
-map&&document.getElementById('map')&&document.getElementById('map').addEventListener('click',e=>{if(e.target.classList.contains('leaflet-container'))closeRoutePanel();});
-
-// ── FAVOURITES ─────────────────────────────────────────────────────────────
-function toggleFav(id,name,diff,color){
-  if(favs[id])delete favs[id];
-  else favs[id]={name,diff,color,savedAt:new Date().toISOString()};
-  localStorage.setItem('ski_favs',JSON.stringify(favs));
-  // Re-render button in panel
-  const btn=document.querySelector('.rp-fav');
-  if(btn)btn.textContent=favs[id]?'⭐':'☆';
-}
-function renderFavs(){
-  const el=document.getElementById('fav-list');
-  const keys=Object.keys(favs);
-  if(!keys.length){el.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-size:14px">Nog geen favoriete pistes.<br>Tik ☆ op een piste op de kaart.</div>';return;}
-  el.innerHTML=keys.map(id=>{
-    const f=favs[id];
-    return`<div class="fav-item" onclick="goToFav()">
-      <div class="fav-dot" style="background:${f.color||'var(--muted)'}"></div>
-      <div style="flex:1"><div class="fav-name">${f.name}</div><div class="fav-sub">${{novice:'Groen',easy:'Groen',intermediate:'Blauw',advanced:'Rood',expert:'Zwart'}[f.diff]||f.diff||'Piste'}</div></div>
-      <button class="fav-remove" onclick="event.stopPropagation();removeFav(${id},this.closest('.fav-item'))">✕</button>
-    </div>`;
-  }).join('');
-}
-function removeFav(id,el){delete favs[id];localStorage.setItem('ski_favs',JSON.stringify(favs));el.remove();}
-function goToFav(){goTo('kaart');}
-
-// ── MEET POINT ─────────────────────────────────────────────────────────────
-function startMeetMode(){
-  meetMode=true;
-  document.getElementById('meet-bar').classList.add('visible');
-  document.getElementById('btn-meet').classList.add('active');
-}
-function cancelMeetMode(){
-  meetMode=false;
-  document.getElementById('meet-bar').classList.remove('visible');
-  document.getElementById('btn-meet').classList.remove('active');
-}
-function placeMeetPoint(latlng){
+// ════════════════════════════════════════════════════════════════
+// MEET POINT
+// ════════════════════════════════════════════════════════════════
+function startMeetMode(){meetMode=true;document.getElementById('meet-hint').classList.add('visible');document.getElementById('meet-btn').classList.add('active');}
+function cancelMeetMode(){meetMode=false;document.getElementById('meet-hint').classList.remove('visible');document.getElementById('meet-btn').classList.remove('active');}
+function placeMeetPoint(latlng,save){
   cancelMeetMode();
   if(meetMarker)markerGroups.meet.removeLayer(meetMarker);
-  const icon=L.divIcon({html:'<div class="meet-marker">📍</div>',className:'',iconSize:[38,38],iconAnchor:[19,19]});
+  const icon=L.divIcon({html:'<div class="meet-marker">📍</div>',className:'',iconSize:[38,38],iconAnchor:[19,38]});
   meetMarker=L.marker([latlng.lat,latlng.lng],{icon});
-  meetMarker.bindPopup('<div class="popup-inner"><div class="popup-name">📍 Afspraakpunt</div><div class="popup-row">Hier afspreken met de groep</div><div style="margin-top:8px"><button onclick="if(meetMarker){markerGroups.meet.removeLayer(meetMarker);meetMarker=null;}" style="background:rgba(255,82,82,.15);border:1px solid rgba(255,82,82,.3);color:var(--red);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:Barlow,sans-serif;font-weight:600">🗑 Verwijder</button></div></div>');
+  meetMarker.bindPopup('<div class="popup-inner"><div class="popup-name">📍 Afspraakpunt</div><div class="popup-row">Hier afspreken met de groep</div><div style="margin-top:10px"><button onclick="removeMeetPoint()" style="background:rgba(255,82,82,.15);border:1px solid rgba(255,82,82,.3);color:var(--red);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:Barlow,sans-serif;font-weight:600">🗑 Verwijder</button></div></div>');
   markerGroups.meet.addLayer(meetMarker);
-  meetMarker.openPopup();
+  if(save){meetMarker.openPopup();saveMeetPoint(latlng);}
+}
+function removeMeetPoint(){
+  if(meetMarker){markerGroups.meet.removeLayer(meetMarker);meetMarker=null;}
+  saveMeetPoint(null);map&&map.closePopup();
 }
 
-// ── MARKERS ────────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// MARKERS
+// ════════════════════════════════════════════════════════════════
 async function loadMarkers(){
   markerGroups.resto.clearLayers();markerGroups.chill.clearLayers();
   const userLocs=await fetch('/api/locations').then(r=>r.json()).catch(()=>[]);
@@ -630,29 +780,50 @@ async function loadMarkers(){
     const emoji=loc.type==='restaurant'?'🍽':loc.type==='bar'?'🍺':'☀️';
     const color=loc.type==='restaurant'?'#ff9100':loc.type==='bar'?'#ff5252':'#ffd740';
     const isUser=loc.addedBy==='user';
-    const icon=L.divIcon({html:`<div class="map-marker" style="background:${color}22;border-color:${color}66">${emoji}</div>`,className:'',iconSize:[38,38],iconAnchor:[19,19]});
+    const icon=L.divIcon({html:`<div class="map-marker" style="background:${color}22;border:2px solid ${color}66">${emoji}</div>`,className:'',iconSize:[38,38],iconAnchor:[19,19]});
     const m=L.marker([loc.lat,loc.lng],{icon});
     const del=isUser?`<div style="margin-top:10px"><button onclick="delLoc(${loc.id})" style="background:rgba(255,82,82,.15);border:1px solid rgba(255,82,82,.3);color:var(--red);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:Barlow,sans-serif;font-weight:600">🗑 Verwijder</button></div>`:'';
-    m.bindPopup(`<div class="popup-inner"><div class="popup-name">${loc.name}</div><span class="popup-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${loc.type}</span>${loc.description?`<div class="popup-row" style="margin-top:4px">${loc.description}</div>`:''}${loc.hours?`<div class="popup-row">Open: <span>${loc.hours}</span></div>`:''}${loc.sun?`<div class="popup-row">☀️ Beste zon: <span>${loc.sun}</span></div>`:''} ${del}</div>`);
+    m.bindPopup(`<div class="popup-inner"><div class="popup-name">${loc.name}</div><span class="popup-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${loc.type}</span>${loc.description?`<div class="popup-row" style="margin-top:4px">${loc.description}</div>`:''}${loc.hours?`<div class="popup-row">Open: <span>${loc.hours}</span></div>`:''}${loc.sun?`<div class="popup-row">☀️ Beste zon: <span>${loc.sun}</span></div>`:''}${del}</div>`);
     markerGroups[isResto?'resto':'chill'].addLayer(m);
   });
 }
 function delLoc(id){fetch(`/api/locations/${id}`,{method:'DELETE'});map&&map.closePopup();loadMarkers();}
 
-// ── ADD LOCATION ───────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// ADD LOCATION
+// ════════════════════════════════════════════════════════════════
 function openAddSheet(){document.getElementById('add-sheet').classList.add('visible');}
 function closeAddSheet(){document.getElementById('add-sheet').classList.remove('visible');}
 function selType(el){document.querySelectorAll('.type-opt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel');selectedType=el.dataset.type;}
 async function submitLocation(){
-  const name=document.getElementById('loc-name').value.trim();
-  if(!name){alert('Vul een naam in');return;}
-  const latlng=pendingLatLng||(map?map.getCenter():{lat:45.012,lng:6.130});
-  await fetch('/api/locations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,type:selectedType,lat:latlng.lat,lng:latlng.lng,description:document.getElementById('loc-desc').value.trim(),sun:document.getElementById('loc-sun').value.trim(),hours:''})});
+  const name=document.getElementById('loc-name').value.trim();if(!name){alert('Vul een naam in');return;}
+  const ll=pendingLatLng||(map?map.getCenter():{lat:45.012,lng:6.130});
+  await fetch('/api/locations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,type:selectedType,lat:ll.lat,lng:ll.lng,description:document.getElementById('loc-desc').value.trim(),sun:document.getElementById('loc-sun').value.trim(),hours:''})});
   document.getElementById('loc-name').value='';document.getElementById('loc-desc').value='';document.getElementById('loc-sun').value='';
   pendingLatLng=null;closeAddSheet();loadMarkers();
 }
 
-// ── BOOT ───────────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// FAVOURITES — opgeslagen in localStorage, blijft bewaard
+// ════════════════════════════════════════════════════════════════
+function toggleFav(id,name,diff,color){
+  if(favs[id])delete favs[id];
+  else favs[id]={name,diff,color,ts:Date.now()};
+  localStorage.setItem('ski_favs',JSON.stringify(favs));
+  const btn=document.querySelector('.rp-fav-btn');
+  if(btn)btn.textContent=favs[id]?'⭐':'☆';
+}
+function renderFavs(){
+  const el=document.getElementById('fav-list'),keys=Object.keys(favs);
+  if(!keys.length){el.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);line-height:1.8">Nog geen favorieten.<br>Tik ☆ op een piste op de kaart.<br><br><span style="font-size:28px">🎿</span></div>';return;}
+  const diffLabel={novice:'Groen',easy:'Groen',intermediate:'Blauw',advanced:'Rood',expert:'Zwart'};
+  el.innerHTML=keys.map(id=>{const f=favs[id];return`<div class="fav-item"><div class="fav-dot" style="background:${f.color||'var(--muted)'}"></div><div style="flex:1"><div class="fav-name">${f.name}</div><div class="fav-sub">${diffLabel[f.diff]||f.diff||'Piste'}</div></div><button class="fav-del" onclick="removeFav('${id}',this.closest('.fav-item'))">✕</button></div>`;}).join('');
+}
+function removeFav(id,el){delete favs[id];localStorage.setItem('ski_favs',JSON.stringify(favs));el.remove();}
+
+// ════════════════════════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════════════════════════
 loadAll();
 </script>
 </body>
