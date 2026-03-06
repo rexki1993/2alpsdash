@@ -1,989 +1,846 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Les 2 Alpes — Ski Dashboard</title>
-
-  <!-- Leaflet -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet" />
-
-  <style>
-    :root {
-      --bg:       #0a0f1a;
-      --panel:    #111827;
-      --border:   #1e2d42;
-      --ice:      #5bc8f5;
-      --snow:     #e8f4fd;
-      --text:     #c9daea;
-      --muted:    #4a6278;
-      --green:    #3ecf8e;
-      --blue:     #4a9eff;
-      --red:      #e05252;
-      --black:    #1a1a1a;
-      --yellow:   #f5c842;
-      --lift:     #f5a623;
-      --panel-w:  340px;
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      background: var(--bg);
-      color: var(--snow);
-      font-family: 'DM Sans', sans-serif;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    /* ── SIDEBAR ─────────────────────────────────── */
-    #sidebar {
-      width: var(--panel-w);
-      flex-shrink: 0;
-      background: var(--panel);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      z-index: 1000;
-      overflow: hidden;
-    }
-
-    #sidebar-header {
-      padding: 24px 20px 16px;
-      border-bottom: 1px solid var(--border);
-      background: linear-gradient(135deg, #0d1b2a 0%, #112036 100%);
-    }
-
-    .resort-title {
-      font-family: 'Bebas Neue', cursive;
-      font-size: 32px;
-      letter-spacing: 2px;
-      color: var(--snow);
-      line-height: 1;
-    }
-
-    .resort-subtitle {
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      margin-top: 4px;
-    }
-
-    .live-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 10px;
-      background: rgba(62,207,142,0.12);
-      border: 1px solid rgba(62,207,142,0.3);
-      border-radius: 20px;
-      padding: 3px 10px;
-      font-size: 11px;
-      color: var(--green);
-      font-weight: 500;
-      letter-spacing: 1px;
-    }
-
-    .live-dot {
-      width: 6px; height: 6px;
-      background: var(--green);
-      border-radius: 50%;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.8); }
-    }
-
-    #sidebar-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
-    }
-
-    /* ── WEATHER CARD ─────────────────────────────── */
-    .card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 12px;
-    }
-
-    .card-label {
-      font-size: 10px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 10px;
-      font-weight: 500;
-    }
-
-    .weather-main {
-      display: flex;
-      align-items: flex-end;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .temp-big {
-      font-family: 'Bebas Neue', cursive;
-      font-size: 56px;
-      line-height: 1;
-      color: var(--ice);
-    }
-
-    .weather-meta {
-      padding-bottom: 4px;
-    }
-
-    .weather-desc {
-      font-size: 13px;
-      color: var(--snow);
-      font-weight: 500;
-    }
-
-    .weather-feels {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .weather-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .weather-item {
-      background: rgba(255,255,255,0.04);
-      border-radius: 8px;
-      padding: 8px 10px;
-    }
-
-    .weather-item-label {
-      font-size: 10px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .weather-item-value {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--snow);
-      margin-top: 2px;
-    }
-
-    /* ── SNOW STATS ───────────────────────────────── */
-    .snow-bar-wrap {
-      margin-bottom: 10px;
-    }
-
-    .snow-bar-info {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      margin-bottom: 5px;
-    }
-
-    .snow-bar-label { color: var(--muted); }
-    .snow-bar-value { color: var(--snow); font-weight: 600; }
-
-    .snow-bar {
-      height: 6px;
-      background: var(--border);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .snow-bar-fill {
-      height: 100%;
-      border-radius: 3px;
-      background: linear-gradient(90deg, var(--ice), var(--blue));
-      transition: width 1s ease;
-    }
-
-    .stat-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
-    }
-
-    .stat-row:last-child { border-bottom: none; }
-    .stat-key { color: var(--muted); }
-    .stat-val { font-weight: 600; color: var(--snow); }
-    .stat-val.good { color: var(--green); }
-    .stat-val.warn { color: var(--yellow); }
-
-    /* ── LEGEND ───────────────────────────────────── */
-    .legend-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: var(--text);
-    }
-
-    .legend-dot {
-      width: 12px; height: 12px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .legend-line {
-      width: 20px; height: 3px;
-      border-radius: 2px;
-      flex-shrink: 0;
-    }
-
-    /* ── PISTE DETAIL PANEL ───────────────────────── */
-    #piste-panel {
-      position: absolute;
-      bottom: 0;
-      left: var(--panel-w);
-      right: 0;
-      background: rgba(10, 15, 26, 0.95);
-      border-top: 1px solid var(--border);
-      backdrop-filter: blur(12px);
-      padding: 16px 24px;
-      display: none;
-      z-index: 999;
-      animation: slideUp 0.25s ease;
-    }
-
-    @keyframes slideUp {
-      from { transform: translateY(100%); opacity: 0; }
-      to   { transform: translateY(0); opacity: 1; }
-    }
-
-    #piste-panel.visible { display: flex; align-items: center; gap: 24px; }
-
-    .piste-panel-name {
-      font-family: 'Bebas Neue', cursive;
-      font-size: 24px;
-      color: var(--snow);
-      white-space: nowrap;
-    }
-
-    .piste-panel-badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .piste-panel-meta {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    .meta-item { font-size: 12px; color: var(--muted); }
-    .meta-item span { color: var(--snow); font-weight: 500; display: block; }
-
-    #piste-close {
-      margin-left: auto;
-      cursor: pointer;
-      color: var(--muted);
-      font-size: 20px;
-      background: none;
-      border: none;
-      padding: 4px 8px;
-      transition: color 0.2s;
-    }
-
-    #piste-close:hover { color: var(--snow); }
-
-    /* ── MAP ──────────────────────────────────────── */
-    #map-wrap {
-      flex: 1;
-      position: relative;
-    }
-
-    #map {
-      width: 100%;
-      height: 100%;
-    }
-
-    /* Leaflet overrides */
-    .leaflet-container { background: #0d1520; }
-
-    .leaflet-popup-content-wrapper {
-      background: var(--panel);
-      color: var(--snow);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      font-family: 'DM Sans', sans-serif;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-    }
-
-    .leaflet-popup-tip { background: var(--panel); }
-
-    .popup-title {
-      font-family: 'Bebas Neue', cursive;
-      font-size: 20px;
-      margin-bottom: 6px;
-      color: var(--snow);
-    }
-
-    .popup-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .popup-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      padding: 4px 0;
-      border-bottom: 1px solid var(--border);
-      gap: 16px;
-    }
-
-    .popup-row:last-child { border-bottom: none; }
-    .popup-key { color: var(--muted); }
-    .popup-val { color: var(--snow); font-weight: 500; }
-
-    /* ── CROWD INDICATOR ─────────────────────────── */
-    .crowd-bar {
-      display: flex;
-      gap: 3px;
-      margin-top: 4px;
-    }
-
-    .crowd-seg {
-      height: 8px;
-      flex: 1;
-      border-radius: 2px;
-      background: var(--border);
-    }
-
-    .crowd-seg.filled { background: var(--yellow); }
-    .crowd-seg.filled.high { background: var(--red); }
-    .crowd-seg.filled.low { background: var(--green); }
-
-    /* ── LOADING ─────────────────────────────────── */
-    #loading-overlay {
-      position: absolute;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      gap: 16px;
-      transition: opacity 0.5s ease;
-    }
-
-    #loading-overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .loading-title {
-      font-family: 'Bebas Neue', cursive;
-      font-size: 36px;
-      letter-spacing: 3px;
-      color: var(--ice);
-    }
-
-    .loading-sub {
-      font-size: 12px;
-      color: var(--muted);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-
-    .loading-bar {
-      width: 200px;
-      height: 2px;
-      background: var(--border);
-      border-radius: 1px;
-      overflow: hidden;
-    }
-
-    .loading-fill {
-      height: 100%;
-      background: var(--ice);
-      border-radius: 1px;
-      animation: loadFill 2s ease forwards;
-    }
-
-    @keyframes loadFill {
-      from { width: 0%; }
-      to   { width: 100%; }
-    }
-
-    /* ── FORECAST ROW ────────────────────────────── */
-    .forecast-row {
-      display: flex;
-      gap: 6px;
-    }
-
-    .forecast-day {
-      flex: 1;
-      background: rgba(255,255,255,0.04);
-      border-radius: 8px;
-      padding: 8px 6px;
-      text-align: center;
-    }
-
-    .forecast-day-name {
-      font-size: 10px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .forecast-icon { font-size: 18px; margin: 4px 0; }
-
-    .forecast-temp {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--snow);
-    }
-
-    .forecast-snow {
-      font-size: 10px;
-      color: var(--ice);
-      margin-top: 2px;
-    }
-
-    /* ── TILES TOGGLE ────────────────────────────── */
-    #tile-toggle {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      z-index: 500;
-      display: flex;
-      gap: 6px;
-    }
-
-    .tile-btn {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 11px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .tile-btn.active {
-      background: var(--ice);
-      color: var(--bg);
-      border-color: var(--ice);
-      font-weight: 600;
-    }
-
-    .tile-btn:hover:not(.active) {
-      border-color: var(--muted);
-      color: var(--snow);
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#070c14"/>
+<title>Les 2 Alpes</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+<style>
+:root {
+  --bg: #070c14;
+  --surface: #0f1924;
+  --card: #141f2e;
+  --border: #1e2e42;
+  --ice: #00d4ff;
+  --ice-dim: rgba(0,212,255,.15);
+  --snow: #f0f6ff;
+  --muted: #4a6680;
+  --green: #00e676;
+  --blue: #448aff;
+  --red: #ff5252;
+  --orange: #ff9100;
+  --yellow: #ffd740;
+  --nav-h: 68px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--snow); font-family:'Barlow',sans-serif; }
+
+/* ── APP SHELL ─── */
+#app { display:flex; flex-direction:column; height:100%; }
+
+/* ── VIEWS ─── */
+.view { display:none; flex:1; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 12px); }
+.view.active { display:block; }
+#view-map { display:none; padding:0; }
+#view-map.active { display:flex; flex-direction:column; }
+
+/* ── NAV ─── */
+#nav {
+  display:flex; align-items:stretch;
+  height:calc(var(--nav-h) + var(--safe-bottom));
+  padding-bottom:var(--safe-bottom);
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  position:relative; z-index:900; flex-shrink:0;
+}
+
+.nav-btn {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:4px; background:none; border:none; cursor:pointer;
+  color:var(--muted); font-family:'Barlow',sans-serif; font-size:11px; font-weight:600;
+  letter-spacing:.5px; text-transform:uppercase; transition:color .2s;
+  padding:8px 4px 0;
+}
+.nav-btn .icon { font-size:22px; line-height:1; }
+.nav-btn.active { color:var(--ice); }
+.nav-btn.active .nav-indicator {
+  position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:32px; height:2px; background:var(--ice); border-radius:0 0 2px 2px;
+}
+
+/* ── COMMON ─── */
+.page-header {
+  padding:20px 16px 0;
+  display:flex; align-items:baseline; gap:10px;
+}
+.page-title { font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:800; letter-spacing:1px; text-transform:uppercase; }
+.page-sub { font-size:12px; color:var(--muted); font-weight:500; letter-spacing:1px; }
+
+.section { padding:16px 16px 0; }
+.section-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:10px; }
+
+.card {
+  background:var(--card); border:1px solid var(--border); border-radius:14px;
+  overflow:hidden; margin-bottom:12px;
+}
+.card-tap { cursor:pointer; transition:all .15s; }
+.card-tap:active { transform:scale(.98); opacity:.9; }
+
+/* ── DASHBOARD ─── */
+#view-dash { background:var(--bg); }
+
+.dash-hero {
+  padding:24px 16px 16px;
+  background:linear-gradient(180deg, #0a1628 0%, var(--bg) 100%);
+}
+.dash-resort { font-family:'Barlow Condensed',sans-serif; font-size:38px; font-weight:800; letter-spacing:2px; line-height:1; }
+.dash-date { font-size:13px; color:var(--muted); margin-top:4px; font-weight:500; }
+.live-badge {
+  display:inline-flex; align-items:center; gap:6px; margin-top:8px;
+  background:rgba(0,230,118,.1); border:1px solid rgba(0,230,118,.25);
+  border-radius:20px; padding:4px 10px; font-size:11px; color:var(--green); font-weight:600; letter-spacing:1px;
+}
+.live-dot { width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.5s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* big tap cards */
+.tap-card {
+  background:var(--card); border:1px solid var(--border); border-radius:16px;
+  padding:18px; margin-bottom:12px; cursor:pointer; transition:all .15s;
+  display:flex; flex-direction:column; gap:6px; position:relative; overflow:hidden;
+}
+.tap-card::after { content:'›'; position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:24px; color:var(--muted); }
+.tap-card:active { transform:scale(.98); border-color:var(--ice); }
+.tap-card-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); font-weight:600; }
+.tap-card-value { font-family:'Barlow Condensed',sans-serif; font-size:42px; font-weight:700; line-height:1; }
+.tap-card-sub { font-size:13px; color:var(--muted); }
+.tap-card-accent { position:absolute; right:0; top:0; bottom:0; width:3px; }
+
+.map-btn {
+  background:var(--ice); color:#000; border:none; border-radius:16px;
+  padding:18px; font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:800;
+  letter-spacing:2px; text-transform:uppercase; width:100%; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  margin-bottom:12px; transition:all .15s;
+}
+.map-btn:active { transform:scale(.98); filter:brightness(.9); }
+
+/* ── WEATHER VIEW ─── */
+.day-tabs { display:flex; gap:8px; padding:16px 16px 0; }
+.day-tab {
+  flex:1; padding:10px 4px; background:var(--card); border:1px solid var(--border);
+  border-radius:10px; text-align:center; cursor:pointer; transition:all .2s;
+  font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700;
+  letter-spacing:.5px; color:var(--muted);
+}
+.day-tab.active { background:var(--ice-dim); border-color:var(--ice); color:var(--ice); }
+
+.alt-tabs { display:flex; gap:6px; padding:12px 16px 0; overflow-x:auto; scrollbar-width:none; }
+.alt-tabs::-webkit-scrollbar { display:none; }
+.alt-tab {
+  flex-shrink:0; padding:8px 14px; background:var(--card); border:1px solid var(--border);
+  border-radius:20px; cursor:pointer; transition:all .2s; white-space:nowrap;
+  font-size:12px; font-weight:600; color:var(--muted); letter-spacing:.5px;
+}
+.alt-tab.active { background:rgba(68,138,255,.15); border-color:var(--blue); color:var(--blue); }
+
+.timeslots { padding:12px 16px; display:flex; flex-direction:column; gap:10px; }
+
+.slot-card {
+  background:var(--card); border:1px solid var(--border); border-radius:14px;
+  padding:16px; display:grid; grid-template-columns:auto 1fr auto auto; align-items:center; gap:12px;
+}
+.slot-time { font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700; color:var(--muted); white-space:nowrap; }
+.slot-icon { font-size:28px; line-height:1; }
+.slot-temp { font-family:'Barlow Condensed',sans-serif; font-size:36px; font-weight:700; line-height:1; text-align:right; }
+.slot-details { font-size:11px; color:var(--muted); line-height:1.6; }
+.slot-precip { font-size:13px; font-weight:600; color:var(--blue); text-align:right; }
+
+/* ── SNOW VIEW ─── */
+.snow-zones { padding:12px 16px; display:flex; flex-direction:column; gap:10px; }
+.snow-zone {
+  background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px;
+}
+.snow-zone-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; }
+.snow-zone-name { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:700; }
+.snow-zone-alt { font-size:12px; color:var(--muted); font-weight:500; }
+.snow-zone-depth { font-family:'Barlow Condensed',sans-serif; font-size:40px; font-weight:800; color:var(--ice); line-height:1; }
+.snow-zone-cm { font-size:14px; color:var(--muted); }
+.snow-bar { height:8px; background:var(--border); border-radius:4px; overflow:hidden; margin-top:10px; }
+.snow-bar-fill { height:100%; background:linear-gradient(90deg,var(--blue),var(--ice)); border-radius:4px; transition:width 1s ease; }
+
+.snow-stats { padding:0 16px 16px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.snow-stat { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; }
+.snow-stat-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.snow-stat-value { font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:700; }
+
+/* ── MAP VIEW ─── */
+#map { flex:1; z-index:1; }
+
+#map-controls {
+  position:absolute; bottom:calc(var(--nav-h) + var(--safe-bottom) + 12px); left:12px; right:12px;
+  z-index:500; display:flex; gap:8px; pointer-events:none;
+}
+
+.filter-btn {
+  pointer-events:all; flex:1; padding:10px 8px; background:rgba(7,12,20,.9);
+  border:1px solid var(--border); border-radius:10px; color:var(--muted);
+  font-family:'Barlow',sans-serif; font-size:12px; font-weight:600; cursor:pointer;
+  backdrop-filter:blur(8px); transition:all .2s; text-align:center; white-space:nowrap;
+}
+.filter-btn.active { border-color:var(--ice); color:var(--ice); background:rgba(0,212,255,.1); }
+.filter-btn:active { transform:scale(.96); }
+
+#add-loc-btn {
+  pointer-events:all; width:48px; height:48px; background:var(--ice); border:none;
+  border-radius:50%; font-size:22px; cursor:pointer; display:flex; align-items:center;
+  justify-content:center; box-shadow:0 4px 20px rgba(0,212,255,.4); flex-shrink:0;
+  align-self:center; transition:all .2s;
+}
+#add-loc-btn:active { transform:scale(.9); }
+
+/* ── ADD LOCATION SHEET ─── */
+#add-sheet {
+  position:fixed; inset:0; z-index:2000; display:none; align-items:flex-end;
+}
+#add-sheet.visible { display:flex; }
+#add-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); }
+#add-form {
+  position:relative; background:var(--surface); border-radius:20px 20px 0 0;
+  padding:24px 20px calc(24px + var(--safe-bottom)); width:100%;
+  border-top:1px solid var(--border); max-height:80vh; overflow-y:auto;
+  animation:slideUp .3s ease;
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.sheet-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 20px; }
+.sheet-title { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:800; margin-bottom:16px; letter-spacing:1px; }
+
+.form-field { margin-bottom:14px; }
+.form-label { font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:6px; display:block; }
+.form-input {
+  width:100%; background:var(--card); border:1px solid var(--border); border-radius:10px;
+  padding:13px 14px; color:var(--snow); font-family:'Barlow',sans-serif; font-size:16px;
+  outline:none; transition:border .2s;
+}
+.form-input:focus { border-color:var(--ice); }
+.form-input::placeholder { color:var(--muted); }
+
+.type-row { display:flex; gap:8px; }
+.type-opt {
+  flex:1; padding:11px 8px; background:var(--card); border:1px solid var(--border);
+  border-radius:10px; text-align:center; cursor:pointer; transition:all .2s;
+  font-size:13px; font-weight:600; color:var(--muted);
+}
+.type-opt.sel { border-color:var(--ice); color:var(--ice); background:var(--ice-dim); }
+
+.form-hint { font-size:12px; color:var(--muted); margin-bottom:14px; line-height:1.5; }
+
+.btn-primary {
+  width:100%; padding:16px; background:var(--ice); border:none; border-radius:12px;
+  font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:800;
+  letter-spacing:1px; color:#000; cursor:pointer; transition:all .15s;
+}
+.btn-primary:active { transform:scale(.98); filter:brightness(.9); }
+
+/* ── LEAFLET OVERRIDES ─── */
+.leaflet-container { background:#0a1422; }
+.leaflet-popup-content-wrapper {
+  background:var(--surface); color:var(--snow); border:1px solid var(--border);
+  border-radius:14px; font-family:'Barlow',sans-serif;
+  box-shadow:0 8px 32px rgba(0,0,0,.7); padding:0;
+}
+.leaflet-popup-content { margin:0; }
+.leaflet-popup-tip { background:var(--surface); }
+.leaflet-control-zoom a { background:var(--surface)!important; color:var(--snow)!important; border-color:var(--border)!important; }
+.leaflet-control-zoom a:hover { background:var(--card)!important; }
+
+.popup-inner { padding:14px 16px; min-width:200px; }
+.popup-name { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:800; margin-bottom:4px; }
+.popup-badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; margin-bottom:8px; }
+.popup-row { font-size:13px; color:var(--muted); padding:3px 0; }
+.popup-row span { color:var(--snow); font-weight:500; }
+
+/* marker styles */
+.map-marker {
+  width:36px; height:36px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; font-size:18px; border:2px solid rgba(255,255,255,.2);
+  box-shadow:0 3px 12px rgba(0,0,0,.5);
+}
+
+/* loading */
+#loading {
+  position:fixed; inset:0; background:var(--bg); z-index:9999;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+}
+#loading.gone { display:none; }
+.load-title { font-family:'Barlow Condensed',sans-serif; font-size:42px; font-weight:800; letter-spacing:3px; color:var(--ice); }
+.load-sub { font-size:11px; color:var(--muted); letter-spacing:3px; text-transform:uppercase; }
+.load-bar { width:160px; height:2px; background:var(--border); border-radius:1px; overflow:hidden; }
+.load-fill { height:100%; background:var(--ice); animation:loadFill 2s ease forwards; }
+@keyframes loadFill { from{width:0} to{width:100%} }
+
+/* scroll restore */
+.view::-webkit-scrollbar { display:none; }
+.view { scrollbar-width:none; }
+</style>
 </head>
 <body>
 
-<!-- ── SIDEBAR ─────────────────────────────────── -->
-<aside id="sidebar">
-  <div id="sidebar-header">
-    <div class="resort-title">Les 2 Alpes</div>
-    <div class="resort-subtitle">Isère · 1300m – 3600m</div>
-    <div class="live-badge">
-      <div class="live-dot"></div>
-      LIVE
+<div id="loading">
+  <div class="load-title">LES 2 ALPES</div>
+  <div class="load-sub">Data ophalen...</div>
+  <div class="load-bar"><div class="load-fill"></div></div>
+</div>
+
+<div id="app">
+
+  <!-- ── DASHBOARD ──────────────────────────────────────── -->
+  <div id="view-dash" class="view active">
+    <div class="dash-hero">
+      <div class="dash-resort">Les 2 Alpes</div>
+      <div class="dash-date" id="dash-date">–</div>
+      <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+    </div>
+
+    <div class="section">
+      <!-- Weer card -->
+      <div class="tap-card" onclick="goTo('weer')">
+        <div class="tap-card-accent" style="background:linear-gradient(180deg,var(--blue),var(--ice))"></div>
+        <div class="tap-card-label">☁ Weer nu · 2600m</div>
+        <div class="tap-card-value" id="dash-temp">–°</div>
+        <div class="tap-card-sub" id="dash-weather-sub">Laden...</div>
+      </div>
+
+      <!-- Sneeuw card -->
+      <div class="tap-card" onclick="goTo('sneeuw')">
+        <div class="tap-card-accent" style="background:linear-gradient(180deg,var(--ice),#fff)"></div>
+        <div class="tap-card-label">❄ Sneeuwhoogte · Top</div>
+        <div class="tap-card-value" style="color:var(--ice)" id="dash-snow">– cm</div>
+        <div class="tap-card-sub" id="dash-snow-sub">Laden...</div>
+      </div>
+
+      <!-- Map button -->
+      <button class="map-btn" onclick="goTo('kaart')">
+        🗺 Pistekaart openen
+      </button>
     </div>
   </div>
 
-  <div id="sidebar-content">
-
-    <!-- Weather -->
-    <div class="card" id="weather-card">
-      <div class="card-label">☁ Weer nu</div>
-      <div class="weather-main">
-        <div class="temp-big" id="temp">—°</div>
-        <div class="weather-meta">
-          <div class="weather-desc" id="weather-desc">Laden...</div>
-          <div class="weather-feels" id="weather-feels"></div>
-        </div>
-      </div>
-      <div class="weather-grid">
-        <div class="weather-item">
-          <div class="weather-item-label">Wind</div>
-          <div class="weather-item-value" id="wind">—</div>
-        </div>
-        <div class="weather-item">
-          <div class="weather-item-label">Luchtvochtigheid</div>
-          <div class="weather-item-value" id="humidity">—</div>
-        </div>
-        <div class="weather-item">
-          <div class="weather-item-label">Sneeuwval</div>
-          <div class="weather-item-value" id="snowfall">—</div>
-        </div>
-        <div class="weather-item">
-          <div class="weather-item-label">Sneeuwdikte</div>
-          <div class="weather-item-value" id="snowdepth">—</div>
-        </div>
-      </div>
+  <!-- ── WEER ───────────────────────────────────────────── -->
+  <div id="view-weer" class="view">
+    <div class="page-header">
+      <div class="page-title">Weer</div>
+      <div class="page-sub" id="weer-updated">–</div>
     </div>
 
-    <!-- 3-day forecast -->
-    <div class="card">
-      <div class="card-label">📅 3-daagse voorspelling</div>
-      <div class="forecast-row" id="forecast-row">
-        <div class="forecast-day"><div class="forecast-day-name">—</div><div class="forecast-icon">❄️</div><div class="forecast-temp">—</div><div class="forecast-snow">—</div></div>
-        <div class="forecast-day"><div class="forecast-day-name">—</div><div class="forecast-icon">❄️</div><div class="forecast-temp">—</div><div class="forecast-snow">—</div></div>
-        <div class="forecast-day"><div class="forecast-day-name">—</div><div class="forecast-icon">❄️</div><div class="forecast-temp">—</div><div class="forecast-snow">—</div></div>
-      </div>
+    <!-- Day tabs -->
+    <div class="day-tabs">
+      <div class="day-tab active" onclick="setDay(0,this)">Vandaag</div>
+      <div class="day-tab" onclick="setDay(1,this)">Morgen</div>
+      <div class="day-tab" onclick="setDay(2,this)">Overmorgen</div>
     </div>
 
-    <!-- Snow stats -->
-    <div class="card" id="snow-card">
-      <div class="card-label">🏔 Sneeuwhoogte</div>
-
-      <div class="snow-bar-wrap">
-        <div class="snow-bar-info">
-          <span class="snow-bar-label">Top (3600m)</span>
-          <span class="snow-bar-value" id="snow-top">laden...</span>
-        </div>
-        <div class="snow-bar"><div class="snow-bar-fill" id="bar-top" style="width:0%"></div></div>
-      </div>
-
-      <div class="snow-bar-wrap">
-        <div class="snow-bar-info">
-          <span class="snow-bar-label">Dal (1300m)</span>
-          <span class="snow-bar-value" id="snow-bot">laden...</span>
-        </div>
-        <div class="snow-bar"><div class="snow-bar-fill" id="bar-bot" style="width:0%"></div></div>
-      </div>
-
-      <div class="stat-row">
-        <span class="stat-key">Vers sneeuw (48u)</span>
-        <span class="stat-val good" id="fresh-snow">—</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Pistcondities</span>
-        <span class="stat-val good" id="pist-cond">—</span>
-      </div>
+    <!-- Altitude tabs -->
+    <div class="alt-tabs" id="alt-tabs">
+      <div class="alt-tab active" onclick="setAlt(0,this)">1300m Dorp</div>
+      <div class="alt-tab" onclick="setAlt(1,this)">1800m Midden</div>
+      <div class="alt-tab" onclick="setAlt(2,this)">2600m Hoog</div>
+      <div class="alt-tab" onclick="setAlt(3,this)">3200m Gletsjer</div>
     </div>
 
-    <!-- Piste & lift status -->
-    <div class="card">
-      <div class="card-label">🎿 Pistes & Liften</div>
-      <div class="stat-row">
-        <span class="stat-key">Open pistes</span>
-        <span class="stat-val good" id="pistes-open">—</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Open liften</span>
-        <span class="stat-val good" id="lifts-open">—</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Totaal km</span>
-        <span class="stat-val" id="km-open">—</span>
-      </div>
-    </div>
-
-    <!-- Legend -->
-    <div class="card">
-      <div class="card-label">Legenda</div>
-      <div class="legend-grid">
-        <div class="legend-item"><div class="legend-dot" style="background:#3ecf8e"></div> Groen (makkelijk)</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#4a9eff"></div> Blauw (gemiddeld)</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#e05252"></div> Rood (moeilijk)</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#888"></div> Zwart (expert)</div>
-        <div class="legend-item"><div class="legend-line" style="background:#f5a623"></div> Lift</div>
-        <div class="legend-item"><div class="legend-dot" style="background:rgba(255,200,0,0.6);border:2px solid #f5c842"></div> Druk</div>
-      </div>
-    </div>
-
-  </div>
-</aside>
-
-<!-- ── MAP ─────────────────────────────────────── -->
-<div id="map-wrap">
-  <div id="loading-overlay">
-    <div class="loading-title">Les 2 Alpes</div>
-    <div class="loading-sub">Piste data laden...</div>
-    <div class="loading-bar"><div class="loading-fill"></div></div>
+    <!-- Time slots -->
+    <div class="timeslots" id="timeslots"></div>
   </div>
 
-  <div id="map"></div>
+  <!-- ── SNEEUW ──────────────────────────────────────────── -->
+  <div id="view-sneeuw" class="view">
+    <div class="page-header">
+      <div class="page-title">Sneeuw</div>
+      <div class="page-sub">Hoogte per zone</div>
+    </div>
 
-  <div id="tile-toggle">
-    <button class="tile-btn active" onclick="setTile('osm')">Standaard</button>
-    <button class="tile-btn" onclick="setTile('snow')">OpenSnowMap</button>
-    <button class="tile-btn" onclick="setTile('satellite')">Satelliet</button>
+    <div class="snow-stats" id="snow-stats"></div>
+    <div class="snow-zones" id="snow-zones"></div>
   </div>
 
-  <!-- Piste detail bottom bar -->
-  <div id="piste-panel">
-    <div>
-      <div class="piste-panel-name" id="pp-name">—</div>
-      <span class="piste-panel-badge" id="pp-badge">—</span>
+  <!-- ── KAART ───────────────────────────────────────────── -->
+  <div id="view-kaart" class="view" style="position:relative;">
+    <div id="map"></div>
+
+    <div id="map-controls">
+      <div class="filter-btn active" onclick="toggleFilter('pistes',this)">🎿 Pistes</div>
+      <div class="filter-btn active" onclick="toggleFilter('resto',this)">🍽 Eten</div>
+      <div class="filter-btn active" onclick="toggleFilter('chill',this)">☀ Chill</div>
+      <button id="add-loc-btn" onclick="openAddSheet()">＋</button>
     </div>
-    <div class="piste-panel-meta">
-      <div class="meta-item">Moeilijkheid<span id="pp-diff">—</span></div>
-      <div class="meta-item">Groomed<span id="pp-groomed">—</span></div>
-      <div class="meta-item">Drukte<span id="pp-crowd">—</span></div>
+  </div>
+
+  <!-- ── BOTTOM NAV ─────────────────────────────────────── -->
+  <nav id="nav">
+    <button class="nav-btn active" id="nav-dash" onclick="goTo('dash')">
+      <div class="nav-indicator"></div>
+      <span class="icon">🏔</span>Dashboard
+    </button>
+    <button class="nav-btn" id="nav-weer" onclick="goTo('weer')">
+      <div class="nav-indicator" style="display:none"></div>
+      <span class="icon">☁️</span>Weer
+    </button>
+    <button class="nav-btn" id="nav-sneeuw" onclick="goTo('sneeuw')">
+      <div class="nav-indicator" style="display:none"></div>
+      <span class="icon">❄️</span>Sneeuw
+    </button>
+    <button class="nav-btn" id="nav-kaart" onclick="goTo('kaart')">
+      <div class="nav-indicator" style="display:none"></div>
+      <span class="icon">🗺</span>Kaart
+    </button>
+  </nav>
+</div>
+
+<!-- ── ADD LOCATION SHEET ─── -->
+<div id="add-sheet">
+  <div id="add-backdrop" onclick="closeAddSheet()"></div>
+  <div id="add-form">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Locatie toevoegen</div>
+    <p class="form-hint">Tip: tik eerst op de kaart om een locatie te pinnen, dan op ＋</p>
+
+    <div class="form-field">
+      <label class="form-label">Naam</label>
+      <input id="loc-name" class="form-input" type="text" placeholder="bv. Zonnige picknicktafel"/>
     </div>
-    <button id="piste-close" onclick="closePanel()">✕</button>
+
+    <div class="form-field">
+      <label class="form-label">Type</label>
+      <div class="type-row">
+        <div class="type-opt sel" data-type="chill" onclick="selectType(this)">☀ Chill</div>
+        <div class="type-opt" data-type="restaurant" onclick="selectType(this)">🍽 Eten</div>
+        <div class="type-opt" data-type="bar" onclick="selectType(this)">🍺 Bar</div>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label class="form-label">Omschrijving (optioneel)</label>
+      <input id="loc-desc" class="form-input" type="text" placeholder="bv. Beste zon van 12-14u"/>
+    </div>
+
+    <div class="form-field">
+      <label class="form-label">Beste zonmoment (optioneel)</label>
+      <input id="loc-sun" class="form-input" type="text" placeholder="bv. 11:00 – 14:00"/>
+    </div>
+
+    <button class="btn-primary" onclick="submitLocation()">📍 Opslaan op kaart</button>
   </div>
 </div>
 
 <script>
-// ── CONFIG ─────────────────────────────────────────────────────────────────
-const CENTER = [45.015, 6.135];
-const API_BASE = '';  // same origin
+// ── STATE ──────────────────────────────────────────────────────────────────
+let weatherData = null;
+let snowData = null;
+let currentDay = 0;
+let currentAlt = 2; // default: 2600m
+let map = null;
+let pisteLayer = null;
+let markerLayers = { pistes: null, resto: L.layerGroup(), chill: L.layerGroup() };
+let filterState = { pistes: true, resto: true, chill: true };
+let pendingLatLng = null;
+let selectedType = 'chill';
 
-// ── MAP INIT ───────────────────────────────────────────────────────────────
-const map = L.map('map', {
-  center: CENTER,
-  zoom: 13,
-  zoomControl: true
-});
+// ── PRESET LOCATIONS (real restaurants/bars from research) ───────────────
+const PRESET_LOCATIONS = [
+  {
+    id: -1, name: 'Chalet de la Toura / PanoBar', type: 'restaurant',
+    lat: 45.0115, lng: 6.1295, description: 'Bergrestaurant + après-ski bar op 2600m. Pizza, pasta, tartiflette. PanoBar van 14:30 met DJ.',
+    hours: '09:00 – 16:45', sun: '11:00 – 14:30'
+  },
+  {
+    id: -2, name: 'Le Diable au Cœur', type: 'restaurant',
+    lat: 45.008, lng: 6.125, description: 'Sfeervol bergrestaurant op 2400m. Tafelservice, Oisans-producten, goede wijnkaart.',
+    hours: '09:00 – 17:00', sun: '12:00 – 15:00'
+  },
+  {
+    id: -3, name: 'La Fée Hut', type: 'restaurant',
+    lat: 45.016, lng: 6.138, description: 'Midden in de Fée-sector op 2440m. Crêpes, tafelservice, rustig terras.',
+    hours: '10:00 – 16:00', sun: '10:00 – 13:00'
+  },
+  {
+    id: -4, name: 'Le 3200', type: 'bar',
+    lat: 45.022, lng: 6.142, description: 'Apero bij zonsondergang op 3200m. Uniek uitzicht over de Écrins.',
+    hours: '09:00 – 19:00', sun: '15:00 – 17:30'
+  },
+  {
+    id: -5, name: 'Umbrella Bar', type: 'bar',
+    lat: 44.999, lng: 6.120, description: 'Après-ski hotspot aan de pistvoet. Live muziek, zonnig terras, 250 plaatsen.',
+    hours: '08:00 – 17:00', sun: '13:00 – 17:00'
+  },
+  {
+    id: -6, name: 'Vallée Blanche Restaurant', type: 'restaurant',
+    lat: 45.019, lng: 6.137, description: 'Huisgemaakte keuken op de gletsjerhellingen. Authentiek en rustig.',
+    hours: '10:00 – 15:30', sun: '10:00 – 13:00'
+  }
+];
 
-// Tile layers
-const tiles = {
-  osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors',
-    maxZoom: 19
-  }),
-  snow: L.tileLayer('https://tiles.opensnowmap.org/pistes/{z}/{x}/{y}.png', {
-    attribution: '© OpenSnowMap, OpenStreetMap contributors',
-    maxZoom: 18,
-    opacity: 0.9
-  }),
-  satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: '© Esri',
-    maxZoom: 18
-  })
+// ── NAVIGATION ─────────────────────────────────────────────────────────────
+function goTo(page) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.remove('active');
+    b.querySelector('.nav-indicator').style.display = 'none';
+  });
+  document.getElementById('view-' + (page === 'kaart' ? 'kaart' : page === 'sneeuw' ? 'sneeuw' : page === 'weer' ? 'weer' : 'dash')).classList.add('active');
+  const nb = document.getElementById('nav-' + (page === 'kaart' ? 'kaart' : page === 'sneeuw' ? 'sneeuw' : page === 'weer' ? 'weer' : 'dash'));
+  nb.classList.add('active');
+  nb.querySelector('.nav-indicator').style.display = 'block';
+
+  if (page === 'kaart' && !map) initMap();
+}
+
+// ── WMO CODES ──────────────────────────────────────────────────────────────
+const WMO = {
+  0:['☀️','Helder'],1:['🌤','Grotendeels helder'],2:['⛅','Bewolkt'],3:['☁️','Zwaar bewolkt'],
+  45:['🌫','Mist'],48:['🌫','IJsmist'],51:['🌦','Lichte motregen'],53:['🌧','Motregen'],
+  55:['🌧','Zware motregen'],61:['🌧','Lichte regen'],63:['🌧','Regen'],65:['🌧','Zware regen'],
+  71:['🌨','Lichte sneeuw'],73:['❄️','Sneeuw'],75:['❄️','Zware sneeuw'],77:['🌨','Sneeuwkorrels'],
+  80:['🌦','Regenbuien'],85:['🌨','Sneeuwbuien'],86:['❄️','Zware sneeuwbuien'],
+  95:['⛈','Onweer'],96:['⛈','Onweer + hagel'],99:['⛈','Zwaar onweer']
 };
+function wmo(code) { return WMO[code] || WMO[Math.round(code/10)*10] || ['🌡','Onbekend']; }
 
-// Start with OSM + snow overlay
-tiles.osm.addTo(map);
+const DAY_NL = ['zo','ma','di','wo','do','vr','za'];
+const MONTHS = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
 
-let currentTile = 'osm';
-let snowOverlay = null;
+// ── SLOT DEFINITIONS ───────────────────────────────────────────────────────
+const SLOTS = [
+  { key: 'nacht',   label: '🌙 Nacht',   hours: [0,1,2,3,4,5] },
+  { key: 'ochtend', label: '🌄 Ochtend', hours: [6,7,8,9,10,11] },
+  { key: 'middag',  label: '☀️ Middag',  hours: [12,13,14,15] },
+  { key: 'avond',   label: '🌆 Avond',   hours: [16,17,18,19,20,21] }
+];
 
-function setTile(name) {
-  document.querySelectorAll('.tile-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`.tile-btn[onclick="setTile('${name}')"]`).classList.add('active');
+// ── LOAD ALL DATA ──────────────────────────────────────────────────────────
+async function loadAll() {
+  const [wRes, sRes] = await Promise.all([
+    fetch('/api/weather').then(r => r.json()).catch(() => null),
+    fetch('/api/snowreport').then(r => r.json()).catch(() => null)
+  ]);
+  weatherData = wRes;
+  snowData = sRes;
 
-  Object.values(tiles).forEach(t => map.removeLayer(t));
-  if (snowOverlay) map.removeLayer(snowOverlay);
-
-  tiles[name].addTo(map);
-
-  if (name !== 'snow') {
-    snowOverlay = L.tileLayer('https://tiles.opensnowmap.org/pistes/{z}/{x}/{y}.png', {
-      opacity: 0.7,
-      maxZoom: 18
-    });
-    snowOverlay.addTo(map);
+  if (weatherData) {
+    updateDashWeather();
+    renderWeather();
+  }
+  if (snowData) {
+    updateDashSnow();
+    renderSnow();
   }
 
-  currentTile = name;
+  const d = new Date();
+  document.getElementById('dash-date').textContent =
+    `${DAY_NL[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+
+  document.getElementById('loading').classList.add('gone');
 }
 
-// Add snow overlay on top of default
-setTile('osm');
-
-// ── PISTE COLORS ───────────────────────────────────────────────────────────
-function difficultyColor(diff, isLift) {
-  if (isLift) return '#f5a623';
-  const map = {
-    novice: '#3ecf8e',
-    easy:   '#3ecf8e',
-    intermediate: '#4a9eff',
-    advanced: '#e05252',
-    expert: '#aaaaaa',
-    freeride: '#cc44cc',
-    unknown: '#888888'
-  };
-  return map[diff] || '#888888';
+// ── DASHBOARD UPDATES ──────────────────────────────────────────────────────
+function updateDashWeather() {
+  const zone = weatherData[2]; // 2600m
+  const c = zone.data.current;
+  const [icon, desc] = wmo(c.weather_code);
+  document.getElementById('dash-temp').textContent = `${Math.round(c.temperature_2m)}°`;
+  document.getElementById('dash-weather-sub').textContent = `${icon} ${desc} · Wind ${Math.round(c.wind_speed_10m)} km/u`;
+  const d = new Date();
+  document.getElementById('weer-updated').textContent = `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
-function difficultyLabel(diff) {
-  const labels = {
-    novice: 'Groen – Makkelijk',
-    easy:   'Groen – Makkelijk',
-    intermediate: 'Blauw – Gemiddeld',
-    advanced: 'Rood – Moeilijk',
-    expert: 'Zwart – Expert',
-    freeride: 'Freeride',
-    unknown: 'Onbekend'
-  };
-  return labels[diff] || diff;
+function updateDashSnow() {
+  document.getElementById('dash-snow').textContent = `${snowData.snowDepthTop} cm`;
+  document.getElementById('dash-snow-sub').textContent =
+    `❄ ${snowData.freshSnow48h > 0 ? snowData.freshSnow48h + ' cm vers (48u)' : 'Geen vers sneeuw'} · ${snowData.pistsOpen}/${snowData.pistsTotal} pistes open`;
 }
 
-function difficultyBadgeStyle(diff, isLift) {
-  if (isLift) return 'background:rgba(245,166,35,0.15);color:#f5a623;border:1px solid rgba(245,166,35,0.4)';
-  const styles = {
-    novice:       'background:rgba(62,207,142,0.15);color:#3ecf8e;border:1px solid rgba(62,207,142,0.4)',
-    easy:         'background:rgba(62,207,142,0.15);color:#3ecf8e;border:1px solid rgba(62,207,142,0.4)',
-    intermediate: 'background:rgba(74,158,255,0.15);color:#4a9eff;border:1px solid rgba(74,158,255,0.4)',
-    advanced:     'background:rgba(224,82,82,0.15);color:#e05252;border:1px solid rgba(224,82,82,0.4)',
-    expert:       'background:rgba(136,136,136,0.15);color:#aaa;border:1px solid rgba(136,136,136,0.4)',
-    freeride:     'background:rgba(204,68,204,0.15);color:#cc44cc;border:1px solid rgba(204,68,204,0.4)'
-  };
-  return styles[diff] || 'background:rgba(255,255,255,0.08);color:#888;border:1px solid #333';
+// ── WEATHER RENDER ─────────────────────────────────────────────────────────
+function setDay(idx, el) {
+  currentDay = idx;
+  document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderWeather();
 }
 
-// ── CROWD SIMULATION ───────────────────────────────────────────────────────
-function getCrowdLevel(featureId) {
-  // Deterministic pseudo-random based on feature ID + time of day
-  const hour = new Date().getHours();
-  const hash = (featureId * 2654435761 + hour * 1000003) % 100;
-  const peakHours = hour >= 10 && hour <= 14;
-  const base = peakHours ? 40 : 20;
-  return Math.min(100, base + (hash % 50));
+function setAlt(idx, el) {
+  currentAlt = idx;
+  document.querySelectorAll('.alt-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderWeather();
 }
 
-function crowdLabel(level) {
-  if (level < 30) return { text: 'Rustig 🟢', class: 'low' };
-  if (level < 65) return { text: 'Normaal 🟡', class: '' };
-  return { text: 'Druk 🔴', class: 'high' };
+function renderWeather() {
+  if (!weatherData) return;
+  const zone = weatherData[currentAlt];
+  const hourly = zone.data.hourly;
+  const container = document.getElementById('timeslots');
+  container.innerHTML = '';
+
+  // Find the offset for the selected day
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  SLOTS.forEach(slot => {
+    // Pick representative hour index for this day+slot
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + currentDay);
+
+    // Find hourly indices matching this day and slot hours
+    const indices = hourly.time.map((t,i) => {
+      const d = new Date(t);
+      const sameDay = d.getDate() === targetDate.getDate() && d.getMonth() === targetDate.getMonth();
+      const inSlot = slot.hours.includes(d.getHours());
+      return sameDay && inSlot ? i : -1;
+    }).filter(i => i >= 0);
+
+    if (!indices.length) return;
+
+    // Average/representative values
+    const temps = indices.map(i => hourly.temperature_2m[i]);
+    const avgTemp = Math.round(temps.reduce((a,b) => a+b,0) / temps.length);
+    const totalPrecip = indices.reduce((s,i) => s + (hourly.precipitation[i] || 0), 0);
+    const totalSnow = indices.reduce((s,i) => s + (hourly.snowfall[i] || 0), 0);
+    const midI = indices[Math.floor(indices.length/2)];
+    const [icon, desc] = wmo(hourly.weather_code[midI]);
+    const wind = Math.round(hourly.wind_speed_10m[midI] || 0);
+
+    const precipStr = totalSnow > 0.1 ? `❄ ${totalSnow.toFixed(1)} cm sneeuw` :
+                      totalPrecip > 0 ? `💧 ${totalPrecip.toFixed(1)} mm regen` : 'Droog';
+
+    const tempColor = avgTemp < -5 ? '#a8d8ff' : avgTemp < 0 ? 'var(--ice)' : avgTemp < 5 ? '#7ec8e3' : '#ffb74d';
+
+    container.innerHTML += `
+      <div class="slot-card">
+        <div class="slot-time">${slot.label}</div>
+        <div>
+          <div style="font-size:28px">${icon}</div>
+          <div class="slot-details">${desc}<br>💨 ${wind} km/u</div>
+        </div>
+        <div></div>
+        <div style="text-align:right">
+          <div class="slot-temp" style="color:${tempColor}">${avgTemp}°</div>
+          <div class="slot-precip">${precipStr}</div>
+        </div>
+      </div>`;
+  });
 }
 
-// ── PISTE LAYER ────────────────────────────────────────────────────────────
-let pisteLayer = null;
-let activeLine = null;
+// ── SNOW RENDER ────────────────────────────────────────────────────────────
+function renderSnow() {
+  if (!snowData) return;
 
-async function loadPistes() {
-  try {
-    const res = await fetch(`${API_BASE}/api/pistes`);
-    const geojson = await res.json();
+  const stats = document.getElementById('snow-stats');
+  stats.innerHTML = `
+    <div class="snow-stat">
+      <div class="snow-stat-label">Open pistes</div>
+      <div class="snow-stat-value" style="color:var(--green)">${snowData.pistsOpen}/${snowData.pistsTotal}</div>
+    </div>
+    <div class="snow-stat">
+      <div class="snow-stat-label">Open liften</div>
+      <div class="snow-stat-value" style="color:var(--green)">${snowData.liftsOpen}/${snowData.liftsTotal}</div>
+    </div>
+    <div class="snow-stat">
+      <div class="snow-stat-label">Vers sneeuw (48u)</div>
+      <div class="snow-stat-value" style="color:var(--ice)">${snowData.freshSnow48h > 0 ? snowData.freshSnow48h + ' cm' : '—'}</div>
+    </div>
+    <div class="snow-stat">
+      <div class="snow-stat-label">Conditie</div>
+      <div class="snow-stat-value" style="font-size:16px;padding-top:4px">${snowData.pistCondition}</div>
+    </div>`;
 
-    if (!geojson.features || geojson.features.length === 0) {
-      console.warn('No piste features returned');
-      hideLoading();
-      return;
-    }
+  const zones = document.getElementById('snow-zones');
+  zones.innerHTML = '';
+  snowData.zones.forEach(z => {
+    const pct = Math.min(100, z.depth / 2);
+    zones.innerHTML += `
+      <div class="snow-zone">
+        <div class="snow-zone-header">
+          <div>
+            <div class="snow-zone-name">${z.label}</div>
+            <div class="snow-zone-alt">${z.alt}m hoogte</div>
+          </div>
+          <div style="text-align:right">
+            <div class="snow-zone-depth">${z.depth}</div>
+            <div class="snow-zone-cm">cm</div>
+          </div>
+        </div>
+        <div class="snow-bar"><div class="snow-bar-fill" style="width:${pct}%"></div></div>
+      </div>`;
+  });
+}
 
+// ── MAP ────────────────────────────────────────────────────────────────────
+function diffColor(diff, isLift) {
+  if (isLift) return '#ff9100';
+  return {novice:'#00e676',easy:'#00e676',intermediate:'#448aff',advanced:'#ff5252',expert:'#aaa',freeride:'#e040fb'}[diff] || '#888';
+}
+
+function initMap() {
+  map = L.map('map', { center: [45.012, 6.130], zoom: 13, zoomControl: true });
+
+  // Base + snow overlay
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'© OpenStreetMap', maxZoom:19, opacity:0.4
+  }).addTo(map);
+  L.tileLayer('https://tiles.opensnowmap.org/pistes/{z}/{x}/{y}.png', {
+    maxZoom:18, opacity:0.85
+  }).addTo(map);
+
+  // Add preset + user markers
+  loadAllMarkers();
+
+  // Tap to set pending location
+  map.on('click', e => { pendingLatLng = e.latlng; });
+
+  // Load piste GeoJSON
+  fetch('/api/pistes').then(r => r.json()).then(geojson => {
+    if (!geojson.features) return;
     pisteLayer = L.geoJSON(geojson, {
-      style: feature => {
-        const { difficulty, isLift } = feature.properties;
-        const color = difficultyColor(difficulty, isLift);
-        const crowd = getCrowdLevel(feature.properties.id);
-        return {
-          color,
-          weight: isLift ? 2 : 3,
-          opacity: 0.85,
-          dashArray: isLift ? '6 4' : null,
-          className: 'piste-line'
-        };
-      },
-      onEachFeature: (feature, layer) => {
-        const p = feature.properties;
-        const crowd = getCrowdLevel(p.id);
-        const crowdInfo = crowdLabel(crowd);
-        const color = difficultyColor(p.difficulty, p.isLift);
-
-        // Hover highlight
-        layer.on('mouseover', function () {
-          if (this !== activeLine) {
-            this.setStyle({ weight: p.isLift ? 4 : 5, opacity: 1 });
-          }
-          map.getContainer().style.cursor = 'pointer';
-        });
-
-        layer.on('mouseout', function () {
-          if (this !== activeLine) {
-            this.setStyle({ weight: p.isLift ? 2 : 3, opacity: 0.85 });
-          }
-          map.getContainer().style.cursor = '';
-        });
-
-        // Click → show detail
-        layer.on('click', function (e) {
+      style: f => ({
+        color: diffColor(f.properties.difficulty, f.properties.isLift),
+        weight: f.properties.isLift ? 2 : 3,
+        opacity: 0.75,
+        dashArray: f.properties.isLift ? '5 4' : null
+      }),
+      onEachFeature: (f, layer) => {
+        const p = f.properties;
+        layer.on('click', e => {
           L.DomEvent.stopPropagation(e);
-
-          if (activeLine && activeLine !== this) {
-            activeLine.setStyle({ weight: activeLine.feature.properties.isLift ? 2 : 3, opacity: 0.85 });
-          }
-          activeLine = this;
-          this.setStyle({ weight: 6, opacity: 1 });
-
-          showPanel(p, crowd, crowdInfo, color);
+          const crowd = getCrowd(p.id);
+          L.popup().setLatLng(e.latlng).setContent(`
+            <div class="popup-inner">
+              <div class="popup-name">${p.name}</div>
+              <span class="popup-badge" style="background:${diffColor(p.difficulty,p.isLift)}22;color:${diffColor(p.difficulty,p.isLift)};border:1px solid ${diffColor(p.difficulty,p.isLift)}44">
+                ${p.isLift ? (p.aerialway||'lift') : (p.difficulty||'?')}
+              </span>
+              <div class="popup-row">Groomed: <span>${p.groomed ? '✅ Ja' : '❌ Nee'}</span></div>
+              <div class="popup-row">Drukte: <span>${crowd}</span></div>
+            </div>`).openOn(map);
         });
       }
-    }).addTo(map);
+    });
+    if (filterState.pistes) pisteLayer.addTo(map);
+    markerLayers.pistes = pisteLayer;
+  }).catch(console.error);
+}
 
-    // Auto fit bounds
-    if (pisteLayer.getBounds().isValid()) {
-      map.fitBounds(pisteLayer.getBounds(), { padding: [40, 40] });
-    }
+function getCrowd(id) {
+  const h = new Date().getHours();
+  const v = ((id * 2654435761 + h * 99991) % 100 + 100) % 100;
+  if (v < 30) return '🟢 Rustig';
+  if (v < 65) return '🟡 Normaal';
+  return '🔴 Druk';
+}
 
-  } catch (err) {
-    console.error('Piste load error:', err);
-  } finally {
-    hideLoading();
+async function loadAllMarkers() {
+  markerLayers.resto.clearLayers();
+  markerLayers.chill.clearLayers();
+
+  const userLocs = await fetch('/api/locations').then(r => r.json()).catch(() => []);
+  const all = [...PRESET_LOCATIONS, ...userLocs];
+
+  all.forEach(loc => {
+    const isResto = loc.type === 'restaurant' || loc.type === 'bar';
+    const emoji = loc.type === 'restaurant' ? '🍽' : loc.type === 'bar' ? '🍺' : '☀️';
+    const color = loc.type === 'restaurant' ? '#ff9100' : loc.type === 'bar' ? '#ff5252' : '#ffd740';
+    const layerKey = isResto ? 'resto' : 'chill';
+    const isUser = loc.addedBy === 'user';
+
+    const icon = L.divIcon({
+      html: `<div class="map-marker" style="background:${color}22;border-color:${color}66;font-size:18px">${emoji}</div>`,
+      className: '', iconSize: [36,36], iconAnchor: [18,18]
+    });
+
+    const marker = L.marker([loc.lat, loc.lng], { icon });
+
+    const deleteBtn = isUser ? `<div style="margin-top:10px"><button onclick="deleteLocation(${loc.id})" style="background:rgba(255,82,82,.15);border:1px solid rgba(255,82,82,.3);color:#ff5252;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:Barlow,sans-serif;font-weight:600">🗑 Verwijder</button></div>` : '';
+
+    marker.bindPopup(`
+      <div class="popup-inner">
+        <div class="popup-name">${loc.name}</div>
+        <span class="popup-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${loc.type}</span>
+        ${loc.description ? `<div class="popup-row" style="margin-top:4px">${loc.description}</div>` : ''}
+        ${loc.hours ? `<div class="popup-row">Open: <span>${loc.hours}</span></div>` : ''}
+        ${loc.sun ? `<div class="popup-row">☀️ Beste zon: <span>${loc.sun}</span></div>` : ''}
+        ${deleteBtn}
+      </div>`);
+
+    markerLayers[layerKey].addLayer(marker);
+  });
+
+  if (map) {
+    if (filterState.resto) markerLayers.resto.addTo(map);
+    if (filterState.chill) markerLayers.chill.addTo(map);
   }
 }
 
-// ── PANEL ──────────────────────────────────────────────────────────────────
-function showPanel(p, crowd, crowdInfo, color) {
-  const panel = document.getElementById('piste-panel');
-  panel.classList.add('visible');
+// ── FILTERS ────────────────────────────────────────────────────────────────
+function toggleFilter(key, el) {
+  filterState[key] = !filterState[key];
+  el.classList.toggle('active', filterState[key]);
 
-  document.getElementById('pp-name').textContent = p.name || (p.isLift ? 'Lift' : 'Piste');
-
-  const badge = document.getElementById('pp-badge');
-  badge.textContent = p.isLift ? (p.aerialway || 'Lift') : difficultyLabel(p.difficulty);
-  badge.style.cssText = difficultyBadgeStyle(p.difficulty, p.isLift);
-
-  document.getElementById('pp-diff').textContent = p.isLift ? '—' : difficultyLabel(p.difficulty);
-  document.getElementById('pp-groomed').textContent = p.groomed ? '✅ Ja' : '❌ Nee';
-  document.getElementById('pp-crowd').textContent = crowdInfo.text;
-}
-
-function closePanel() {
-  document.getElementById('piste-panel').classList.remove('visible');
-  if (activeLine) {
-    activeLine.setStyle({ weight: activeLine.feature.properties.isLift ? 2 : 3, opacity: 0.85 });
-    activeLine = null;
+  if (!map) return;
+  if (key === 'pistes' && markerLayers.pistes) {
+    filterState.pistes ? markerLayers.pistes.addTo(map) : map.removeLayer(markerLayers.pistes);
+  } else if (markerLayers[key]) {
+    filterState[key] ? markerLayers[key].addTo(map) : map.removeLayer(markerLayers[key]);
   }
 }
 
-map.on('click', closePanel);
+// ── ADD LOCATION ───────────────────────────────────────────────────────────
+function openAddSheet() { document.getElementById('add-sheet').classList.add('visible'); }
+function closeAddSheet() { document.getElementById('add-sheet').classList.remove('visible'); }
 
-// ── WEATHER ────────────────────────────────────────────────────────────────
-const WMO_CODES = {
-  0: ['☀️', 'Helder'],
-  1: ['🌤️', 'Grotendeels helder'],
-  2: ['⛅', 'Wisselend bewolkt'],
-  3: ['☁️', 'Bewolkt'],
-  45: ['🌫️', 'Mist'],
-  48: ['🌫️', 'IJsmist'],
-  51: ['🌦️', 'Lichte motregen'],
-  61: ['🌧️', 'Lichte regen'],
-  71: ['🌨️', 'Lichte sneeuwval'],
-  73: ['❄️', 'Matige sneeuwval'],
-  75: ['🌨️', 'Zware sneeuwval'],
-  77: ['🌨️', 'Sneeuwkorrels'],
-  80: ['🌧️', 'Regenbuien'],
-  85: ['❄️', 'Sneeuwbuien'],
-  95: ['⛈️', 'Onweer']
-};
-
-function wmoInfo(code) {
-  const exact = WMO_CODES[code];
-  if (exact) return exact;
-  for (const [k, v] of Object.entries(WMO_CODES)) {
-    if (Math.abs(Number(k) - code) < 3) return v;
-  }
-  return ['🌡️', 'Onbekend'];
+function selectType(el) {
+  document.querySelectorAll('.type-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedType = el.dataset.type;
 }
 
-async function loadWeather() {
-  try {
-    const res = await fetch(`${API_BASE}/api/weather`);
-    const data = await res.json();
-    const c = data.current;
+async function submitLocation() {
+  const name = document.getElementById('loc-name').value.trim();
+  if (!name) { alert('Vul een naam in'); return; }
 
-    const [icon, desc] = wmoInfo(c.weather_code);
-    document.getElementById('temp').textContent = `${Math.round(c.temperature_2m)}°`;
-    document.getElementById('weather-desc').textContent = `${icon} ${desc}`;
-    document.getElementById('weather-feels').textContent = `Voelt als ${Math.round(c.apparent_temperature)}°`;
-    document.getElementById('wind').textContent = `${Math.round(c.wind_speed_10m)} km/u`;
-    document.getElementById('humidity').textContent = `${c.relative_humidity_2m}%`;
-    document.getElementById('snowfall').textContent = c.snowfall > 0 ? `${c.snowfall} cm/u` : '—';
-
-    // 3-day forecast
-    const days = ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'];
-    const forecastEl = document.getElementById('forecast-row');
-    forecastEl.innerHTML = '';
-    for (let i = 0; i < 3; i++) {
-      const dateStr = data.daily.time[i];
-      const dayDate = new Date(dateStr);
-      const dayName = i === 0 ? 'Vandaag' : days[dayDate.getDay()];
-      const maxT = Math.round(data.daily.temperature_2m_max[i]);
-      const minT = Math.round(data.daily.temperature_2m_min[i]);
-      const snow = data.daily.snowfall_sum[i];
-      const [dayIcon] = wmoInfo(0); // simplified
-      forecastEl.innerHTML += `
-        <div class="forecast-day">
-          <div class="forecast-day-name">${dayName}</div>
-          <div class="forecast-icon">${snow > 0 ? '❄️' : '🌤️'}</div>
-          <div class="forecast-temp">${maxT}° / ${minT}°</div>
-          <div class="forecast-snow">${snow > 0 ? `${snow.toFixed(1)}cm sneeuw` : 'Geen sneeuw'}</div>
-        </div>`;
-    }
-  } catch (err) {
-    console.error('Weather error:', err);
+  let lat, lng;
+  if (pendingLatLng) {
+    lat = pendingLatLng.lat;
+    lng = pendingLatLng.lng;
+  } else if (map) {
+    const c = map.getCenter();
+    lat = c.lat; lng = c.lng;
+  } else {
+    lat = 45.012; lng = 6.130;
   }
+
+  const body = {
+    name, type: selectedType,
+    lat, lng,
+    description: document.getElementById('loc-desc').value.trim(),
+    sun: document.getElementById('loc-sun').value.trim(),
+    hours: ''
+  };
+
+  await fetch('/api/locations', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+
+  // Reset form
+  document.getElementById('loc-name').value = '';
+  document.getElementById('loc-desc').value = '';
+  document.getElementById('loc-sun').value = '';
+  pendingLatLng = null;
+  closeAddSheet();
+  loadAllMarkers();
 }
 
-async function loadSnowReport() {
-  try {
-    const res = await fetch(`${API_BASE}/api/snowreport`);
-    const d = await res.json();
-    document.getElementById('snow-top').textContent = `${d.snowDepthTop} cm`;
-    document.getElementById('snow-bot').textContent = `${d.snowDepthBottom} cm`;
-    document.getElementById('bar-top').style.width = `${Math.min(100, d.snowDepthTop / 3)}%`;
-    document.getElementById('bar-bot').style.width = `${Math.min(100, d.snowDepthBottom / 1.5)}%`;
-    document.getElementById('fresh-snow').textContent = d.freshSnow48h > 0 ? `❄️ ${d.freshSnow48h} cm` : 'Geen vers sneeuw';
-    document.getElementById('pist-cond').textContent = d.pistCondition;
-    document.getElementById('pistes-open').textContent = `${d.pistsOpen} / ${d.pistsTotal}`;
-    document.getElementById('lifts-open').textContent = `${d.liftsOpen} / ${d.liftsTotal}`;
-    document.getElementById('km-open').textContent = '220 km';
-    document.getElementById('snowdepth').textContent = `${d.snowDepthTop} cm (top)`;
-  } catch (err) {
-    console.error('Snowreport error:', err);
-  }
-}
-
-// ── LOADING ────────────────────────────────────────────────────────────────
-function hideLoading() {
-  const overlay = document.getElementById('loading-overlay');
-  overlay.classList.add('hidden');
-  setTimeout(() => overlay.remove(), 600);
+async function deleteLocation(id) {
+  await fetch(`/api/locations/${id}`, { method:'DELETE' });
+  map.closePopup();
+  loadAllMarkers();
 }
 
 // ── BOOT ───────────────────────────────────────────────────────────────────
-Promise.all([
-  loadWeather(),
-  loadSnowReport(),
-  loadPistes()
-]);
-
-// Refresh weather every 10 min
-setInterval(loadWeather, 10 * 60 * 1000);
+loadAll();
 </script>
 </body>
 </html>
