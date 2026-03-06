@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>Les 2 Alpes — Pistekaart</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #070c14;
+  --surface: #0f1924;
+  --border: #1e2e42;
+  --ice: #00d4ff;
+  --snow: #f0f6ff;
+  --muted: #4a6680;
+  --nav-h: 52px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+html,body { height:100%; overflow:hidden; background:var(--bg); font-family:'Barlow',sans-serif; color:var(--snow); touch-action:none; }
+
+/* ── TOP BAR ── */
+#topbar {
+  height:var(--nav-h); background:rgba(7,12,20,.95); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; padding:0 14px; gap:12px;
+  backdrop-filter:blur(10px); z-index:100; position:relative; flex-shrink:0;
+}
+#back-btn {
+  background:rgba(255,255,255,.06); border:1px solid var(--border); border-radius:8px;
+  color:var(--snow); font-family:'Barlow',sans-serif; font-size:14px; font-weight:600;
+  padding:7px 12px; cursor:pointer;
+}
+#back-btn:active { opacity:.7; }
+.topbar-title { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:800; letter-spacing:1px; flex:1; }
+#zoom-hint { font-size:11px; color:var(--muted); white-space:nowrap; }
+
+/* ── MAP CONTAINER ── */
+#map-wrap {
+  position:relative;
+  flex:1;
+  overflow:hidden;
+  width:100%;
+  height:calc(100vh - var(--nav-h));
+  background:#0a1628;
+  cursor:grab;
+}
+#map-wrap:active { cursor:grabbing; }
+
+/* The pannable/zoomable stage */
+#stage {
+  position:absolute;
+  transform-origin:0 0;
+  will-change:transform;
+}
+
+#piste-img {
+  display:block;
+  width:3000px;
+  height:1490px;
+  pointer-events:none;
+}
+
+/* SVG overlay — same size as image */
+#piste-svg {
+  position:absolute;
+  top:0; left:0;
+  width:3000px;
+  height:1490px;
+  overflow:visible;
+}
+
+/* ── SVG PISTE STYLES ── */
+.piste-hit {
+  fill:none;
+  stroke:transparent;
+  stroke-width:28;
+  cursor:pointer;
+  transition:stroke .15s;
+}
+.piste-vis {
+  fill:none;
+  stroke-width:5;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .2s;
+}
+
+/* piste colors */
+.c-green  { stroke:#00e676; }
+.c-blue   { stroke:#448aff; }
+.c-red    { stroke:#ff5252; }
+.c-black  { stroke:#cccccc; }
+.c-lift   { stroke:#ff9100; stroke-dasharray:10 6; }
+.c-gondola { stroke:#ffcc00; stroke-dasharray:none; stroke-width:6; }
+
+/* hover glow */
+.piste-group:hover .piste-vis,
+.piste-group.active .piste-vis { opacity:1; }
+.piste-group.active .piste-vis { stroke-width:7; filter:drop-shadow(0 0 6px currentColor); }
+
+/* sector labels in SVG */
+.sector-label {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:28px;
+  font-weight:800;
+  fill:rgba(255,255,255,0);
+  pointer-events:none;
+}
+
+/* ── ROUTE PANEL ── */
+#route-panel {
+  position:fixed;
+  bottom:0; left:0; right:0;
+  background:rgba(10,15,26,.97);
+  border-top:1px solid var(--border);
+  border-radius:18px 18px 0 0;
+  backdrop-filter:blur(20px);
+  padding:10px 18px calc(18px + var(--safe-bottom));
+  z-index:500;
+  transform:translateY(100%);
+  transition:transform .3s ease;
+  max-height:65vh;
+  overflow-y:auto;
+}
+#route-panel.open { transform:translateY(0); }
+#rp-handle { width:32px; height:3px; background:var(--border); border-radius:2px; margin:0 auto 14px; }
+#rp-close { position:absolute; top:12px; right:16px; background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; padding:4px 8px; }
+#rp-close:hover { color:var(--snow); }
+
+.rp-name { font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:800; line-height:1; padding-right:40px; }
+.rp-badges { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 14px; }
+.rp-badge { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+
+.rp-section-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:8px; }
+.route-steps { display:flex; flex-direction:column; gap:7px; margin-bottom:14px; }
+.route-step { display:flex; align-items:flex-start; gap:10px; background:rgba(255,255,255,.04); border-radius:10px; padding:10px 12px; }
+.route-step-icon { font-size:20px; flex-shrink:0; margin-top:1px; }
+.route-step-text strong { color:var(--snow); font-weight:600; display:block; font-size:14px; }
+.route-step-text span { color:var(--muted); font-size:12px; line-height:1.4; }
+
+.rp-meta { display:flex; gap:20px; padding-top:12px; border-top:1px solid var(--border); }
+.rp-meta-item { font-size:12px; color:var(--muted); }
+.rp-meta-item strong { display:block; font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:700; color:var(--snow); }
+
+/* ── LEGEND ── */
+#legend {
+  position:fixed; top:calc(var(--nav-h) + 10px); right:10px;
+  background:rgba(10,15,26,.9); border:1px solid var(--border);
+  border-radius:12px; padding:10px 12px; z-index:200;
+  backdrop-filter:blur(10px); font-size:11px;
+}
+.leg-row { display:flex; align-items:center; gap:7px; margin-bottom:5px; color:var(--muted); }
+.leg-row:last-child { margin-bottom:0; }
+.leg-line { width:20px; height:3px; border-radius:2px; flex-shrink:0; }
+.leg-dash { width:20px; height:3px; border-radius:2px; flex-shrink:0; background:repeating-linear-gradient(90deg,#ff9100 0,#ff9100 6px,transparent 6px,transparent 12px); }
+</style>
+</head>
+<body style="display:flex;flex-direction:column;height:100%">
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <button id="back-btn" onclick="history.back()">← Terug</button>
+  <div class="topbar-title">🎿 Les 2 Alpes</div>
+  <div id="zoom-hint">Pinch/scroll = zoom</div>
+</div>
+
+<!-- MAP -->
+<div id="map-wrap">
+  <div id="stage">
+    <img id="piste-img" src="/img/pistemap.jpg" draggable="false" alt="Pistekaart Les 2 Alpes"/>
+
+    <!-- SVG OVERLAY — traced pistes & lifts -->
+    <svg id="piste-svg" viewBox="0 0 3000 1490" xmlns="http://www.w3.org/2000/svg">
+
+      <!-- ══════════════════════════════════════
+           LIFTEN / GONDOLAS
+      ══════════════════════════════════════ -->
+
+      <!-- Jandri Express 1 (dorp → Toura 2600m) -->
+      <g class="piste-group" onclick="showPanel('jandri1')">
+        <path class="piste-hit" d="M 2020,1270 L 1850,1050 L 1650,780 L 1430,560 L 1360,430"/>
+        <path class="piste-vis c-gondola" d="M 2020,1270 L 1850,1050 L 1650,780 L 1430,560 L 1360,430"/>
+      </g>
+
+      <!-- Jandri Express 2 (Toura → top 3200m) -->
+      <g class="piste-group" onclick="showPanel('jandri2')">
+        <path class="piste-hit" d="M 1360,430 L 1200,340 L 1000,240 L 830,185"/>
+        <path class="piste-vis c-gondola" d="M 1360,430 L 1200,340 L 1000,240 L 830,185"/>
+      </g>
+
+      <!-- Diable gondola (dorp → Diable 2400m) -->
+      <g class="piste-group" onclick="showPanel('diable-lift')">
+        <path class="piste-hit" d="M 2100,1250 L 2130,1050 L 2150,820 L 2160,620 L 2150,560"/>
+        <path class="piste-vis c-gondola" d="M 2100,1250 L 2130,1050 L 2150,820 L 2160,620 L 2150,560"/>
+      </g>
+
+      <!-- Super Venosc (dorp → Vallée Blanche) -->
+      <g class="piste-group" onclick="showPanel('supervenosc')">
+        <path class="piste-hit" d="M 2320,1270 L 2520,1100 L 2700,900 L 2820,760"/>
+        <path class="piste-vis c-gondola" d="M 2320,1270 L 2520,1100 L 2700,900 L 2820,760"/>
+      </g>
+
+      <!-- Bellecombes stoeltjeslift -->
+      <g class="piste-group" onclick="showPanel('bellecombes')">
+        <path class="piste-hit" d="M 2220,1210 L 2280,1050 L 2340,880 L 2360,820"/>
+        <path class="piste-vis c-lift" d="M 2220,1210 L 2280,1050 L 2340,880 L 2360,820"/>
+      </g>
+
+      <!-- Crête stoeltjeslift -->
+      <g class="piste-group" onclick="showPanel('crete-lift')">
+        <path class="piste-hit" d="M 2360,820 L 2420,720 L 2460,640 L 2500,580"/>
+        <path class="piste-vis c-lift" d="M 2360,820 L 2420,720 L 2460,640 L 2500,580"/>
+      </g>
+
+      <!-- Signal lift (glacier area) -->
+      <g class="piste-group" onclick="showPanel('signal-lift')">
+        <path class="piste-hit" d="M 830,185 L 650,230 L 490,310 L 380,390"/>
+        <path class="piste-vis c-lift" d="M 830,185 L 650,230 L 490,310 L 380,390"/>
+      </g>
+
+      <!-- ══════════════════════════════════════
+           PISTES — GROEN (makkelijk)
+      ══════════════════════════════════════ -->
+
+      <!-- Puy Salié 1 — gletsjer groen -->
+      <g class="piste-group" onclick="showPanel('puy-salie-1')">
+        <path class="piste-hit" d="M 830,185 L 900,280 L 950,380 L 980,480 L 1000,580 L 1050,680 L 1100,760 L 1150,840 L 1200,920 L 1250,1000 L 1300,1080 L 1340,1150 L 1360,1220"/>
+        <path class="piste-vis c-green" d="M 830,185 L 900,280 L 950,380 L 980,480 L 1000,580 L 1050,680 L 1100,760 L 1150,840 L 1200,920 L 1250,1000 L 1300,1080 L 1340,1150 L 1360,1220"/>
+      </g>
+
+      <!-- Jandri 4 — blauw/groen aankomstpiste -->
+      <g class="piste-group" onclick="showPanel('jandri4')">
+        <path class="piste-hit" d="M 1360,430 L 1420,550 L 1500,680 L 1580,820 L 1650,960 L 1720,1080 L 1780,1180 L 1820,1260"/>
+        <path class="piste-vis c-green" d="M 1360,430 L 1420,550 L 1500,680 L 1580,820 L 1650,960 L 1720,1080 L 1780,1180 L 1820,1260"/>
+      </g>
+
+      <!-- Easy Park entrance -->
+      <g class="piste-group" onclick="showPanel('easy-park')">
+        <path class="piste-hit" d="M 1360,430 L 1280,520 L 1200,640 L 1150,750 L 1100,860 L 1070,960 L 1050,1060 L 1040,1150"/>
+        <path class="piste-vis c-green" d="M 1360,430 L 1280,520 L 1200,640 L 1150,750 L 1100,860 L 1070,960 L 1050,1060 L 1040,1150"/>
+      </g>
+
+      <!-- ══════════════════════════════════════
+           PISTES — BLAUW (gemiddeld)
+      ══════════════════════════════════════ -->
+
+      <!-- Toura piste (blauw, breed) -->
+      <g class="piste-group" onclick="showPanel('toura')">
+        <path class="piste-hit" d="M 1360,430 L 1310,530 L 1280,650 L 1260,780 L 1240,900 L 1220,1020 L 1200,1120 L 1180,1220"/>
+        <path class="piste-vis c-blue" d="M 1360,430 L 1310,530 L 1280,650 L 1260,780 L 1240,900 L 1220,1020 L 1200,1120 L 1180,1220"/>
+      </g>
+
+      <!-- Fée 2 (blauw) -->
+      <g class="piste-group" onclick="showPanel('fee2')">
+        <path class="piste-hit" d="M 960,740 L 1000,860 L 1040,980 L 1080,1090 L 1100,1180 L 1110,1250"/>
+        <path class="piste-vis c-blue" d="M 960,740 L 1000,860 L 1040,980 L 1080,1090 L 1100,1180 L 1110,1250"/>
+      </g>
+
+      <!-- Glacier 1 — blauw op gletsjer -->
+      <g class="piste-group" onclick="showPanel('glacier1')">
+        <path class="piste-hit" d="M 1560,390 L 1500,300 L 1420,230 L 1320,180 L 1200,160 L 1050,170 L 900,185"/>
+        <path class="piste-vis c-blue" d="M 1560,390 L 1500,300 L 1420,230 L 1320,180 L 1200,160 L 1050,170 L 900,185"/>
+      </g>
+
+      <!-- Lauze 1 (gletsjer blauw) -->
+      <g class="piste-group" onclick="showPanel('lauze1')">
+        <path class="piste-hit" d="M 580,165 L 520,220 L 460,300 L 420,390 L 400,480 L 390,570"/>
+        <path class="piste-vis c-blue" d="M 580,165 L 520,220 L 460,300 L 420,390 L 400,480 L 390,570"/>
+      </g>
+
+      <!-- Bellecombes blauw -->
+      <g class="piste-group" onclick="showPanel('bellecombes-piste')">
+        <path class="piste-hit" d="M 2360,820 L 2320,920 L 2280,1030 L 2240,1140 L 2220,1220"/>
+        <path class="piste-vis c-blue" d="M 2360,820 L 2320,920 L 2280,1030 L 2240,1140 L 2220,1220"/>
+      </g>
+
+      <!-- Diable blauw (lange afdaling) -->
+      <g class="piste-group" onclick="showPanel('diable-blue')">
+        <path class="piste-hit" d="M 2150,560 L 2180,680 L 2200,800 L 2210,920 L 2200,1040 L 2180,1150 L 2160,1240"/>
+        <path class="piste-vis c-blue" d="M 2150,560 L 2180,680 L 2200,800 L 2210,920 L 2200,1040 L 2180,1150 L 2160,1240"/>
+      </g>
+
+      <!-- Vallée Blanche blauw -->
+      <g class="piste-group" onclick="showPanel('vallee-blanche-blue')">
+        <path class="piste-hit" d="M 2820,760 L 2840,860 L 2860,960 L 2870,1060 L 2860,1160 L 2830,1260"/>
+        <path class="piste-vis c-blue" d="M 2820,760 L 2840,860 L 2860,960 L 2870,1060 L 2860,1160 L 2830,1260"/>
+      </g>
+
+      <!-- ══════════════════════════════════════
+           PISTES — ROOD (moeilijk)
+      ══════════════════════════════════════ -->
+
+      <!-- Fée 3 (rood) -->
+      <g class="piste-group" onclick="showPanel('fee3')">
+        <path class="piste-hit" d="M 960,740 L 920,820 L 880,930 L 860,1040 L 850,1140 L 840,1230"/>
+        <path class="piste-vis c-red" d="M 960,740 L 920,820 L 880,930 L 860,1040 L 850,1140 L 840,1230"/>
+      </g>
+
+      <!-- Fée 4 (rood) -->
+      <g class="piste-group" onclick="showPanel('fee4')">
+        <path class="piste-hit" d="M 960,740 L 1010,800 L 1040,900 L 1060,1010 L 1060,1120 L 1070,1220"/>
+        <path class="piste-vis c-red" d="M 960,740 L 1010,800 L 1040,900 L 1060,1010 L 1060,1120 L 1070,1220"/>
+      </g>
+
+      <!-- Signal 3 (rood, gletsjer) -->
+      <g class="piste-group" onclick="showPanel('signal3')">
+        <path class="piste-hit" d="M 830,185 L 760,260 L 700,360 L 660,470 L 640,580 L 630,690 L 620,800 L 610,900"/>
+        <path class="piste-vis c-red" d="M 830,185 L 760,260 L 700,360 L 660,470 L 640,580 L 630,690 L 620,800 L 610,900"/>
+      </g>
+
+      <!-- Crête rouge -->
+      <g class="piste-group" onclick="showPanel('crete-rouge')">
+        <path class="piste-hit" d="M 2500,580 L 2480,680 L 2450,780 L 2420,880 L 2390,980 L 2360,1080 L 2330,1180 L 2310,1260"/>
+        <path class="piste-vis c-red" d="M 2500,580 L 2480,680 L 2450,780 L 2420,880 L 2390,980 L 2360,1080 L 2330,1180 L 2310,1260"/>
+      </g>
+
+      <!-- Diable rouge (afdaling) -->
+      <g class="piste-group" onclick="showPanel('diable-rouge')">
+        <path class="piste-hit" d="M 2150,560 L 2100,640 L 2060,740 L 2040,860 L 2030,980 L 2040,1100 L 2060,1210"/>
+        <path class="piste-vis c-red" d="M 2150,560 L 2100,640 L 2060,740 L 2040,860 L 2030,980 L 2040,1100 L 2060,1210"/>
+      </g>
+
+      <!-- Pierre Grosse (rood, lange afdaling) -->
+      <g class="piste-group" onclick="showPanel('pierre-grosse')">
+        <path class="piste-hit" d="M 1560,390 L 1600,500 L 1640,620 L 1680,760 L 1710,900 L 1740,1040 L 1760,1160 L 1780,1260"/>
+        <path class="piste-vis c-red" d="M 1560,390 L 1600,500 L 1640,620 L 1680,760 L 1710,900 L 1740,1040 L 1760,1160 L 1780,1260"/>
+      </g>
+
+      <!-- Bonne Etoile rood -->
+      <g class="piste-group" onclick="showPanel('bonne-etoile')">
+        <path class="piste-hit" d="M 2360,820 L 2410,920 L 2450,1020 L 2470,1120 L 2460,1220"/>
+        <path class="piste-vis c-red" d="M 2360,820 L 2410,920 L 2450,1020 L 2470,1120 L 2460,1220"/>
+      </g>
+
+      <!-- ══════════════════════════════════════
+           PISTES — ZWART (expert)
+      ══════════════════════════════════════ -->
+
+      <!-- La Grave richtingbord / Pierre Grosse zwart -->
+      <g class="piste-group" onclick="showPanel('pierre-grosse-black')">
+        <path class="piste-hit" d="M 1560,390 L 1520,470 L 1480,570 L 1450,680 L 1420,800 L 1400,930 L 1390,1060 L 1380,1180"/>
+        <path class="piste-vis c-black" d="M 1560,390 L 1520,470 L 1480,570 L 1450,680 L 1420,800 L 1400,930 L 1390,1060 L 1380,1180"/>
+      </g>
+
+      <!-- Signal 1 (zwart, steep gletsjer) -->
+      <g class="piste-group" onclick="showPanel('signal1')">
+        <path class="piste-hit" d="M 580,165 L 550,250 L 510,360 L 480,480 L 460,600 L 450,720 L 440,840 L 430,950"/>
+        <path class="piste-vis c-black" d="M 580,165 L 550,250 L 510,360 L 480,480 L 460,600 L 450,720 L 440,840 L 430,950"/>
+      </g>
+
+      <!-- Lauze 2 (zwart) -->
+      <g class="piste-group" onclick="showPanel('lauze2')">
+        <path class="piste-hit" d="M 580,165 L 530,200 L 470,260 L 420,340 L 390,430 L 370,530 L 360,640"/>
+        <path class="piste-vis c-black" d="M 580,165 L 530,200 L 470,260 L 420,340 L 390,430 L 370,530 L 360,640"/>
+      </g>
+
+      <!-- Diable zwart -->
+      <g class="piste-group" onclick="showPanel('diable-black')">
+        <path class="piste-hit" d="M 2150,560 L 2090,620 L 2050,720 L 2020,840 L 2000,970 L 1990,1100 L 2000,1220"/>
+        <path class="piste-vis c-black" d="M 2150,560 L 2090,620 L 2050,720 L 2020,840 L 2000,970 L 1990,1100 L 2000,1220"/>
+      </g>
+
+    </svg>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div id="legend">
+  <div class="leg-row"><div class="leg-line" style="background:#00e676"></div>Groen</div>
+  <div class="leg-row"><div class="leg-line" style="background:#448aff"></div>Blauw</div>
+  <div class="leg-row"><div class="leg-line" style="background:#ff5252"></div>Rood</div>
+  <div class="leg-row"><div class="leg-line" style="background:#ccc"></div>Zwart</div>
+  <div class="leg-row"><div class="leg-dash"></div>Lift</div>
+  <div class="leg-row"><div class="leg-line" style="background:#ffcc00"></div>Gondola</div>
+</div>
+
+<!-- ROUTE PANEL -->
+<div id="route-panel">
+  <div id="rp-handle"></div>
+  <button id="rp-close" onclick="closePanel()">✕</button>
+  <div id="rp-content"></div>
+</div>
+
+<script>
+// ── PISTE DATA ─────────────────────────────────────────────────────────────
+const PISTES = {
+  // LIFTEN
+  'jandri1': {
+    name:'Jandri Express 1', type:'lift', color:'#ffcc00',
+    info:'Hoofdgondola van het dorp naar Toura op 2600m. De ruggengraat van het skigebied.',
+    zone:'dorp→hoog', time:'~12 min', lifts:1,
+    steps:[
+      {i:'🥾', t:'Loop vanuit Les Aroles', s:'2 minuten lopen naar de Jandri Express gondola'},
+      {i:'🚡', t:'Jandri Express 1', s:'Naar Toura station op 2600m · 12 min'}
+    ]
+  },
+  'jandri2': {
+    name:'Jandri Express 2', type:'lift', color:'#ffcc00',
+    info:'Gondola van Toura naar het top-station op 3200m.',
+    zone:'2600m→3200m', time:'+10 min', lifts:1,
+    steps:[
+      {i:'🚡', t:'Jandri Express 1', s:'Eerst naar Toura · 12 min'},
+      {i:'🚡', t:'Jandri Express 2', s:'Door naar 3200m top · 10 min'}
+    ]
+  },
+  'diable-lift': {
+    name:'Diable gondola', type:'lift', color:'#ffcc00',
+    info:'Gondola van het dorp naar het Diable-sector op 2400m. Mooie route via de oostflank.',
+    zone:'dorp→Diable', time:'~10 min', lifts:1,
+    steps:[
+      {i:'🥾', t:'Loop naar Diable gondola', s:'3 minuten lopen vanuit Les Aroles'},
+      {i:'🚡', t:'Diable gondola', s:'Rechtstreeks naar 2400m · 10 min'}
+    ]
+  },
+  'supervenosc': {
+    name:'Super-Venosc kabelbaan', type:'lift', color:'#ffcc00',
+    info:'Kabelbaan aan de oostkant naar Vallée Blanche sector. Rustiger, mooi uitzicht.',
+    zone:'dorp→Vallée Blanche', time:'~15 min', lifts:1,
+    steps:[
+      {i:'🥾', t:'Loop naar Super-Venosc', s:'5 minuten lopen, andere kant van dorp'},
+      {i:'🚡', t:'Super-Venosc kabelbaan', s:'Naar Vallée Blanche op 2100m · 10 min'}
+    ]
+  },
+  'bellecombes': {
+    name:'Bellecombes stoeltjeslift', type:'lift', color:'#ff9100',
+    info:'Stoeltjeslift in de Crêtes-sector.',
+    zone:'1800m→Crêtes', time:'~18 min', lifts:2,
+    steps:[
+      {i:'🚡', t:'Jandri Express 1 of Diable', s:'Eerst naar het middengebied'},
+      {i:'🪑', t:'Bellecombes stoeltjeslift', s:'Naar Crêtes sector · 8 min'}
+    ]
+  },
+  'crete-lift': {
+    name:'Crête stoeltjeslift', type:'lift', color:'#ff9100',
+    info:'Stoeltjeslift naar de top van de Crêtes-sector op ~2500m.',
+    zone:'Crêtes', time:'~22 min', lifts:3,
+    steps:[
+      {i:'🚡', t:'Jandri Express 1', s:'Naar Toura · 12 min'},
+      {i:'🪑', t:'Bellecombes lift', s:'Richting Crêtes · 5 min'},
+      {i:'🪑', t:'Crête lift', s:'Naar top Crêtes · 5 min'}
+    ]
+  },
+  'signal-lift': {
+    name:'Signal stoeltjeslift', type:'lift', color:'#ff9100',
+    info:'Stoeltjeslift op het gletsjer voor de Signal-pistes.',
+    zone:'Gletsjer', time:'~35 min', lifts:3,
+    steps:[
+      {i:'🚡', t:'Jandri Express 1+2', s:'Naar 3200m top · 22 min'},
+      {i:'🪑', t:'Signal lift', s:'Op het gletsjer · 8 min'}
+    ]
+  },
+
+  // GROENE PISTES
+  'puy-salie-1': {
+    name:'Puy Salié 1', type:'green', color:'#00e676',
+    info:'Brede groene gletsjer-piste. Ideaal voor beginners op hoge hoogte (3000-3400m). Uitzonderlijk uitzicht.',
+    zone:'Gletsjer 3400m', time:'~35 min', lifts:3,
+    steps:[
+      {i:'🥾', t:'Loop naar Jandri Express', s:'2 min vanuit Les Aroles'},
+      {i:'🚡', t:'Jandri Express 1+2', s:'Naar 3200m · 22 min'},
+      {i:'🛤', t:'Funiculaire sous-glaciaire', s:'Onder het ijs naar 3400m · 8 min'},
+      {i:'🎿', t:'Puy Salié 1', s:'Brede groene afdaling over de gletsjer'}
+    ]
+  },
+  'jandri4': {
+    name:'Jandri 4', type:'green', color:'#00e676',
+    info:'Makkelijke groene piste langs de Jandri gondola. Ideaal voor beginners die net van de gondola komen.',
+    zone:'2600m→dorp', time:'~20 min', lifts:2,
+    steps:[
+      {i:'🥾', t:'Loop naar Jandri Express', s:'2 min vanuit Les Aroles'},
+      {i:'🚡', t:'Jandri Express 1', s:'Naar Toura 2600m · 12 min'},
+      {i:'🎿', t:'Jandri 4', s:'Groene afdaling terug naar het dorp'}
+    ]
+  },
+  'easy-park': {
+    name:'Easy Park / Envers', type:'green', color:'#00e676',
+    info:'Vlakke groene zone perfect voor beginners. Skilessen vinden hier grotendeels plaats.',
+    zone:'Envers sector', time:'~20 min', lifts:2,
+    steps:[
+      {i:'🚡', t:'Jandri Express 1', s:'Naar Toura · 12 min'},
+      {i:'🎿', t:'Easy Park zone', s:'Brede groene afdaling, perfect voor oefenen'}
+    ]
+  },
+
+  // BLAUWE PISTES
+  'toura': {
+    name:'Toura piste', type:'blue', color:'#448aff',
+    info:'Klassieke blauwe breed afdaling vanuit het Toura-sector. Een van de populairste pistes van het resort.',
+    zone:'Toura 2600m', time:'~20 min', lifts:2,
+    steps:[
+      {i:'🥾', t:'Naar Jandri Express', s:'2 min lopen'},
+      {i:'🚡', t:'Jandri Express 1', s:'Naar Toura 2600m · 12 min'},
+      {i:'🎿', t:'Toura blauw', s:'Brede comfortabele afdaling richting dorp'}
+    ]
+  },
+  'fee2': {
+    name:'Fée 2', type:'blue', color:'#448aff',
+    info:'Blauwe piste in de La Fée sector (2440m). Rustige kant, mooi terras bij La Fée hut.',
+    zone:'La Fée 2200m', time:'~25 min', lifts:2,
+    steps:[
+      {i:'🚡', t:'Jandri Express 1', s:'Naar Toura · 12 min'},
+      {i:'🪑', t:'Fée stoeltjeslift', s:'Naar La Fée sector · 8 min'},
+      {i:'🎿', t:'Fée 2 blauw', s:'Rustige afdaling, stop bij La Fée hut'}
+    ]
+  },
+  'glacier1': {
+    name:'Glacier 1', type:'blue', color:'#448aff',
+    info:'Brede blauwe gletsjer-piste op 3200m. Perfecte sneeuw het hele seizoen dankzij de hoogte.',
+    zone:'Gletsjer 3200m', time:'~25 min', lifts:2,
+    steps:[
+      {i:'🚡', t:'Jandri Express 1+2', s:'Naar 3200m top · 22 min'},
+      {i:'🎿', t:'Glacier 1 blauw', s:'Gletsjer blauw, consistente sneeuw'}
+    ]
+  },
+  'lauze1': {
+    name:'Lauze 1', type:'blue', color:'#448aff',
+    info:'Blauwe piste op de westflank van de gletsjer. Mooier uitzicht richting Dôme de la Lauze.',
+    zone:'Gletsjer 3400m', time:'~35 min', lifts:3,
+    steps:[
+      {i:'🚡', t:'Jandri Express 1+2 + Funiculaire', s:'Naar 3400m · 35 min'},
+      {i:'🎿', t:'Lauze 1', s:'Gletsjerblauwe afdaling'}
+    ]
+  },
+  'bellecombes-piste': {
+    name:'Bellecombes blauw', type:'blue', color:'#448aff',
+    info:'Makkelijke blauwe terugkeer van de Crêtes sector naar het dorp.',
+    zone:'Crêtes→dorp', time:'~18 min', lifts:2,
+    steps:[
+      {i:'🚡', t:'Diable gondola', s:'Naar Diable sector · 10 min'},
+      {i:'🎿', t:'Bellecombes blauw', s:'Rustige afdaling via Crêtes terug naar dorp'}
+    ]
+  },
+  'diable-blue': {
+    name:'Diable blauw', type:'blue', color:'#448aff',
+    info:'Lange blauwe afdaling in de Diable sector. Mooie oriëntatie naar het oosten.',
+    zone:'Diable 2400m', time:'~13 min', lifts:2,
+    steps:[
+      {i:'🚡', t:'Diable gondola', s:'Naar 2400m · 10 min'},
+      {i:'🎿', t:'Diable blauw', s:'Lange afdaling terug naar het dorp'}
+    ]
+  },
+  'vallee-blanche-blue': {
+    name:'Vallée Blanche', type:'blue', color:'#448aff',
+    info:'Rustige piste in de Vallée Blanche sector. Weinig drukte, mooi uitzicht richting Muzelle.',
+    zone:'Vallée Blanche', time:'~18 min', lifts:2,
+    steps:[
+      {i:'🥾', t:'Loop naar Super-Venosc', s:'5 min lopen vanuit Les Aroles'},
+      {i:'🚡', t:'Super-Venosc kabelbaan', s:'Naar Vallée Blanche · 12 min'},
+      {i:'🎿', t:'Vallée Blanche blauw', s:'Rustige piste, bijna nooit druk'}
+    ]
+  },
+
+  // RODE PISTES
+  'fee3': {
+    name:'Fée 3', type:'red', color:'#ff5252',
+    info:'Rode piste in de La Fée sector. Goed van techniek naar La Fée hut skiën.',
+    zone:'La Fée 2440m', time:'~25 min', lifts:2,
+    steps:[
+      {i:'🚡', t:'Jandri Express 1', s:'Naar Toura · 12 min'},
+      {i:'🪑', t:'Fée lift', s:'Naar La Fée · 8 min'},
+      {i:'🎿', t:'Fée 3 rood', s:'Steile rode afdaling'}
+    ]
+  },
+  'fee4': {
+    name:'Fée 4', type:'red', color:'#ff5252',
+    info:'Technische rode in de Fée sector. Naast Fée 3 maar iets lastiger.',
+    zone:'La Fée 2440m', time:'~25 min', lifts:2,
+    steps:[
+      {i:'🚡', t:'Jandri Express 1', s:'Naar Toura · 12 min'},
+      {i:'🪑', t:'Fée lift', s:'Naar La Fée · 8 min'},
+      {i:'🎿', t:'Fée 4 rood', s:'Technische afdaling'}
+    ]
+  },
+  'signal3': {
+    name:'Signal 3', type:'red', color:'#ff5252',
+    info:'Rode gletsjer-piste op de Signal sector (3000m+). Steile gedeelten, perfecte sneeuw.',
+    zone:'Gletsjer 3200m', time:'~30 min', lifts:3,
+    steps:[
+      {i:'🚡', t:'Jandri Express 1+2', s:'Naar top · 22 min'},
+      {i:'🪑', t:'Signal lift', s:'Op het gletsjer · 8 min'},
+      {i:'🎿', t:'Signal 3 rood', s:'Rode gletsjer-afdaling'}
+    ]
+  },
+  'crete-rouge': {
+    name:'Crête rood', type:'red', color:'#ff5252',
+    info:'Rode afdaling van de Crêtes sector. Consistente helling, mooie piste.',
+    zone:'Crêtes 2100m', time:'~20 min', lifts:2,
+    steps:[
+      {i:'🚡', t:'Diable gondola', s:'Naar Diable · 10 min'},
+      {i:'🎿', t:'Crête rood', s:'Afdaling via Crêtes naar het dorp'}
+    ]
+  },
+  'diable-rouge': {
+    name:'Diable rood', type:'red', color:'#ff5252',
+    info:'Klassieke rode in de Diable sector. Gevarieerde helling, goed geprepareerd.',
+    zone:'Diable 2400m', time:'~13 min', lifts:2,
+    steps:[
+      {i:'🚡', t:'Diable gondola', s:'Naar 2400m · 10 min'},
+      {i:'🎿', t:'Diable rood', s:'Technische rode afdaling'}
+    ]
+  },
+  'pierre-grosse': {
+    name:'Pierre Grosse', type:'red', color:'#ff5252',
+    info:'Lange rode afdaling vanuit het hoge gebied. Een van de langste afdalingen.',
+    zone:'Toura→dorp', time:'~22 min', lifts:2,
+    steps:[
+      {i:'🚡', t:'Jandri Express 1', s:'Naar Toura · 12 min'},
+      {i:'🎿', t:'Pierre Grosse rood', s:'Lange afdaling helemaal terug naar het dorp'}
+    ]
+  },
+  'bonne-etoile': {
+    name:'Bonne Étoile', type:'red', color:'#ff5252',
+    info:'Rode piste in de Crêtes sector op de oostflank.',
+    zone:'Crêtes 2100m', time:'~20 min', lifts:2,
+    steps:[
+      {i:'🚡', t:'Diable gondola', s:'Naar Diable · 10 min'},
+      {i:'🎿', t:'Bonne Étoile rood', s:'Zonnige oostflank afdaling'}
+    ]
+  },
+
+  // ZWARTE PISTES
+  'pierre-grosse-black': {
+    name:'Pierre Grosse zwart', type:'black', color:'#cccccc',
+    info:'Steile zwarte variant van Pierre Grosse. Alleen voor experts. Prachtige lange afdaling.',
+    zone:'Toura→dorp', time:'~22 min', lifts:2,
+    steps:[
+      {i:'🚡', t:'Jandri Express 1', s:'Naar Toura 2600m · 12 min'},
+      {i:'⚠️', t:'Expert only', s:'Steile gedeelten, altijd goed prepareren'},
+      {i:'🎿', t:'Pierre Grosse zwart', s:'Lange, steile afdaling naar het dorp'}
+    ]
+  },
+  'signal1': {
+    name:'Signal 1', type:'black', color:'#cccccc',
+    info:'Zwarte gletsjer-piste, een van de steilste van het resort. Expert only.',
+    zone:'Gletsjer 3400m', time:'~35 min', lifts:3,
+    steps:[
+      {i:'🚡', t:'Jandri 1+2 + Funiculaire', s:'Naar 3400m · 35 min'},
+      {i:'⚠️', t:'Expert only', s:'Ijzig vroeg in de ochtend'},
+      {i:'🎿', t:'Signal 1 zwart', s:'Steile gletsjer-afdaling'}
+    ]
+  },
+  'lauze2': {
+    name:'Lauze 2', type:'black', color:'#cccccc',
+    info:'Steile zwarte op de westflank van de gletsjer. Uitzonderlijk uitzicht richting La Grave.',
+    zone:'Gletsjer 3400m', time:'~35 min', lifts:3,
+    steps:[
+      {i:'🚡', t:'Jandri 1+2 + Funiculaire', s:'Naar 3400m · 35 min'},
+      {i:'⚠️', t:'Expert only', s:'Steile westflank, let op ijs'},
+      {i:'🎿', t:'Lauze 2', s:'Avontuurlijke afdaling'}
+    ]
+  },
+  'diable-black': {
+    name:'Diable zwart', type:'black', color:'#cccccc',
+    info:'Steile zwarte afdaling in de Diable sector. Direct en technisch.',
+    zone:'Diable 2400m', time:'~13 min', lifts:2,
+    steps:[
+      {i:'🚡', t:'Diable gondola', s:'Naar 2400m · 10 min'},
+      {i:'⚠️', t:'Expert only', s:'Steile helling, technische turns'},
+      {i:'🎿', t:'Diable zwart', s:'Steile directe lijn'}
+    ]
+  }
+};
+
+const TYPE_LABELS = { green:'Groen', blue:'Blauw', red:'Rood', black:'Zwart', lift:'Gondola', cable:'Kabelbaan' };
+
+// ── PANEL ─────────────────────────────────────────────────────────────────
+let activeGroup = null;
+
+function showPanel(id) {
+  const p = PISTES[id];
+  if (!p) return;
+
+  // Highlight active piste
+  if (activeGroup) activeGroup.classList.remove('active');
+  activeGroup = document.querySelector(`[onclick="showPanel('${id}')"]`);
+  if (activeGroup) activeGroup.classList.add('active');
+
+  const isLift = p.type === 'lift';
+  const typeLabel = TYPE_LABELS[p.type] || p.type;
+
+  const stepsHtml = p.steps.map(s => `
+    <div class="route-step">
+      <div class="route-step-icon">${s.i}</div>
+      <div class="route-step-text">
+        <strong>${s.t}</strong>
+        <span>${s.s}</span>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('rp-content').innerHTML = `
+    <div class="rp-name">${p.name}</div>
+    <div class="rp-badges">
+      <span class="rp-badge" style="background:${p.color}22;color:${p.color};border:1px solid ${p.color}44">${typeLabel}</span>
+      ${!isLift ? `<span class="rp-badge" style="background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--border)">${p.zone}</span>` : ''}
+    </div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px">${p.info}</div>
+    <div class="rp-section-label">🏠 Route vanaf Les Aroles</div>
+    <div class="route-steps">${stepsHtml}</div>
+    <div class="rp-meta">
+      <div class="rp-meta-item"><strong>${p.time}</strong>Reistijd</div>
+      <div class="rp-meta-item"><strong>${p.lifts}</strong>Lift(en)</div>
+    </div>`;
+
+  document.getElementById('route-panel').classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('route-panel').classList.remove('open');
+  if (activeGroup) { activeGroup.classList.remove('active'); activeGroup = null; }
+}
+
+// ── PAN + ZOOM ────────────────────────────────────────────────────────────
+const wrap = document.getElementById('map-wrap');
+const stage = document.getElementById('stage');
+const IMG_W = 3000, IMG_H = 1490;
+
+let scale = 1, tx = 0, ty = 0;
+let dragging = false, lastX = 0, lastY = 0;
+let pinchDist = null;
+
+function applyTransform(animate) {
+  // Clamp
+  const vw = wrap.clientWidth, vh = wrap.clientHeight;
+  const minScale = Math.max(vw / IMG_W, vh / IMG_H) * 0.9;
+  scale = Math.max(minScale, Math.min(5, scale));
+  const maxTx = 0, minTx = vw - IMG_W * scale;
+  const maxTy = 0, minTy = vh - IMG_H * scale;
+  tx = Math.max(minTx, Math.min(maxTx, tx));
+  ty = Math.max(minTy, Math.min(maxTy, ty));
+  stage.style.transition = animate ? 'transform .2s ease' : 'none';
+  stage.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+  stage.style.transformOrigin = '0 0';
+}
+
+// Initial fit
+window.addEventListener('load', () => {
+  const vw = wrap.clientWidth, vh = wrap.clientHeight;
+  scale = Math.max(vw / IMG_W, vh / IMG_H);
+  tx = (vw - IMG_W * scale) / 2;
+  ty = (vh - IMG_H * scale) / 2;
+  applyTransform(false);
+});
+
+// Mouse
+wrap.addEventListener('mousedown', e => {
+  dragging = true; lastX = e.clientX; lastY = e.clientY;
+  wrap.style.cursor = 'grabbing';
+});
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  tx += e.clientX - lastX; ty += e.clientY - lastY;
+  lastX = e.clientX; lastY = e.clientY;
+  applyTransform(false);
+});
+window.addEventListener('mouseup', () => { dragging = false; wrap.style.cursor = 'grab'; });
+
+// Scroll zoom
+wrap.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect = wrap.getBoundingClientRect();
+  const px = e.clientX - rect.left, py = e.clientY - rect.top;
+  const factor = e.deltaY < 0 ? 1.12 : 0.88;
+  const newScale = Math.max(0.3, Math.min(5, scale * factor));
+  tx = px - (px - tx) * (newScale / scale);
+  ty = py - (py - ty) * (newScale / scale);
+  scale = newScale;
+  applyTransform(false);
+}, { passive: false });
+
+// Touch pan + pinch zoom
+function getTouchDist(t) {
+  return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+}
+function getTouchMid(t, rect) {
+  return {
+    x: (t[0].clientX + t[1].clientX) / 2 - rect.left,
+    y: (t[0].clientY + t[1].clientY) / 2 - rect.top
+  };
+}
+
+wrap.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) {
+    dragging = true;
+    lastX = e.touches[0].clientX;
+    lastY = e.touches[0].clientY;
+  } else if (e.touches.length === 2) {
+    dragging = false;
+    pinchDist = getTouchDist(e.touches);
+  }
+}, { passive: true });
+
+wrap.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (e.touches.length === 1 && dragging) {
+    tx += e.touches[0].clientX - lastX;
+    ty += e.touches[0].clientY - lastY;
+    lastX = e.touches[0].clientX;
+    lastY = e.touches[0].clientY;
+    applyTransform(false);
+  } else if (e.touches.length === 2 && pinchDist !== null) {
+    const newDist = getTouchDist(e.touches);
+    const rect = wrap.getBoundingClientRect();
+    const mid = getTouchMid(e.touches, rect);
+    const factor = newDist / pinchDist;
+    const newScale = Math.max(0.3, Math.min(5, scale * factor));
+    tx = mid.x - (mid.x - tx) * (newScale / scale);
+    ty = mid.y - (mid.y - ty) * (newScale / scale);
+    scale = newScale;
+    pinchDist = newDist;
+    applyTransform(false);
+  }
+}, { passive: false });
+
+wrap.addEventListener('touchend', e => {
+  if (e.touches.length < 2) pinchDist = null;
+  if (e.touches.length === 0) { dragging = false; applyTransform(true); }
+}, { passive: true });
+
+// Close panel on map tap (if not on a piste)
+wrap.addEventListener('click', e => {
+  if (e.target === wrap || e.target === stage || e.target.id === 'piste-img') closePanel();
+});
+</script>
+</body>
+</html>
