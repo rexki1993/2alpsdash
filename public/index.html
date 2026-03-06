@@ -39,8 +39,9 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--sno
 /* ── VIEWS ─── */
 .view { display:none; flex:1; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 12px); }
 .view.active { display:block; }
-#view-map { display:none; padding:0; }
-#view-map.active { display:flex; flex-direction:column; }
+/* map view overrides */
+#view-kaart { position:relative; padding:0; overflow:hidden; }
+#view-kaart.active { display:flex !important; flex-direction:column; }
 
 /* ── NAV ─── */
 #nav {
@@ -173,7 +174,11 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--sno
 .snow-stat-value { font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:700; }
 
 /* ── MAP VIEW ─── */
-#map { flex:1; z-index:1; }
+#map {
+  flex:1;
+  min-height:0;
+  z-index:1;
+}
 
 #map-controls {
   position:absolute; bottom:calc(var(--nav-h) + var(--safe-bottom) + 12px); left:12px; right:12px;
@@ -362,7 +367,7 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--sno
   </div>
 
   <!-- ── KAART ───────────────────────────────────────────── -->
-  <div id="view-kaart" class="view" style="position:relative;">
+  <div id="view-kaart" class="view">
     <div id="map"></div>
 
     <div id="map-controls">
@@ -489,7 +494,10 @@ function goTo(page) {
   nb.classList.add('active');
   nb.querySelector('.nav-indicator').style.display = 'block';
 
-  if (page === 'kaart' && !map) initMap();
+  if (page === 'kaart') {
+    if (!map) { initMap(); }
+    else { setTimeout(() => map.invalidateSize(), 50); }
+  }
 }
 
 // ── WMO CODES ──────────────────────────────────────────────────────────────
@@ -679,6 +687,9 @@ function diffColor(diff, isLift) {
 
 function initMap() {
   map = L.map('map', { center: [45.012, 6.130], zoom: 13, zoomControl: true });
+
+  // Force Leaflet to recalculate size after container becomes visible
+  setTimeout(() => map.invalidateSize(), 100);
 
   // Base + snow overlay
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
