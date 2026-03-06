@@ -6,1043 +6,650 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="theme-color" content="#070c14"/>
 <title>Les 2 Alpes</title>
-
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-
 <style>
 :root {
-  --bg: #070c14;
-  --surface: #0f1924;
-  --card: #141f2e;
-  --border: #1e2e42;
-  --ice: #00d4ff;
-  --ice-dim: rgba(0,212,255,.15);
-  --snow: #f0f6ff;
-  --muted: #4a6680;
-  --green: #00e676;
-  --blue: #448aff;
-  --red: #ff5252;
-  --orange: #ff9100;
-  --yellow: #ffd740;
-  --nav-h: 68px;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bg:#070c14; --surface:#0f1924; --card:#141f2e; --border:#1e2e42;
+  --ice:#00d4ff; --ice-dim:rgba(0,212,255,.15); --snow:#f0f6ff; --muted:#4a6680;
+  --green:#00e676; --blue:#448aff; --red:#ff5252; --orange:#ff9100; --yellow:#ffd740;
+  --nav-h:68px; --safe-bottom:env(safe-area-inset-bottom,0px);
 }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);font-family:'Barlow',sans-serif;}
+#app{display:flex;flex-direction:column;height:100%;}
 
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--snow); font-family:'Barlow',sans-serif; }
+/* VIEWS */
+.view{display:none;flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 12px);}
+.view.active{display:block;}
+#view-kaart{position:relative;padding:0;overflow:hidden;}
+#view-kaart.active{display:flex!important;flex-direction:column;}
 
-/* ── APP SHELL ─── */
-#app { display:flex; flex-direction:column; height:100%; }
+/* NAV */
+#nav{display:flex;align-items:stretch;height:calc(var(--nav-h) + var(--safe-bottom));padding-bottom:var(--safe-bottom);background:var(--surface);border-top:1px solid var(--border);position:relative;z-index:900;flex-shrink:0;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--muted);font-family:'Barlow',sans-serif;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;transition:color .2s;padding:8px 4px 0;position:relative;}
+.nav-btn .icon{font-size:22px;line-height:1;}
+.nav-btn.active{color:var(--ice);}
+.nav-ind{position:absolute;top:0;left:50%;transform:translateX(-50%);width:28px;height:2px;background:var(--ice);border-radius:0 0 2px 2px;display:none;}
+.nav-btn.active .nav-ind{display:block;}
 
-/* ── VIEWS ─── */
-.view { display:none; flex:1; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 12px); }
-.view.active { display:block; }
-/* map view overrides */
-#view-kaart { position:relative; padding:0; overflow:hidden; }
-#view-kaart.active { display:flex !important; flex-direction:column; }
+/* COMMON */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;}
+.section{padding:16px 16px 0;}
+.section-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:10px;}
 
-/* ── NAV ─── */
-#nav {
-  display:flex; align-items:stretch;
-  height:calc(var(--nav-h) + var(--safe-bottom));
-  padding-bottom:var(--safe-bottom);
-  background:var(--surface);
-  border-top:1px solid var(--border);
-  position:relative; z-index:900; flex-shrink:0;
-}
+/* DASHBOARD */
+#view-dash{background:var(--bg);}
+.dash-hero{padding:24px 16px 16px;background:linear-gradient(180deg,#0a1628 0%,var(--bg) 100%);}
+.dash-resort{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:800;letter-spacing:2px;line-height:1;}
+.dash-date{font-size:13px;color:var(--muted);margin-top:4px;font-weight:500;}
+.live-badge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.25);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--green);font-weight:600;letter-spacing:1px;}
+.live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-.nav-btn {
-  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:4px; background:none; border:none; cursor:pointer;
-  color:var(--muted); font-family:'Barlow',sans-serif; font-size:11px; font-weight:600;
-  letter-spacing:.5px; text-transform:uppercase; transition:color .2s;
-  padding:8px 4px 0;
-}
-.nav-btn .icon { font-size:22px; line-height:1; }
-.nav-btn.active { color:var(--ice); }
-.nav-btn.active .nav-indicator {
-  position:absolute; top:0; left:50%; transform:translateX(-50%);
-  width:32px; height:2px; background:var(--ice); border-radius:0 0 2px 2px;
-}
+.tap-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:12px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;}
+.tap-card::after{content:'›';position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:24px;color:var(--muted);}
+.tap-card:active{transform:scale(.98);border-color:var(--ice);}
+.tap-card-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;}
+.tap-card-value{font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:700;line-height:1;}
+.tap-card-sub{font-size:13px;color:var(--muted);}
+.tap-card-accent{position:absolute;right:0;top:0;bottom:0;width:3px;}
 
-/* ── COMMON ─── */
-.page-header {
-  padding:20px 16px 0;
-  display:flex; align-items:baseline; gap:10px;
-}
-.page-title { font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:800; letter-spacing:1px; text-transform:uppercase; }
-.page-sub { font-size:12px; color:var(--muted); font-weight:500; letter-spacing:1px; }
+.map-btn{background:var(--ice);color:#000;border:none;border-radius:16px;padding:18px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:2px;text-transform:uppercase;width:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;transition:all .15s;}
+.map-btn:active{transform:scale(.98);filter:brightness(.9);}
 
-.section { padding:16px 16px 0; }
-.section-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:10px; }
+.sos-btn{background:rgba(255,82,82,.12);border:1px solid rgba(255,82,82,.3);color:var(--red);border-radius:12px;padding:14px 18px;font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;width:100%;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.sos-btn span{font-size:11px;color:var(--muted);}
 
-.card {
-  background:var(--card); border:1px solid var(--border); border-radius:14px;
-  overflow:hidden; margin-bottom:12px;
-}
-.card-tap { cursor:pointer; transition:all .15s; }
-.card-tap:active { transform:scale(.98); opacity:.9; }
+/* WEATHER */
+.day-tabs{display:flex;gap:8px;padding:16px 16px 0;}
+.day-tab{flex:1;padding:10px 4px;background:var(--card);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;transition:all .2s;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--muted);}
+.day-tab.active{background:var(--ice-dim);border-color:var(--ice);color:var(--ice);}
+.alt-tabs{display:flex;gap:6px;padding:12px 16px 0;overflow-x:auto;scrollbar-width:none;}
+.alt-tabs::-webkit-scrollbar{display:none;}
+.alt-tab{flex-shrink:0;padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:20px;cursor:pointer;transition:all .2s;white-space:nowrap;font-size:12px;font-weight:600;color:var(--muted);}
+.alt-tab.active{background:rgba(68,138,255,.15);border-color:var(--blue);color:var(--blue);}
+.timeslots{padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
+.slot-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;}
+.slot-time{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--muted);white-space:nowrap;}
+.slot-details{font-size:11px;color:var(--muted);line-height:1.6;}
+.slot-right{text-align:right;}
+.slot-temp{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:700;line-height:1;}
+.slot-precip{font-size:13px;font-weight:600;color:var(--blue);}
 
-/* ── DASHBOARD ─── */
-#view-dash { background:var(--bg); }
+/* SNOW */
+.snow-zones{padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
+.snow-zone{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}
+.snow-zone-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;}
+.snow-zone-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;}
+.snow-zone-alt{font-size:12px;color:var(--muted);}
+.snow-zone-depth{font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:800;color:var(--ice);line-height:1;}
+.snow-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:10px;}
+.snow-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--ice));border-radius:4px;transition:width 1s ease;}
+.snow-stats{padding:0 16px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.snow-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;}
+.snow-stat-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.snow-stat-value{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;}
 
-.dash-hero {
-  padding:24px 16px 16px;
-  background:linear-gradient(180deg, #0a1628 0%, var(--bg) 100%);
-}
-.dash-resort { font-family:'Barlow Condensed',sans-serif; font-size:38px; font-weight:800; letter-spacing:2px; line-height:1; }
-.dash-date { font-size:13px; color:var(--muted); margin-top:4px; font-weight:500; }
-.live-badge {
-  display:inline-flex; align-items:center; gap:6px; margin-top:8px;
-  background:rgba(0,230,118,.1); border:1px solid rgba(0,230,118,.25);
-  border-radius:20px; padding:4px 10px; font-size:11px; color:var(--green); font-weight:600; letter-spacing:1px;
-}
-.live-dot { width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.5s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+/* MAP */
+#map{flex:1;min-height:0;z-index:1;}
+.leaflet-container{background:#0a1422;}
+.leaflet-popup-content-wrapper{background:var(--surface);color:var(--snow);border:1px solid var(--border);border-radius:14px;font-family:'Barlow',sans-serif;box-shadow:0 8px 32px rgba(0,0,0,.7);padding:0;}
+.leaflet-popup-content{margin:0;}
+.leaflet-popup-tip{background:var(--surface);}
+.leaflet-control-zoom a{background:var(--surface)!important;color:var(--snow)!important;border-color:var(--border)!important;}
+.popup-inner{padding:14px 16px;min-width:180px;}
+.popup-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px;}
+.popup-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;}
+.popup-row{font-size:13px;color:var(--muted);padding:3px 0;}
+.popup-row span{color:var(--snow);font-weight:500;}
+.map-marker{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;border:2px solid rgba(255,255,255,.2);box-shadow:0 3px 12px rgba(0,0,0,.5);}
+.meet-marker{width:38px;height:38px;border-radius:50%;background:rgba(0,212,255,.2);border:2px solid var(--ice);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 16px rgba(0,212,255,.5);animation:meetPulse 2s infinite;}
+@keyframes meetPulse{0%,100%{box-shadow:0 0 16px rgba(0,212,255,.5)}50%{box-shadow:0 0 28px rgba(0,212,255,.9)}}
 
-/* big tap cards */
-.tap-card {
-  background:var(--card); border:1px solid var(--border); border-radius:16px;
-  padding:18px; margin-bottom:12px; cursor:pointer; transition:all .15s;
-  display:flex; flex-direction:column; gap:6px; position:relative; overflow:hidden;
-}
-.tap-card::after { content:'›'; position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:24px; color:var(--muted); }
-.tap-card:active { transform:scale(.98); border-color:var(--ice); }
-.tap-card-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); font-weight:600; }
-.tap-card-value { font-family:'Barlow Condensed',sans-serif; font-size:42px; font-weight:700; line-height:1; }
-.tap-card-sub { font-size:13px; color:var(--muted); }
-.tap-card-accent { position:absolute; right:0; top:0; bottom:0; width:3px; }
+/* MAP TOP CONTROLS */
+#map-top{position:absolute;top:12px;left:12px;right:12px;z-index:500;display:flex;gap:8px;align-items:flex-start;pointer-events:none;}
+.level-filters{display:flex;gap:5px;flex-wrap:wrap;pointer-events:all;}
+.lvl-btn{padding:7px 11px;background:rgba(7,12,20,.92);border:2px solid var(--border);border-radius:20px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;backdrop-filter:blur(10px);transition:all .2s;color:var(--muted);}
+.lvl-btn.on{color:#000;font-weight:800;}
+.lvl-btn[data-d="novice"].on,.lvl-btn[data-d="easy"].on{background:var(--green);border-color:var(--green);}
+.lvl-btn[data-d="intermediate"].on{background:var(--blue);border-color:var(--blue);}
+.lvl-btn[data-d="advanced"].on{background:var(--red);border-color:var(--red);}
+.lvl-btn[data-d="expert"].on{background:#bbb;border-color:#bbb;}
+.lvl-btn[data-d="lift"].on{background:var(--orange);border-color:var(--orange);}
+.lvl-btn:active{transform:scale(.93);}
 
-.map-btn {
-  background:var(--ice); color:#000; border:none; border-radius:16px;
-  padding:18px; font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:800;
-  letter-spacing:2px; text-transform:uppercase; width:100%; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; gap:10px;
-  margin-bottom:12px; transition:all .15s;
-}
-.map-btn:active { transform:scale(.98); filter:brightness(.9); }
+/* MAP BOTTOM CONTROLS */
+#map-bottom{position:absolute;bottom:calc(var(--nav-h) + var(--safe-bottom) + 12px);left:12px;right:12px;z-index:500;display:flex;gap:8px;pointer-events:none;}
+.map-ctrl-btn{pointer-events:all;flex:1;padding:11px 6px;background:rgba(7,12,20,.92);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);transition:all .2s;text-align:center;white-space:nowrap;}
+.map-ctrl-btn.active{border-color:var(--ice);color:var(--ice);background:rgba(0,212,255,.1);}
+.map-ctrl-btn:active{transform:scale(.95);}
+#add-loc-btn{pointer-events:all;width:44px;height:44px;background:var(--ice);border:none;border-radius:50%;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,212,255,.4);flex-shrink:0;align-self:center;transition:all .2s;color:#000;}
+#add-loc-btn:active{transform:scale(.9);}
 
-/* ── WEATHER VIEW ─── */
-.day-tabs { display:flex; gap:8px; padding:16px 16px 0; }
-.day-tab {
-  flex:1; padding:10px 4px; background:var(--card); border:1px solid var(--border);
-  border-radius:10px; text-align:center; cursor:pointer; transition:all .2s;
-  font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700;
-  letter-spacing:.5px; color:var(--muted);
-}
-.day-tab.active { background:var(--ice-dim); border-color:var(--ice); color:var(--ice); }
+/* ROUTE PANEL */
+#route-panel{position:absolute;bottom:calc(var(--nav-h) + var(--safe-bottom));left:0;right:0;z-index:600;background:rgba(9,14,23,.97);border-top:1px solid var(--border);border-radius:18px 18px 0 0;backdrop-filter:blur(20px);padding:10px 18px calc(18px + var(--safe-bottom));transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:70vh;overflow-y:auto;}
+#route-panel.open{transform:translateY(0);}
+#rp-handle{width:32px;height:3px;background:var(--border);border-radius:2px;margin:0 auto 14px;}
+#rp-close{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;}
+.rp-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;padding-right:32px;}
+.rp-name{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;line-height:1.1;flex:1;}
+.rp-fav{background:none;border:none;font-size:24px;cursor:pointer;flex-shrink:0;padding:0;transition:transform .2s;}
+.rp-fav:active{transform:scale(.8);}
+.rp-badges{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;}
+.rp-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.rp-info{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:14px;}
+.rp-section{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px;}
+.route-steps{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+.route-step{display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;}
+.step-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.step-txt strong{color:var(--snow);font-weight:600;display:block;font-size:14px;}
+.step-txt span{color:var(--muted);font-size:12px;line-height:1.4;}
+.rp-meta{display:flex;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.rp-meta-item{flex:1;padding:12px;text-align:center;border-right:1px solid var(--border);}
+.rp-meta-item:last-child{border-right:none;}
+.rp-meta-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.rp-meta-val{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--snow);margin-top:2px;}
 
-.alt-tabs { display:flex; gap:6px; padding:12px 16px 0; overflow-x:auto; scrollbar-width:none; }
-.alt-tabs::-webkit-scrollbar { display:none; }
-.alt-tab {
-  flex-shrink:0; padding:8px 14px; background:var(--card); border:1px solid var(--border);
-  border-radius:20px; cursor:pointer; transition:all .2s; white-space:nowrap;
-  font-size:12px; font-weight:600; color:var(--muted); letter-spacing:.5px;
-}
-.alt-tab.active { background:rgba(68,138,255,.15); border-color:var(--blue); color:var(--blue); }
+/* FAVORIETEN TAB */
+#fav-list{padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
+.fav-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s;}
+.fav-item:active{transform:scale(.98);}
+.fav-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.fav-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;flex:1;}
+.fav-sub{font-size:12px;color:var(--muted);}
+.fav-remove{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;}
 
-.timeslots { padding:12px 16px; display:flex; flex-direction:column; gap:10px; }
+/* MEETPOINT PANEL */
+#meet-bar{position:absolute;top:calc(12px + 44px + 8px);left:12px;right:12px;z-index:500;background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.3);border-radius:12px;padding:10px 14px;display:none;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--ice);backdrop-filter:blur(10px);}
+#meet-bar.visible{display:flex;}
+#meet-bar-close{margin-left:auto;background:none;border:none;color:var(--ice);font-size:16px;cursor:pointer;}
 
-.slot-card {
-  background:var(--card); border:1px solid var(--border); border-radius:14px;
-  padding:16px; display:grid; grid-template-columns:auto 1fr auto auto; align-items:center; gap:12px;
-}
-.slot-time { font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700; color:var(--muted); white-space:nowrap; }
-.slot-icon { font-size:28px; line-height:1; }
-.slot-temp { font-family:'Barlow Condensed',sans-serif; font-size:36px; font-weight:700; line-height:1; text-align:right; }
-.slot-details { font-size:11px; color:var(--muted); line-height:1.6; }
-.slot-precip { font-size:13px; font-weight:600; color:var(--blue); text-align:right; }
+/* ADD SHEET */
+#add-sheet{position:fixed;inset:0;z-index:2000;display:none;align-items:flex-end;}
+#add-sheet.visible{display:flex;}
+#add-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);}
+#add-form{position:relative;background:var(--surface);border-radius:20px 20px 0 0;padding:24px 20px calc(24px + var(--safe-bottom));width:100%;border-top:1px solid var(--border);max-height:82vh;overflow-y:auto;animation:slideUp .3s ease;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
+.sheet-title{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;margin-bottom:6px;}
+.sheet-sub{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5;}
+.form-field{margin-bottom:14px;}
+.form-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px;display:block;}
+.form-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 14px;color:var(--snow);font-family:'Barlow',sans-serif;font-size:16px;outline:none;transition:border .2s;}
+.form-input:focus{border-color:var(--ice);}
+.form-input::placeholder{color:var(--muted);}
+.type-row{display:flex;gap:8px;}
+.type-opt{flex:1;padding:11px 8px;background:var(--card);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;transition:all .2s;font-size:13px;font-weight:600;color:var(--muted);}
+.type-opt.sel{border-color:var(--ice);color:var(--ice);background:var(--ice-dim);}
+.btn-primary{width:100%;padding:16px;background:var(--ice);border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;letter-spacing:1px;color:#000;cursor:pointer;transition:all .15s;margin-top:4px;}
+.btn-primary:active{transform:scale(.98);filter:brightness(.9);}
 
-/* ── SNOW VIEW ─── */
-.snow-zones { padding:12px 16px; display:flex; flex-direction:column; gap:10px; }
-.snow-zone {
-  background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px;
-}
-.snow-zone-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; }
-.snow-zone-name { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:700; }
-.snow-zone-alt { font-size:12px; color:var(--muted); font-weight:500; }
-.snow-zone-depth { font-family:'Barlow Condensed',sans-serif; font-size:40px; font-weight:800; color:var(--ice); line-height:1; }
-.snow-zone-cm { font-size:14px; color:var(--muted); }
-.snow-bar { height:8px; background:var(--border); border-radius:4px; overflow:hidden; margin-top:10px; }
-.snow-bar-fill { height:100%; background:linear-gradient(90deg,var(--blue),var(--ice)); border-radius:4px; transition:width 1s ease; }
-
-.snow-stats { padding:0 16px 16px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.snow-stat { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; }
-.snow-stat-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
-.snow-stat-value { font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:700; }
-
-/* ── MAP VIEW ─── */
-#map { flex:1; min-height:0; z-index:1; }
-
-#map-top-controls {
-  position:absolute; top:12px; left:12px; z-index:500;
-  display:flex; gap:6px; pointer-events:none;
-}
-.map-toggle-btn {
-  pointer-events:all; padding:9px 14px;
-  background:rgba(7,12,20,.92); border:1px solid var(--border); border-radius:22px;
-  color:var(--muted); font-family:'Barlow',sans-serif; font-size:12px; font-weight:700;
-  cursor:pointer; backdrop-filter:blur(10px); transition:all .2s; white-space:nowrap;
-}
-.map-toggle-btn.active { border-color:var(--ice); color:var(--ice); background:rgba(0,212,255,.12); }
-.map-toggle-btn:active { transform:scale(.95); }
-
-#map-controls {
-  position:absolute; bottom:calc(var(--nav-h) + var(--safe-bottom) + 12px); left:12px; right:12px;
-  z-index:500; display:flex; gap:8px; pointer-events:none;
-}
-.filter-btn {
-  pointer-events:all; flex:1; padding:10px 8px; background:rgba(7,12,20,.92);
-  border:1px solid var(--border); border-radius:10px; color:var(--muted);
-  font-family:'Barlow',sans-serif; font-size:12px; font-weight:600; cursor:pointer;
-  backdrop-filter:blur(10px); transition:all .2s; text-align:center; white-space:nowrap;
-}
-.filter-btn.active { border-color:var(--ice); color:var(--ice); background:rgba(0,212,255,.1); }
-.filter-btn:active { transform:scale(.96); }
-
-#add-loc-btn {
-  pointer-events:all; width:44px; height:44px; background:var(--ice); border:none;
-  border-radius:50%; font-size:20px; cursor:pointer; display:flex; align-items:center;
-  justify-content:center; box-shadow:0 4px 20px rgba(0,212,255,.4); flex-shrink:0;
-  align-self:center; transition:all .2s;
-}
-#add-loc-btn:active { transform:scale(.9); }
-
-/* Route panel */
-#route-panel {
-  position:absolute; bottom:calc(var(--nav-h) + var(--safe-bottom));
-  left:0; right:0; z-index:600;
-  background:rgba(10,15,26,.97); border-top:1px solid var(--border);
-  backdrop-filter:blur(16px); border-radius:18px 18px 0 0;
-  padding:10px 18px 18px; display:none;
-}
-#route-panel.open { display:block; animation:slideUp .28s ease; }
-#route-handle { width:32px; height:3px; background:var(--border); border-radius:2px; margin:0 auto 14px; }
-#route-close { position:absolute; top:12px; right:16px; background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; padding:4px 8px; }
-#route-close:hover { color:var(--snow); }
-.route-piste-name { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:800; line-height:1; margin-right:40px; }
-.route-badge { display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin:6px 0 10px; }
-.route-steps { display:flex; flex-direction:column; gap:7px; }
-.route-step { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.04); border-radius:10px; padding:9px 12px; }
-.route-step-icon { font-size:20px; flex-shrink:0; }
-.route-step-text { font-size:13px; line-height:1.4; }
-.route-step-text strong { color:var(--snow); font-weight:600; display:block; }
-.route-step-text span { color:var(--muted); font-size:12px; }
-.route-meta { display:flex; gap:20px; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
-.route-meta-item { font-size:12px; color:var(--muted); }
-.route-meta-item strong { display:block; font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:700; color:var(--snow); }
-
-/* ── ADD LOCATION SHEET ─── */
-#add-sheet {
-  position:fixed; inset:0; z-index:2000; display:none; align-items:flex-end;
-}
-#add-sheet.visible { display:flex; }
-#add-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); }
-#add-form {
-  position:relative; background:var(--surface); border-radius:20px 20px 0 0;
-  padding:24px 20px calc(24px + var(--safe-bottom)); width:100%;
-  border-top:1px solid var(--border); max-height:80vh; overflow-y:auto;
-  animation:slideUp .3s ease;
-}
-@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-.sheet-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 20px; }
-.sheet-title { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:800; margin-bottom:16px; letter-spacing:1px; }
-
-.form-field { margin-bottom:14px; }
-.form-label { font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:6px; display:block; }
-.form-input {
-  width:100%; background:var(--card); border:1px solid var(--border); border-radius:10px;
-  padding:13px 14px; color:var(--snow); font-family:'Barlow',sans-serif; font-size:16px;
-  outline:none; transition:border .2s;
-}
-.form-input:focus { border-color:var(--ice); }
-.form-input::placeholder { color:var(--muted); }
-
-.type-row { display:flex; gap:8px; }
-.type-opt {
-  flex:1; padding:11px 8px; background:var(--card); border:1px solid var(--border);
-  border-radius:10px; text-align:center; cursor:pointer; transition:all .2s;
-  font-size:13px; font-weight:600; color:var(--muted);
-}
-.type-opt.sel { border-color:var(--ice); color:var(--ice); background:var(--ice-dim); }
-
-.form-hint { font-size:12px; color:var(--muted); margin-bottom:14px; line-height:1.5; }
-
-.btn-primary {
-  width:100%; padding:16px; background:var(--ice); border:none; border-radius:12px;
-  font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:800;
-  letter-spacing:1px; color:#000; cursor:pointer; transition:all .15s;
-}
-.btn-primary:active { transform:scale(.98); filter:brightness(.9); }
-
-/* ── LEAFLET OVERRIDES ─── */
-.leaflet-container { background:#0a1422; }
-.leaflet-popup-content-wrapper {
-  background:var(--surface); color:var(--snow); border:1px solid var(--border);
-  border-radius:14px; font-family:'Barlow',sans-serif;
-  box-shadow:0 8px 32px rgba(0,0,0,.7); padding:0;
-}
-.leaflet-popup-content { margin:0; }
-.leaflet-popup-tip { background:var(--surface); }
-.leaflet-control-zoom a { background:var(--surface)!important; color:var(--snow)!important; border-color:var(--border)!important; }
-.leaflet-control-zoom a:hover { background:var(--card)!important; }
-
-.popup-inner { padding:14px 16px; min-width:200px; }
-.popup-name { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:800; margin-bottom:4px; }
-.popup-badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; margin-bottom:8px; }
-.popup-row { font-size:13px; color:var(--muted); padding:3px 0; }
-.popup-row span { color:var(--snow); font-weight:500; }
-
-/* marker styles */
-.map-marker {
-  width:36px; height:36px; border-radius:50%; display:flex; align-items:center;
-  justify-content:center; font-size:18px; border:2px solid rgba(255,255,255,.2);
-  box-shadow:0 3px 12px rgba(0,0,0,.5);
-}
-
-/* loading */
-#loading {
-  position:fixed; inset:0; background:var(--bg); z-index:9999;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
-}
-#loading.gone { display:none; }
-.load-title { font-family:'Barlow Condensed',sans-serif; font-size:42px; font-weight:800; letter-spacing:3px; color:var(--ice); }
-.load-sub { font-size:11px; color:var(--muted); letter-spacing:3px; text-transform:uppercase; }
-.load-bar { width:160px; height:2px; background:var(--border); border-radius:1px; overflow:hidden; }
-.load-fill { height:100%; background:var(--ice); animation:loadFill 2s ease forwards; }
-@keyframes loadFill { from{width:0} to{width:100%} }
-
-/* scroll restore */
-.view::-webkit-scrollbar { display:none; }
-.view { scrollbar-width:none; }
+/* LOADING */
+#loading{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+#loading.gone{display:none;}
+.load-title{font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:800;letter-spacing:3px;color:var(--ice);}
+.load-sub{font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;}
+.load-bar{width:160px;height:2px;background:var(--border);border-radius:1px;overflow:hidden;}
+.load-fill{height:100%;background:var(--ice);animation:loadFill 2s ease forwards;}
+@keyframes loadFill{from{width:0}to{width:100%}}
+.view::-webkit-scrollbar{display:none;}
+.view{scrollbar-width:none;}
 </style>
 </head>
 <body>
 
 <div id="loading">
   <div class="load-title">LES 2 ALPES</div>
-  <div class="load-sub">Data ophalen...</div>
+  <div class="load-sub">Laden...</div>
   <div class="load-bar"><div class="load-fill"></div></div>
 </div>
 
 <div id="app">
 
-  <!-- ── DASHBOARD ──────────────────────────────────────── -->
-  <div id="view-dash" class="view active">
-    <div class="dash-hero">
-      <div class="dash-resort">Les 2 Alpes</div>
-      <div class="dash-date" id="dash-date">–</div>
-      <div class="live-badge"><div class="live-dot"></div> LIVE</div>
-    </div>
-
-    <div class="section">
-      <!-- Weer card -->
-      <div class="tap-card" onclick="goTo('weer')">
-        <div class="tap-card-accent" style="background:linear-gradient(180deg,var(--blue),var(--ice))"></div>
-        <div class="tap-card-label">☁ Weer nu · 2600m</div>
-        <div class="tap-card-value" id="dash-temp">–°</div>
-        <div class="tap-card-sub" id="dash-weather-sub">Laden...</div>
-      </div>
-
-      <!-- Sneeuw card -->
-      <div class="tap-card" onclick="goTo('sneeuw')">
-        <div class="tap-card-accent" style="background:linear-gradient(180deg,var(--ice),#fff)"></div>
-        <div class="tap-card-label">❄ Sneeuwhoogte · Top</div>
-        <div class="tap-card-value" style="color:var(--ice)" id="dash-snow">– cm</div>
-        <div class="tap-card-sub" id="dash-snow-sub">Laden...</div>
-      </div>
-
-      <!-- Map button -->
-      <button class="map-btn" onclick="window.location.href='/map.html'">
-        🗺 Pistekaart openen
-      </button>
-    </div>
+<!-- DASHBOARD -->
+<div id="view-dash" class="view active">
+  <div class="dash-hero">
+    <div class="dash-resort">Les 2 Alpes</div>
+    <div class="dash-date" id="dash-date">—</div>
+    <div class="live-badge"><div class="live-dot"></div> LIVE</div>
   </div>
-
-  <!-- ── WEER ───────────────────────────────────────────── -->
-  <div id="view-weer" class="view">
-    <div class="page-header">
-      <div class="page-title">Weer</div>
-      <div class="page-sub" id="weer-updated">–</div>
+  <div class="section">
+    <div class="tap-card" onclick="goTo('weer')">
+      <div class="tap-card-accent" style="background:linear-gradient(180deg,var(--blue),var(--ice))"></div>
+      <div class="tap-card-label">☁ Weer nu · 2600m</div>
+      <div class="tap-card-value" id="dash-temp">—°</div>
+      <div class="tap-card-sub" id="dash-weather-sub">Laden...</div>
     </div>
-
-    <!-- Day tabs -->
-    <div class="day-tabs">
-      <div class="day-tab active" onclick="setDay(0,this)">Vandaag</div>
-      <div class="day-tab" onclick="setDay(1,this)">Morgen</div>
-      <div class="day-tab" onclick="setDay(2,this)">Overmorgen</div>
+    <div class="tap-card" onclick="goTo('sneeuw')">
+      <div class="tap-card-accent" style="background:linear-gradient(180deg,var(--ice),#fff)"></div>
+      <div class="tap-card-label">❄ Sneeuwhoogte · Top</div>
+      <div class="tap-card-value" style="color:var(--ice)" id="dash-snow">— cm</div>
+      <div class="tap-card-sub" id="dash-snow-sub">Laden...</div>
     </div>
-
-    <!-- Altitude tabs -->
-    <div class="alt-tabs" id="alt-tabs">
-      <div class="alt-tab active" onclick="setAlt(0,this)">1300m Dorp</div>
-      <div class="alt-tab" onclick="setAlt(1,this)">1800m Midden</div>
-      <div class="alt-tab" onclick="setAlt(2,this)">2600m Hoog</div>
-      <div class="alt-tab" onclick="setAlt(3,this)">3200m Gletsjer</div>
-    </div>
-
-    <!-- Time slots -->
-    <div class="timeslots" id="timeslots"></div>
+    <button class="map-btn" onclick="goTo('kaart')">🗺 Pistekaart openen</button>
+    <button class="sos-btn" onclick="window.location.href='tel:+33476791111'">
+      <div>🆘 Bergredding bellen <span style="display:block;font-size:12px;color:var(--muted)">+33 4 76 79 11 11</span></div>
+      <span>Noodgeval</span>
+    </button>
   </div>
-
-  <!-- ── SNEEUW ──────────────────────────────────────────── -->
-  <div id="view-sneeuw" class="view">
-    <div class="page-header">
-      <div class="page-title">Sneeuw</div>
-      <div class="page-sub">Hoogte per zone</div>
-    </div>
-
-    <div class="snow-stats" id="snow-stats"></div>
-    <div class="snow-zones" id="snow-zones"></div>
-  </div>
-
-  <!-- ── KAART ───────────────────────────────────────────── -->
-  <div id="view-kaart" class="view">
-    <div id="map"></div>
-
-    <div id="map-top-controls">
-      <button class="map-toggle-btn active" id="btn-pistemap" onclick="switchMapLayer('piste')">🎿 Pistemap</button>
-      <button class="map-toggle-btn" id="btn-glaciermap" onclick="switchMapLayer('glacier')">🏔 Gletsjer</button>
-    </div>
-
-    <div id="map-controls">
-      <div class="filter-btn active" onclick="toggleFilter('pistes',this)">Pistes</div>
-      <div class="filter-btn active" onclick="toggleFilter('resto',this)">🍽 Eten</div>
-      <div class="filter-btn active" onclick="toggleFilter('chill',this)">☀ Chill</div>
-      <button id="add-loc-btn" onclick="openAddSheet()">＋</button>
-    </div>
-
-    <div id="route-panel">
-      <div id="route-handle"></div>
-      <div id="route-content"></div>
-      <button id="route-close" onclick="closeRoutePanel()">✕</button>
-    </div>
-  </div>
-
-  <!-- ── BOTTOM NAV ─────────────────────────────────────── -->
-  <nav id="nav">
-    <button class="nav-btn active" id="nav-dash" onclick="goTo('dash')">
-      <div class="nav-indicator"></div>
-      <span class="icon">🏔</span>Dashboard
-    </button>
-    <button class="nav-btn" id="nav-weer" onclick="goTo('weer')">
-      <div class="nav-indicator" style="display:none"></div>
-      <span class="icon">☁️</span>Weer
-    </button>
-    <button class="nav-btn" id="nav-sneeuw" onclick="goTo('sneeuw')">
-      <div class="nav-indicator" style="display:none"></div>
-      <span class="icon">❄️</span>Sneeuw
-    </button>
-    <button class="nav-btn" id="nav-kaart" onclick="goTo('kaart')">
-      <div class="nav-indicator" style="display:none"></div>
-      <span class="icon">🗺</span>Kaart
-    </button>
-  </nav>
 </div>
 
-<!-- ── ADD LOCATION SHEET ─── -->
+<!-- WEER -->
+<div id="view-weer" class="view">
+  <div style="padding:20px 16px 0;display:flex;align-items:baseline;gap:10px;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;">Weer</div>
+    <div style="font-size:12px;color:var(--muted)" id="weer-updated">—</div>
+  </div>
+  <div class="day-tabs">
+    <div class="day-tab active" onclick="setDay(0,this)">Vandaag</div>
+    <div class="day-tab" onclick="setDay(1,this)">Morgen</div>
+    <div class="day-tab" onclick="setDay(2,this)">Overmorgen</div>
+  </div>
+  <div class="alt-tabs">
+    <div class="alt-tab" onclick="setAlt(0,this)">1300m Dorp</div>
+    <div class="alt-tab" onclick="setAlt(1,this)">1800m Midden</div>
+    <div class="alt-tab active" onclick="setAlt(2,this)">2600m Hoog</div>
+    <div class="alt-tab" onclick="setAlt(3,this)">3200m Gletsjer</div>
+  </div>
+  <div class="timeslots" id="timeslots"></div>
+</div>
+
+<!-- SNEEUW -->
+<div id="view-sneeuw" class="view">
+  <div style="padding:20px 16px 0"><div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;">Sneeuw</div></div>
+  <div class="snow-stats" id="snow-stats"></div>
+  <div class="snow-zones" id="snow-zones"></div>
+</div>
+
+<!-- KAART -->
+<div id="view-kaart" class="view">
+  <div id="map"></div>
+
+  <!-- Top: level filters -->
+  <div id="map-top">
+    <div class="level-filters">
+      <button class="lvl-btn on" data-d="novice" onclick="toggleLevel(this)">🟢</button>
+      <button class="lvl-btn on" data-d="easy" onclick="toggleLevel(this)" style="display:none"></button>
+      <button class="lvl-btn on" data-d="intermediate" onclick="toggleLevel(this)">🔵</button>
+      <button class="lvl-btn on" data-d="advanced" onclick="toggleLevel(this)">🔴</button>
+      <button class="lvl-btn on" data-d="expert" onclick="toggleLevel(this)">⚫</button>
+      <button class="lvl-btn on" data-d="lift" onclick="toggleLevel(this)">🚡</button>
+    </div>
+  </div>
+
+  <!-- Meet point hint bar -->
+  <div id="meet-bar">
+    📍 Tik op de kaart om afspraakpunt te zetten
+    <button id="meet-bar-close" onclick="cancelMeetMode()">✕</button>
+  </div>
+
+  <!-- Bottom controls -->
+  <div id="map-bottom">
+    <div class="map-ctrl-btn active" id="btn-resto" onclick="toggleLayer('resto',this)">🍽 Eten</div>
+    <div class="map-ctrl-btn active" id="btn-chill" onclick="toggleLayer('chill',this)">☀ Chill</div>
+    <div class="map-ctrl-btn" id="btn-meet" onclick="startMeetMode()">📍 Meet</div>
+    <button id="add-loc-btn" onclick="openAddSheet()">＋</button>
+  </div>
+
+  <!-- Route panel -->
+  <div id="route-panel">
+    <div id="rp-handle"></div>
+    <button id="rp-close" onclick="closeRoutePanel()">✕</button>
+    <div id="rp-body"></div>
+  </div>
+</div>
+
+<!-- FAVORIETEN -->
+<div id="view-favs" class="view">
+  <div style="padding:20px 16px 0"><div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;">Favorieten</div></div>
+  <div id="fav-list"></div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <button class="nav-btn active" id="nav-dash" onclick="goTo('dash')">
+    <div class="nav-ind"></div><span class="icon">🏔</span>Dashboard
+  </button>
+  <button class="nav-btn" id="nav-weer" onclick="goTo('weer')">
+    <div class="nav-ind"></div><span class="icon">☁️</span>Weer
+  </button>
+  <button class="nav-btn" id="nav-sneeuw" onclick="goTo('sneeuw')">
+    <div class="nav-ind"></div><span class="icon">❄️</span>Sneeuw
+  </button>
+  <button class="nav-btn" id="nav-kaart" onclick="goTo('kaart')">
+    <div class="nav-ind"></div><span class="icon">🗺</span>Kaart
+  </button>
+  <button class="nav-btn" id="nav-favs" onclick="goTo('favs')">
+    <div class="nav-ind"></div><span class="icon">⭐</span>Favs
+  </button>
+</nav>
+</div>
+
+<!-- ADD LOCATION SHEET -->
 <div id="add-sheet">
   <div id="add-backdrop" onclick="closeAddSheet()"></div>
   <div id="add-form">
     <div class="sheet-handle"></div>
     <div class="sheet-title">Locatie toevoegen</div>
-    <p class="form-hint">Tip: tik eerst op de kaart om een locatie te pinnen, dan op ＋</p>
-
+    <div class="sheet-sub">Tik eerst op de kaart om een plek te pinnen, dan op ＋</div>
     <div class="form-field">
       <label class="form-label">Naam</label>
       <input id="loc-name" class="form-input" type="text" placeholder="bv. Zonnige picknicktafel"/>
     </div>
-
     <div class="form-field">
       <label class="form-label">Type</label>
       <div class="type-row">
-        <div class="type-opt sel" data-type="chill" onclick="selectType(this)">☀ Chill</div>
-        <div class="type-opt" data-type="restaurant" onclick="selectType(this)">🍽 Eten</div>
-        <div class="type-opt" data-type="bar" onclick="selectType(this)">🍺 Bar</div>
+        <div class="type-opt sel" data-type="chill" onclick="selType(this)">☀ Chill</div>
+        <div class="type-opt" data-type="restaurant" onclick="selType(this)">🍽 Eten</div>
+        <div class="type-opt" data-type="bar" onclick="selType(this)">🍺 Bar</div>
       </div>
     </div>
-
     <div class="form-field">
-      <label class="form-label">Omschrijving (optioneel)</label>
-      <input id="loc-desc" class="form-input" type="text" placeholder="bv. Beste zon van 12-14u"/>
+      <label class="form-label">Omschrijving</label>
+      <input id="loc-desc" class="form-input" type="text" placeholder="bv. Beste zon 12–14u"/>
     </div>
-
     <div class="form-field">
-      <label class="form-label">Beste zonmoment (optioneel)</label>
+      <label class="form-label">Beste zonmoment</label>
       <input id="loc-sun" class="form-input" type="text" placeholder="bv. 11:00 – 14:00"/>
     </div>
-
     <button class="btn-primary" onclick="submitLocation()">📍 Opslaan op kaart</button>
   </div>
 </div>
 
 <script>
 // ── STATE ──────────────────────────────────────────────────────────────────
-let weatherData = null;
-let snowData = null;
-let currentDay = 0;
-let currentAlt = 2; // default: 2600m
-let map = null;
-let pisteLayer = null;
-let markerLayers = { pistes: null, resto: L.layerGroup(), chill: L.layerGroup() };
-let filterState = { pistes: true, resto: true, chill: true };
-let pendingLatLng = null;
-let selectedType = 'chill';
+let weatherData=null, snowData=null, currentDay=0, currentAlt=2;
+let map=null, pisteLayer=null;
+let markerGroups={resto:null,chill:null,meet:null};
+let layerState={resto:true,chill:true};
+let levelState={novice:true,easy:true,intermediate:true,advanced:true,expert:true,lift:true};
+let pendingLatLng=null, selectedType='chill';
+let meetMode=false, meetMarker=null;
+let favs=JSON.parse(localStorage.getItem('ski_favs')||'{}');
+let allPisteFeatures=[];
 
-// ── PRESET LOCATIONS (real restaurants/bars from research) ───────────────
-const PRESET_LOCATIONS = [
-  {
-    id: -1, name: 'Chalet de la Toura / PanoBar', type: 'restaurant',
-    lat: 45.0115, lng: 6.1295, description: 'Bergrestaurant + après-ski bar op 2600m. Pizza, pasta, tartiflette. PanoBar van 14:30 met DJ.',
-    hours: '09:00 – 16:45', sun: '11:00 – 14:30'
-  },
-  {
-    id: -2, name: 'Le Diable au Cœur', type: 'restaurant',
-    lat: 45.008, lng: 6.125, description: 'Sfeervol bergrestaurant op 2400m. Tafelservice, Oisans-producten, goede wijnkaart.',
-    hours: '09:00 – 17:00', sun: '12:00 – 15:00'
-  },
-  {
-    id: -3, name: 'La Fée Hut', type: 'restaurant',
-    lat: 45.016, lng: 6.138, description: 'Midden in de Fée-sector op 2440m. Crêpes, tafelservice, rustig terras.',
-    hours: '10:00 – 16:00', sun: '10:00 – 13:00'
-  },
-  {
-    id: -4, name: 'Le 3200', type: 'bar',
-    lat: 45.022, lng: 6.142, description: 'Apero bij zonsondergang op 3200m. Uniek uitzicht over de Écrins.',
-    hours: '09:00 – 19:00', sun: '15:00 – 17:30'
-  },
-  {
-    id: -5, name: 'Umbrella Bar', type: 'bar',
-    lat: 44.999, lng: 6.120, description: 'Après-ski hotspot aan de pistvoet. Live muziek, zonnig terras, 250 plaatsen.',
-    hours: '08:00 – 17:00', sun: '13:00 – 17:00'
-  },
-  {
-    id: -6, name: 'Vallée Blanche Restaurant', type: 'restaurant',
-    lat: 45.019, lng: 6.137, description: 'Huisgemaakte keuken op de gletsjerhellingen. Authentiek en rustig.',
-    hours: '10:00 – 15:30', sun: '10:00 – 13:00'
-  }
+// ── PRESET LOCATIONS ──────────────────────────────────────────────────────
+const PRESETS=[
+  {id:-1,name:'Chalet de la Toura / PanoBar',type:'restaurant',lat:45.0115,lng:6.1295,description:'Bergrestaurant + après-ski bar op 2600m. PanoBar van 14:30 met DJ.',hours:'09:00–16:45',sun:'11:00–14:30'},
+  {id:-2,name:'Le Diable au Cœur',type:'restaurant',lat:45.008,lng:6.125,description:'Tafelservice op 2400m. Oisans-producten, goede wijnkaart.',hours:'09:00–17:00',sun:'12:00–15:00'},
+  {id:-3,name:'La Fée Hut',type:'restaurant',lat:45.016,lng:6.138,description:'Crêpes & tafelservice op 2440m. Rustig terras.',hours:'10:00–16:00',sun:'10:00–13:00'},
+  {id:-4,name:'Le 3200',type:'bar',lat:45.022,lng:6.142,description:'Apero bij zonsondergang op 3200m. Uniek uitzicht.',hours:'09:00–19:00',sun:'15:00–17:30'},
+  {id:-5,name:'Umbrella Bar',type:'bar',lat:44.999,lng:6.120,description:'Après-ski hotspot aan de pistvoet. Live muziek, 250 plaatsen.',hours:'08:00–17:00',sun:'13:00–17:00'},
+  {id:-6,name:'Vallée Blanche Restaurant',type:'restaurant',lat:45.019,lng:6.137,description:'Huisgemaakte keuken op de gletsjerhellingen.',hours:'10:00–15:30',sun:'10:00–13:00'},
+  {id:-7,name:'Snowpark zone',type:'chill',lat:45.013,lng:6.133,description:'Beste plek om snowparkers te kijken. Eigen eten meenemen.',sun:'12:00–15:00'},
+  {id:-8,name:'Panorama 360° rustplek',type:'chill',lat:45.020,lng:6.128,description:'Zitgelegenheid op 3421m, 360° uitzicht. Neem een boterham mee.',sun:'10:00–14:00'}
 ];
 
-// ── NAVIGATION ─────────────────────────────────────────────────────────────
-function goTo(page) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => {
-    b.classList.remove('active');
-    b.querySelector('.nav-indicator').style.display = 'none';
-  });
-  document.getElementById('view-' + (page === 'kaart' ? 'kaart' : page === 'sneeuw' ? 'sneeuw' : page === 'weer' ? 'weer' : 'dash')).classList.add('active');
-  const nb = document.getElementById('nav-' + (page === 'kaart' ? 'kaart' : page === 'sneeuw' ? 'sneeuw' : page === 'weer' ? 'weer' : 'dash'));
-  nb.classList.add('active');
-  nb.querySelector('.nav-indicator').style.display = 'block';
-
-  if (page === 'kaart') {
-    if (!map) { initMap(); }
-    else { setTimeout(() => map.invalidateSize(), 50); }
-  }
+// ── NAVIGATION ──────────────────────────────────────────────────────────────
+function goTo(page){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>{b.classList.remove('active');b.querySelector('.nav-ind').style.display='none';});
+  document.getElementById('view-'+page).classList.add('active');
+  const nb=document.getElementById('nav-'+page);
+  nb.classList.add('active');nb.querySelector('.nav-ind').style.display='block';
+  if(page==='kaart'){if(!map)initMap();else setTimeout(()=>map.invalidateSize(),50);}
+  if(page==='favs')renderFavs();
 }
 
-// ── WMO CODES ──────────────────────────────────────────────────────────────
-const WMO = {
-  0:['☀️','Helder'],1:['🌤','Grotendeels helder'],2:['⛅','Bewolkt'],3:['☁️','Zwaar bewolkt'],
-  45:['🌫','Mist'],48:['🌫','IJsmist'],51:['🌦','Lichte motregen'],53:['🌧','Motregen'],
-  55:['🌧','Zware motregen'],61:['🌧','Lichte regen'],63:['🌧','Regen'],65:['🌧','Zware regen'],
-  71:['🌨','Lichte sneeuw'],73:['❄️','Sneeuw'],75:['❄️','Zware sneeuw'],77:['🌨','Sneeuwkorrels'],
-  80:['🌦','Regenbuien'],85:['🌨','Sneeuwbuien'],86:['❄️','Zware sneeuwbuien'],
-  95:['⛈','Onweer'],96:['⛈','Onweer + hagel'],99:['⛈','Zwaar onweer']
-};
-function wmo(code) { return WMO[code] || WMO[Math.round(code/10)*10] || ['🌡','Onbekend']; }
+// ── WMO ────────────────────────────────────────────────────────────────────
+const WMO={0:['☀️','Helder'],1:['🌤','Grotendeels helder'],2:['⛅','Bewolkt'],3:['☁️','Zwaar bewolkt'],45:['🌫','Mist'],51:['🌦','Motregen'],61:['🌧','Regen'],71:['🌨','Lichte sneeuw'],73:['❄️','Sneeuw'],75:['❄️','Zware sneeuw'],80:['🌦','Regenbuien'],85:['🌨','Sneeuwbuien'],95:['⛈','Onweer']};
+function wmo(c){return WMO[c]||WMO[Math.round(c/10)*10]||['🌡','—'];}
+const DAY_NL=['zo','ma','di','wo','do','vr','za'];
+const MON=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+const SLOTS=[{label:'🌙 Nacht',hours:[0,1,2,3,4,5]},{label:'🌄 Ochtend',hours:[6,7,8,9,10,11]},{label:'☀️ Middag',hours:[12,13,14,15]},{label:'🌆 Avond',hours:[16,17,18,19,20,21]}];
 
-const DAY_NL = ['zo','ma','di','wo','do','vr','za'];
-const MONTHS = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
-
-// ── SLOT DEFINITIONS ───────────────────────────────────────────────────────
-const SLOTS = [
-  { key: 'nacht',   label: '🌙 Nacht',   hours: [0,1,2,3,4,5] },
-  { key: 'ochtend', label: '🌄 Ochtend', hours: [6,7,8,9,10,11] },
-  { key: 'middag',  label: '☀️ Middag',  hours: [12,13,14,15] },
-  { key: 'avond',   label: '🌆 Avond',   hours: [16,17,18,19,20,21] }
-];
-
-// ── LOAD ALL DATA ──────────────────────────────────────────────────────────
-async function loadAll() {
-  const [wRes, sRes] = await Promise.all([
-    fetch('/api/weather').then(r => r.json()).catch(() => null),
-    fetch('/api/snowreport').then(r => r.json()).catch(() => null)
+// ── LOAD DATA ──────────────────────────────────────────────────────────────
+async function loadAll(){
+  const[w,s]=await Promise.all([
+    fetch('/api/weather').then(r=>r.json()).catch(()=>null),
+    fetch('/api/snowreport').then(r=>r.json()).catch(()=>null)
   ]);
-  weatherData = wRes;
-  snowData = sRes;
-
-  if (weatherData) {
-    updateDashWeather();
-    renderWeather();
-  }
-  if (snowData) {
-    updateDashSnow();
-    renderSnow();
-  }
-
-  const d = new Date();
-  document.getElementById('dash-date').textContent =
-    `${DAY_NL[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-
+  weatherData=w; snowData=s;
+  if(w){updateDashWeather();renderWeather();}
+  if(s){updateDashSnow();renderSnow();}
+  const d=new Date();
+  document.getElementById('dash-date').textContent=`${DAY_NL[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
   document.getElementById('loading').classList.add('gone');
 }
 
-// ── DASHBOARD UPDATES ──────────────────────────────────────────────────────
-function updateDashWeather() {
-  const zone = weatherData[2]; // 2600m
-  const c = zone.data.current;
-  const [icon, desc] = wmo(c.weather_code);
-  document.getElementById('dash-temp').textContent = `${Math.round(c.temperature_2m)}°`;
-  document.getElementById('dash-weather-sub').textContent = `${icon} ${desc} · Wind ${Math.round(c.wind_speed_10m)} km/u`;
-  const d = new Date();
-  document.getElementById('weer-updated').textContent = `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+function updateDashWeather(){
+  const z=weatherData[2],c=z.data.current,[icon,desc]=wmo(c.weather_code);
+  document.getElementById('dash-temp').textContent=`${Math.round(c.temperature_2m)}°`;
+  document.getElementById('dash-weather-sub').textContent=`${icon} ${desc} · 💨 ${Math.round(c.wind_speed_10m)} km/u`;
+  const d=new Date();document.getElementById('weer-updated').textContent=`${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
-
-function updateDashSnow() {
-  document.getElementById('dash-snow').textContent = `${snowData.snowDepthTop} cm`;
-  document.getElementById('dash-snow-sub').textContent =
-    `❄ ${snowData.freshSnow48h > 0 ? snowData.freshSnow48h + ' cm vers (48u)' : 'Geen vers sneeuw'} · ${snowData.pistsOpen}/${snowData.pistsTotal} pistes open`;
+function updateDashSnow(){
+  document.getElementById('dash-snow').textContent=`${snowData.snowDepthTop} cm`;
+  document.getElementById('dash-snow-sub').textContent=`❄ ${snowData.freshSnow48h>0?snowData.freshSnow48h+' cm vers (48u)':'Geen vers'} · ${snowData.pistsOpen}/${snowData.pistsTotal} pistes open`;
 }
 
 // ── WEATHER RENDER ─────────────────────────────────────────────────────────
-function setDay(idx, el) {
-  currentDay = idx;
-  document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  renderWeather();
-}
-
-function setAlt(idx, el) {
-  currentAlt = idx;
-  document.querySelectorAll('.alt-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  renderWeather();
-}
-
-function renderWeather() {
-  if (!weatherData) return;
-  const zone = weatherData[currentAlt];
-  const hourly = zone.data.hourly;
-  const container = document.getElementById('timeslots');
-  container.innerHTML = '';
-
-  // Find the offset for the selected day
-  const today = new Date();
-  today.setHours(0,0,0,0);
-
-  SLOTS.forEach(slot => {
-    // Pick representative hour index for this day+slot
-    const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + currentDay);
-
-    // Find hourly indices matching this day and slot hours
-    const indices = hourly.time.map((t,i) => {
-      const d = new Date(t);
-      const sameDay = d.getDate() === targetDate.getDate() && d.getMonth() === targetDate.getMonth();
-      const inSlot = slot.hours.includes(d.getHours());
-      return sameDay && inSlot ? i : -1;
-    }).filter(i => i >= 0);
-
-    if (!indices.length) return;
-
-    // Average/representative values
-    const temps = indices.map(i => hourly.temperature_2m[i]);
-    const avgTemp = Math.round(temps.reduce((a,b) => a+b,0) / temps.length);
-    const totalPrecip = indices.reduce((s,i) => s + (hourly.precipitation[i] || 0), 0);
-    const totalSnow = indices.reduce((s,i) => s + (hourly.snowfall[i] || 0), 0);
-    const midI = indices[Math.floor(indices.length/2)];
-    const [icon, desc] = wmo(hourly.weather_code[midI]);
-    const wind = Math.round(hourly.wind_speed_10m[midI] || 0);
-
-    const precipStr = totalSnow > 0.1 ? `❄ ${totalSnow.toFixed(1)} cm sneeuw` :
-                      totalPrecip > 0 ? `💧 ${totalPrecip.toFixed(1)} mm regen` : 'Droog';
-
-    const tempColor = avgTemp < -5 ? '#a8d8ff' : avgTemp < 0 ? 'var(--ice)' : avgTemp < 5 ? '#7ec8e3' : '#ffb74d';
-
-    container.innerHTML += `
-      <div class="slot-card">
-        <div class="slot-time">${slot.label}</div>
-        <div>
-          <div style="font-size:28px">${icon}</div>
-          <div class="slot-details">${desc}<br>💨 ${wind} km/u</div>
-        </div>
-        <div></div>
-        <div style="text-align:right">
-          <div class="slot-temp" style="color:${tempColor}">${avgTemp}°</div>
-          <div class="slot-precip">${precipStr}</div>
-        </div>
-      </div>`;
+function setDay(i,el){currentDay=i;document.querySelectorAll('.day-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderWeather();}
+function setAlt(i,el){currentAlt=i;document.querySelectorAll('.alt-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderWeather();}
+function renderWeather(){
+  if(!weatherData)return;
+  const z=weatherData[currentAlt],h=z.data.hourly,c=document.getElementById('timeslots');
+  c.innerHTML='';
+  const today=new Date();today.setHours(0,0,0,0);
+  SLOTS.forEach(slot=>{
+    const td=new Date(today);td.setDate(today.getDate()+currentDay);
+    const idx=h.time.map((t,i)=>{const d=new Date(t);return d.getDate()===td.getDate()&&d.getMonth()===td.getMonth()&&slot.hours.includes(d.getHours())?i:-1;}).filter(i=>i>=0);
+    if(!idx.length)return;
+    const avgT=Math.round(idx.reduce((s,i)=>s+h.temperature_2m[i],0)/idx.length);
+    const totSnow=idx.reduce((s,i)=>s+(h.snowfall[i]||0),0);
+    const totPrecip=idx.reduce((s,i)=>s+(h.precipitation[i]||0),0);
+    const[icon,desc]=wmo(h.weather_code[idx[Math.floor(idx.length/2)]]);
+    const wind=Math.round(h.wind_speed_10m[idx[Math.floor(idx.length/2)]]||0);
+    const precStr=totSnow>0.1?`❄ ${totSnow.toFixed(1)} cm`:totPrecip>0?`💧 ${totPrecip.toFixed(1)} mm`:'Droog';
+    const tc=avgT<-5?'#a8d8ff':avgT<0?'var(--ice)':avgT<5?'#7ec8e3':'#ffb74d';
+    c.innerHTML+=`<div class="slot-card"><div class="slot-time">${slot.label}</div><div><div style="font-size:26px">${icon}</div><div class="slot-details">${desc}<br>💨 ${wind} km/u</div></div><div class="slot-right"><div class="slot-temp" style="color:${tc}">${avgT}°</div><div class="slot-precip">${precStr}</div></div></div>`;
   });
 }
 
 // ── SNOW RENDER ────────────────────────────────────────────────────────────
-function renderSnow() {
-  if (!snowData) return;
-
-  const stats = document.getElementById('snow-stats');
-  stats.innerHTML = `
-    <div class="snow-stat">
-      <div class="snow-stat-label">Open pistes</div>
-      <div class="snow-stat-value" style="color:var(--green)">${snowData.pistsOpen}/${snowData.pistsTotal}</div>
-    </div>
-    <div class="snow-stat">
-      <div class="snow-stat-label">Open liften</div>
-      <div class="snow-stat-value" style="color:var(--green)">${snowData.liftsOpen}/${snowData.liftsTotal}</div>
-    </div>
-    <div class="snow-stat">
-      <div class="snow-stat-label">Vers sneeuw (48u)</div>
-      <div class="snow-stat-value" style="color:var(--ice)">${snowData.freshSnow48h > 0 ? snowData.freshSnow48h + ' cm' : '—'}</div>
-    </div>
-    <div class="snow-stat">
-      <div class="snow-stat-label">Conditie</div>
-      <div class="snow-stat-value" style="font-size:16px;padding-top:4px">${snowData.pistCondition}</div>
-    </div>`;
-
-  const zones = document.getElementById('snow-zones');
-  zones.innerHTML = '';
-  snowData.zones.forEach(z => {
-    const pct = Math.min(100, z.depth / 2);
-    zones.innerHTML += `
-      <div class="snow-zone">
-        <div class="snow-zone-header">
-          <div>
-            <div class="snow-zone-name">${z.label}</div>
-            <div class="snow-zone-alt">${z.alt}m hoogte</div>
-          </div>
-          <div style="text-align:right">
-            <div class="snow-zone-depth">${z.depth}</div>
-            <div class="snow-zone-cm">cm</div>
-          </div>
-        </div>
-        <div class="snow-bar"><div class="snow-bar-fill" style="width:${pct}%"></div></div>
-      </div>`;
+function renderSnow(){
+  if(!snowData)return;
+  document.getElementById('snow-stats').innerHTML=`
+    <div class="snow-stat"><div class="snow-stat-label">Open pistes</div><div class="snow-stat-value" style="color:var(--green)">${snowData.pistsOpen}/${snowData.pistsTotal}</div></div>
+    <div class="snow-stat"><div class="snow-stat-label">Open liften</div><div class="snow-stat-value" style="color:var(--green)">${snowData.liftsOpen}/${snowData.liftsTotal}</div></div>
+    <div class="snow-stat"><div class="snow-stat-label">Vers sneeuw 48u</div><div class="snow-stat-value" style="color:var(--ice)">${snowData.freshSnow48h>0?snowData.freshSnow48h+' cm':'—'}</div></div>
+    <div class="snow-stat"><div class="snow-stat-label">Conditie</div><div class="snow-stat-value" style="font-size:14px;padding-top:6px">${snowData.pistCondition}</div></div>`;
+  const z=document.getElementById('snow-zones');z.innerHTML='';
+  snowData.zones.forEach(z2=>{
+    const pct=Math.min(100,z2.depth/2);
+    document.getElementById('snow-zones').innerHTML+=`<div class="snow-zone"><div class="snow-zone-header"><div><div class="snow-zone-name">${z2.label}</div><div class="snow-zone-alt">${z2.alt}m hoogte</div></div><div style="text-align:right"><div class="snow-zone-depth">${z2.depth}</div><div style="font-size:14px;color:var(--muted)">cm</div></div></div><div class="snow-bar"><div class="snow-bar-fill" style="width:${pct}%"></div></div></div>`;
   });
 }
 
 // ── MAP ────────────────────────────────────────────────────────────────────
-function diffColor(diff, isLift) {
-  if (isLift) return '#ff9100';
-  return {novice:'#00e676',easy:'#00e676',intermediate:'#448aff',advanced:'#ff5252',expert:'#aaa',freeride:'#e040fb'}[diff] || '#888';
+function diffColor(d,isLift){
+  if(isLift)return'#ff9100';
+  return{novice:'#00e676',easy:'#00e676',intermediate:'#448aff',advanced:'#ff5252',expert:'#cccccc',freeride:'#e040fb'}[d]||'#888';
+}
+function crowdLabel(id){
+  const h=new Date().getHours();
+  const isWeekend=[0,6].includes(new Date().getDay());
+  const peakHour=h>=10&&h<=14;
+  const v=((Math.abs(id)*2654435761+h*99991)%100+100)%100;
+  const base=isWeekend?(peakHour?70:45):(peakHour?45:25);
+  const lvl=Math.min(100,base+(v%35)-10);
+  if(lvl<35)return{t:'🟢 Rustig',c:'var(--green)'};
+  if(lvl<65)return{t:'🟡 Normaal',c:'var(--yellow)'};
+  return{t:'🔴 Druk',c:'var(--red)'};
+}
+function routeFromAroles(lat,lng){
+  const isEast=lng>6.155,isGlacier=lat>45.018,isHigh=lat>45.010,isDiable=isEast&&lat>45.000&&lat<45.016;
+  if(isGlacier)return{zone:'Gletsjer 3200–3400m',time:'~35 min',lifts:3,steps:[{i:'🥾',t:'Loop naar Jandri Express',s:'2 min vanuit Les Aroles'},{i:'🚡',t:'Jandri Express 1',s:'Tot Toura 2600m · 12 min'},{i:'🚡',t:'Jandri Express 2',s:'Tot 3200m · 10 min'},{i:'🛤',t:'Funiculaire sous-glaciaire',s:'Naar 3400m · 8 min'}]};
+  if(isDiable)return{zone:'Diable / Crêtes 2100–2400m',time:'~13 min',lifts:1,steps:[{i:'🥾',t:'Loop naar Diable gondola',s:'3 min lopen vanuit Les Aroles'},{i:'🚡',t:'Diable gondola',s:'Rechtstreeks naar 2400m · 10 min'}]};
+  if(isEast)return{zone:'Vallée Blanche 2100m',time:'~18 min',lifts:1,steps:[{i:'🥾',t:'Loop naar Super-Venosc',s:'5 min lopen, andere kant dorp'},{i:'🚡',t:'Super-Venosc kabelbaan',s:'Naar Vallée Blanche · 12 min'}]};
+  if(isHigh)return{zone:'Hoog gebied 2600m',time:'~20 min',lifts:2,steps:[{i:'🥾',t:'Loop naar Jandri Express',s:'2 min vanuit Les Aroles'},{i:'🚡',t:'Jandri Express 1',s:'Naar Toura 2600m · 12 min'}]};
+  return{zone:'Dorp / laag gebied',time:'~5 min',lifts:1,steps:[{i:'🥾',t:'Direct vanuit Les Aroles',s:'Liggen aan de pistvoet'},{i:'🎿',t:'Direct beginnen',s:'Groene en blauwe beginnerszones'}]};
 }
 
-// ── MAP LAYER BOUNDS (georeferenced to Les 2 Alpes) ─────────────────────────
-// Full piste map: SW corner ~ [44.980, 6.082], NE corner ~ [45.040, 6.210]
-const PISTE_BOUNDS = [[44.980, 6.082], [45.040, 6.210]];
-// Glacier detail map: covers upper glacier area
-const GLACIER_BOUNDS = [[45.005, 6.090], [45.042, 6.175]];
-
-let imageOverlay = null;
-let currentMapLayer = 'piste';
-
-function initMap() {
-  map = L.map('map', {
-    center: [45.010, 6.130],
-    zoom: 13,
-    zoomControl: true,
-    maxZoom: 17,
-    minZoom: 11
+function initMap(){
+  map=L.map('map',{center:[45.012,6.130],zoom:13,zoomControl:true});
+  setTimeout(()=>map.invalidateSize(),100);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19,opacity:0.3}).addTo(map);
+  L.tileLayer('https://tiles.opensnowmap.org/pistes/{z}/{x}/{y}.png',{maxZoom:18,opacity:0.9}).addTo(map);
+  markerGroups.resto=L.layerGroup().addTo(map);
+  markerGroups.chill=L.layerGroup().addTo(map);
+  markerGroups.meet=L.layerGroup().addTo(map);
+  loadMarkers();
+  map.on('click',e=>{
+    pendingLatLng=e.latlng;
+    if(meetMode)placeMeetPoint(e.latlng);
   });
-
-  // Faint OSM base for context when zooming out
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap',
-    maxZoom: 19,
-    opacity: 0.15
-  }).addTo(map);
-
-  // Official piste map as main image overlay
-  imageOverlay = L.imageOverlay('/img/pistemap.jpg', PISTE_BOUNDS, {
-    opacity: 1,
-    zIndex: 10,
-    interactive: false
-  }).addTo(map);
-
-  map.fitBounds(PISTE_BOUNDS, { padding: [20, 20] });
-
-  // Force redraw after show
-  setTimeout(() => map.invalidateSize(), 100);
-
-  // Tap to set pending location pin
-  map.on('click', e => { pendingLatLng = e.latlng; });
-
-  // Load piste GeoJSON (transparent clickable layer on top)
-  fetch('/api/pistes').then(r => r.json()).then(geojson => {
-    if (!geojson.features) return;
-    pisteLayer = L.geoJSON(geojson, {
-      style: f => ({
-        color: diffColor(f.properties.difficulty, f.properties.isLift),
-        weight: f.properties.isLift ? 3 : 4,
-        opacity: 0,           // invisible — official map shows the pistes
-        fillOpacity: 0,
-        dashArray: null
-      }),
-      onEachFeature: (f, layer) => {
-        const p = f.properties;
-        // Make hit area wider for touch
-        layer.options.weight = 18;
-        layer.options.opacity = 0;
-
-        layer.on('mouseover', function() {
-          this.setStyle({ opacity: 0.35, color: diffColor(p.difficulty, p.isLift) });
-        });
-        layer.on('mouseout', function() {
-          this.setStyle({ opacity: 0 });
-        });
-        layer.on('click', e => {
-          L.DomEvent.stopPropagation(e);
-          layer.setStyle({ opacity: 0 });
-          showRoutePanel(p, e.latlng);
-        });
+  fetch('/api/pistes').then(r=>r.json()).then(geo=>{
+    if(!geo.features)return;
+    allPisteFeatures=geo.features;
+    pisteLayer=L.geoJSON(geo,{
+      style:f=>{
+        const p=f.properties,c=diffColor(p.difficulty,p.isLift);
+        return{color:c,weight:p.isLift?3:4,opacity:0.85,dashArray:p.isLift?'6 4':null};
+      },
+      onEachFeature:(f,layer)=>{
+        const p=f.properties;
+        layer.on('mouseover',function(){this.setStyle({weight:p.isLift?5:7,opacity:1});});
+        layer.on('mouseout',function(){this.setStyle({weight:p.isLift?3:4,opacity:0.85});});
+        layer.on('click',e=>{L.DomEvent.stopPropagation(e);showRoutePanel(p,e.latlng);});
       }
-    });
-    if (filterState.pistes) pisteLayer.addTo(map);
-    markerLayers.pistes = pisteLayer;
+    }).addTo(map);
   }).catch(console.error);
-
-  // Load markers
-  loadAllMarkers();
 }
 
-function switchMapLayer(type) {
-  if (!map) return;
-  currentMapLayer = type;
-  document.querySelectorAll('.map-toggle-btn').forEach(b => b.classList.remove('active'));
-
-  if (type === 'glacier') {
-    document.getElementById('btn-glaciermap').classList.add('active');
-    if (imageOverlay) map.removeLayer(imageOverlay);
-    imageOverlay = L.imageOverlay('/img/glaciermap.jpg', GLACIER_BOUNDS, {
-      opacity: 1, zIndex: 10, interactive: false
-    }).addTo(map);
-    map.fitBounds(GLACIER_BOUNDS, { padding: [20, 20] });
-  } else {
-    document.getElementById('btn-pistemap').classList.add('active');
-    if (imageOverlay) map.removeLayer(imageOverlay);
-    imageOverlay = L.imageOverlay('/img/pistemap.jpg', PISTE_BOUNDS, {
-      opacity: 1, zIndex: 10, interactive: false
-    }).addTo(map);
-    map.fitBounds(PISTE_BOUNDS, { padding: [20, 20] });
-  }
+function applyLevelFilters(){
+  if(!pisteLayer)return;
+  pisteLayer.eachLayer(layer=>{
+    const p=layer.feature?.properties;if(!p)return;
+    const d=p.isLift?'lift':(p.difficulty||'unknown');
+    const show=levelState[d]!==false;
+    layer.setStyle({opacity:show?0.85:0,interactive:show});
+  });
 }
 
-// ── ROUTE FROM LES AROLES ──────────────────────────────────────────────────
-// Les Aroles is at ~1650m in the village, near the main lift base
-function getRouteFromAroles(lat, lng, difficulty, name) {
-  // Determine zone based on latitude (higher lat = higher altitude in Les 2 Alpes)
-  const isEast = lng > 6.155;          // Vallée Blanche / Connexion side
-  const isGlacier = lat > 45.018;      // Glacier / top area
-  const isHigh = lat > 45.010;         // Toura / Signal area
-  const isDiable = isEast && lat > 45.000 && lat < 45.016; // Diable/Crêtes east
-
-  if (isGlacier) {
-    return {
-      zone: 'Gletsjer (3200–3600m)',
-      time: '~35 min',
-      lifts: 3,
-      steps: [
-        { icon: '🥾', title: 'Loop naar Jandri Express', sub: '2 min lopen vanuit Les Aroles' },
-        { icon: '🚡', title: 'Jandri Express 1', sub: 'Tot Toura station (2600m) · 12 min' },
-        { icon: '🚡', title: 'Jandri Express 2', sub: 'Tot Jandri top (3200m) · 10 min' },
-        { icon: '🛤', title: 'Funiculaire sous-glaciaire', sub: 'Onder het ijs door naar 3400m · 8 min' }
-      ]
-    };
-  } else if (isDiable) {
-    return {
-      zone: 'Diable / Crêtes (2100–2400m)',
-      time: '~15 min',
-      lifts: 2,
-      steps: [
-        { icon: '🥾', title: 'Loop naar Diable gondola', sub: '3 min lopen, richting Bellecombes' },
-        { icon: '🚡', title: 'Diable gondola', sub: 'Rechtstreeks omhoog · 10 min' },
-        { icon: '🎿', title: 'Je bent er!', sub: 'Rode en zwarte pistes in de Crêtes-sector' }
-      ]
-    };
-  } else if (isEast) {
-    return {
-      zone: 'Vallée Blanche (2100m)',
-      time: '~20 min',
-      lifts: 2,
-      steps: [
-        { icon: '🥾', title: 'Loop naar Super-Venosc', sub: '5 min lopen naar de kabelbaan' },
-        { icon: '🚡', title: 'Super-Venosc kabelbaan', sub: 'Naar Vallée Blanche sector · 12 min' },
-        { icon: '🎿', title: 'Vallée Blanche pistes', sub: 'Rustige sector, mooi uitzicht' }
-      ]
-    };
-  } else if (isHigh) {
-    return {
-      zone: 'Hoog gebied (2600m)',
-      time: '~20 min',
-      lifts: 2,
-      steps: [
-        { icon: '🥾', title: 'Loop naar Jandri Express', sub: '2 min lopen vanuit Les Aroles' },
-        { icon: '🚡', title: 'Jandri Express 1', sub: 'Naar Toura (2600m) · 12 min' },
-        { icon: '🎿', title: 'Je bent er!', sub: 'Brede rode en blauwe pistes op 2600m' }
-      ]
-    };
-  } else {
-    return {
-      zone: 'Lager gebied (1650–2100m)',
-      time: '~5 min',
-      lifts: 1,
-      steps: [
-        { icon: '🥾', title: 'Ski of loop vanuit de deur', sub: 'Les Aroles ligt direct aan de piste' },
-        { icon: '🚡', title: 'Jandri Express of Bellecombes', sub: 'Als je hoger wilt · 5 min' },
-        { icon: '🎿', title: 'Directe toegang', sub: 'Groene en blauwe beginnerspistes' }
-      ]
-    };
-  }
+function toggleLevel(btn){
+  const d=btn.dataset.d;
+  levelState[d]=!levelState[d];
+  btn.classList.toggle('on',levelState[d]);
+  applyLevelFilters();
 }
 
-function showRoutePanel(p, latlng) {
-  const crowd = getCrowd(p.id);
-  const color = diffColor(p.difficulty, p.isLift);
-  const route = getRouteFromAroles(latlng.lat, latlng.lng, p.difficulty, p.name);
+function toggleLayer(key,el){
+  layerState[key]=!layerState[key];
+  el.classList.toggle('active',layerState[key]);
+  if(!map||!markerGroups[key])return;
+  layerState[key]?markerGroups[key].addTo(map):map.removeLayer(markerGroups[key]);
+}
 
-  const stepsHtml = route.steps.map(s => `
-    <div class="route-step">
-      <div class="route-step-icon">${s.icon}</div>
-      <div class="route-step-text">
-        <strong>${s.title}</strong>
-        <span>${s.sub}</span>
-      </div>
-    </div>`).join('');
+// ── ROUTE PANEL ────────────────────────────────────────────────────────────
+function showRoutePanel(p,latlng){
+  const c=diffColor(p.difficulty,p.isLift);
+  const crowd=crowdLabel(p.id);
+  const route=routeFromAroles(latlng.lat,latlng.lng);
+  const isFav=!!favs[p.id];
+  const steps=route.steps.map(s=>`<div class="route-step"><div class="step-icon">${s.i}</div><div class="step-txt"><strong>${s.t}</strong><span>${s.s}</span></div></div>`).join('');
+  const diffLabel={novice:'Groen',easy:'Groen',intermediate:'Blauw',advanced:'Rood',expert:'Zwart',freeride:'Freeride'}[p.difficulty]||p.difficulty||'—';
 
-  document.getElementById('route-content').innerHTML = `
-    <div class="route-piste-name">${p.name || (p.isLift ? 'Lift' : 'Piste')}</div>
-    <span class="route-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">
-      ${p.isLift ? (p.aerialway || 'lift') : (p.difficulty || '?')} · ${p.groomed ? '✅ gegroomed' : '❌ niet gegroomed'}
-    </span>
-    <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">
-      🏠 Route vanaf Les Aroles · ${route.zone}
+  document.getElementById('rp-body').innerHTML=`
+    <div class="rp-header">
+      <div class="rp-name">${p.name||'Piste'}</div>
+      <button class="rp-fav" onclick="toggleFav(${p.id},'${(p.name||'Piste').replace(/'/g,"\\'")}','${p.difficulty||''}','${c}')">${isFav?'⭐':'☆'}</button>
     </div>
-    <div class="route-steps">${stepsHtml}</div>
-    <div class="route-meta">
-      <div class="route-meta-item"><strong>${route.time}</strong>Reistijd</div>
-      <div class="route-meta-item"><strong>${route.lifts}</strong>Lift(en)</div>
-      <div class="route-meta-item"><strong>${crowd}</strong>Drukte</div>
+    <div class="rp-badges">
+      <span class="rp-badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${p.isLift?(p.aerialway||'Lift'):diffLabel}</span>
+      <span class="rp-badge" style="background:rgba(255,255,255,.06);color:${crowd.c};border:1px solid var(--border)">${crowd.t}</span>
+      ${p.groomed?'<span class="rp-badge" style="background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.2)">✅ Gegroomed</span>':''}
+    </div>
+    <div class="rp-section">🏠 Route vanaf Les Aroles · ${route.zone}</div>
+    <div class="route-steps">${steps}</div>
+    <div class="rp-meta">
+      <div class="rp-meta-item"><div class="rp-meta-label">Reistijd</div><div class="rp-meta-val">${route.time}</div></div>
+      <div class="rp-meta-item"><div class="rp-meta-label">Liften</div><div class="rp-meta-val">${route.lifts}</div></div>
+      <div class="rp-meta-item"><div class="rp-meta-label">Drukte</div><div class="rp-meta-val" style="font-size:16px;margin-top:4px">${crowd.t}</div></div>
     </div>`;
-
   document.getElementById('route-panel').classList.add('open');
 }
 
-function closeRoutePanel() {
-  document.getElementById('route-panel').classList.remove('open');
+function closeRoutePanel(){document.getElementById('route-panel').classList.remove('open');}
+map&&document.getElementById('map')&&document.getElementById('map').addEventListener('click',e=>{if(e.target.classList.contains('leaflet-container'))closeRoutePanel();});
+
+// ── FAVOURITES ─────────────────────────────────────────────────────────────
+function toggleFav(id,name,diff,color){
+  if(favs[id])delete favs[id];
+  else favs[id]={name,diff,color,savedAt:new Date().toISOString()};
+  localStorage.setItem('ski_favs',JSON.stringify(favs));
+  // Re-render button in panel
+  const btn=document.querySelector('.rp-fav');
+  if(btn)btn.textContent=favs[id]?'⭐':'☆';
+}
+function renderFavs(){
+  const el=document.getElementById('fav-list');
+  const keys=Object.keys(favs);
+  if(!keys.length){el.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-size:14px">Nog geen favoriete pistes.<br>Tik ☆ op een piste op de kaart.</div>';return;}
+  el.innerHTML=keys.map(id=>{
+    const f=favs[id];
+    return`<div class="fav-item" onclick="goToFav()">
+      <div class="fav-dot" style="background:${f.color||'var(--muted)'}"></div>
+      <div style="flex:1"><div class="fav-name">${f.name}</div><div class="fav-sub">${{novice:'Groen',easy:'Groen',intermediate:'Blauw',advanced:'Rood',expert:'Zwart'}[f.diff]||f.diff||'Piste'}</div></div>
+      <button class="fav-remove" onclick="event.stopPropagation();removeFav(${id},this.closest('.fav-item'))">✕</button>
+    </div>`;
+  }).join('');
+}
+function removeFav(id,el){delete favs[id];localStorage.setItem('ski_favs',JSON.stringify(favs));el.remove();}
+function goToFav(){goTo('kaart');}
+
+// ── MEET POINT ─────────────────────────────────────────────────────────────
+function startMeetMode(){
+  meetMode=true;
+  document.getElementById('meet-bar').classList.add('visible');
+  document.getElementById('btn-meet').classList.add('active');
+}
+function cancelMeetMode(){
+  meetMode=false;
+  document.getElementById('meet-bar').classList.remove('visible');
+  document.getElementById('btn-meet').classList.remove('active');
+}
+function placeMeetPoint(latlng){
+  cancelMeetMode();
+  if(meetMarker)markerGroups.meet.removeLayer(meetMarker);
+  const icon=L.divIcon({html:'<div class="meet-marker">📍</div>',className:'',iconSize:[38,38],iconAnchor:[19,19]});
+  meetMarker=L.marker([latlng.lat,latlng.lng],{icon});
+  meetMarker.bindPopup('<div class="popup-inner"><div class="popup-name">📍 Afspraakpunt</div><div class="popup-row">Hier afspreken met de groep</div><div style="margin-top:8px"><button onclick="if(meetMarker){markerGroups.meet.removeLayer(meetMarker);meetMarker=null;}" style="background:rgba(255,82,82,.15);border:1px solid rgba(255,82,82,.3);color:var(--red);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:Barlow,sans-serif;font-weight:600">🗑 Verwijder</button></div></div>');
+  markerGroups.meet.addLayer(meetMarker);
+  meetMarker.openPopup();
 }
 
-function getCrowd(id) {
-  const h = new Date().getHours();
-  const v = ((id * 2654435761 + h * 99991) % 100 + 100) % 100;
-  if (v < 30) return '🟢 Rustig';
-  if (v < 65) return '🟡 Normaal';
-  return '🔴 Druk';
-}
-
-async function loadAllMarkers() {
-  markerLayers.resto.clearLayers();
-  markerLayers.chill.clearLayers();
-
-  const userLocs = await fetch('/api/locations').then(r => r.json()).catch(() => []);
-  const all = [...PRESET_LOCATIONS, ...userLocs];
-
-  all.forEach(loc => {
-    const isResto = loc.type === 'restaurant' || loc.type === 'bar';
-    const emoji = loc.type === 'restaurant' ? '🍽' : loc.type === 'bar' ? '🍺' : '☀️';
-    const color = loc.type === 'restaurant' ? '#ff9100' : loc.type === 'bar' ? '#ff5252' : '#ffd740';
-    const layerKey = isResto ? 'resto' : 'chill';
-    const isUser = loc.addedBy === 'user';
-
-    const icon = L.divIcon({
-      html: `<div class="map-marker" style="background:${color}22;border-color:${color}66;font-size:18px">${emoji}</div>`,
-      className: '', iconSize: [36,36], iconAnchor: [18,18]
-    });
-
-    const marker = L.marker([loc.lat, loc.lng], { icon });
-
-    const deleteBtn = isUser ? `<div style="margin-top:10px"><button onclick="deleteLocation(${loc.id})" style="background:rgba(255,82,82,.15);border:1px solid rgba(255,82,82,.3);color:#ff5252;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:Barlow,sans-serif;font-weight:600">🗑 Verwijder</button></div>` : '';
-
-    marker.bindPopup(`
-      <div class="popup-inner">
-        <div class="popup-name">${loc.name}</div>
-        <span class="popup-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${loc.type}</span>
-        ${loc.description ? `<div class="popup-row" style="margin-top:4px">${loc.description}</div>` : ''}
-        ${loc.hours ? `<div class="popup-row">Open: <span>${loc.hours}</span></div>` : ''}
-        ${loc.sun ? `<div class="popup-row">☀️ Beste zon: <span>${loc.sun}</span></div>` : ''}
-        ${deleteBtn}
-      </div>`);
-
-    markerLayers[layerKey].addLayer(marker);
+// ── MARKERS ────────────────────────────────────────────────────────────────
+async function loadMarkers(){
+  markerGroups.resto.clearLayers();markerGroups.chill.clearLayers();
+  const userLocs=await fetch('/api/locations').then(r=>r.json()).catch(()=>[]);
+  [...PRESETS,...userLocs].forEach(loc=>{
+    const isResto=loc.type==='restaurant'||loc.type==='bar';
+    const emoji=loc.type==='restaurant'?'🍽':loc.type==='bar'?'🍺':'☀️';
+    const color=loc.type==='restaurant'?'#ff9100':loc.type==='bar'?'#ff5252':'#ffd740';
+    const isUser=loc.addedBy==='user';
+    const icon=L.divIcon({html:`<div class="map-marker" style="background:${color}22;border-color:${color}66">${emoji}</div>`,className:'',iconSize:[38,38],iconAnchor:[19,19]});
+    const m=L.marker([loc.lat,loc.lng],{icon});
+    const del=isUser?`<div style="margin-top:10px"><button onclick="delLoc(${loc.id})" style="background:rgba(255,82,82,.15);border:1px solid rgba(255,82,82,.3);color:var(--red);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:Barlow,sans-serif;font-weight:600">🗑 Verwijder</button></div>`:'';
+    m.bindPopup(`<div class="popup-inner"><div class="popup-name">${loc.name}</div><span class="popup-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${loc.type}</span>${loc.description?`<div class="popup-row" style="margin-top:4px">${loc.description}</div>`:''}${loc.hours?`<div class="popup-row">Open: <span>${loc.hours}</span></div>`:''}${loc.sun?`<div class="popup-row">☀️ Beste zon: <span>${loc.sun}</span></div>`:''} ${del}</div>`);
+    markerGroups[isResto?'resto':'chill'].addLayer(m);
   });
-
-  if (map) {
-    if (filterState.resto) markerLayers.resto.addTo(map);
-    if (filterState.chill) markerLayers.chill.addTo(map);
-  }
 }
-
-// ── FILTERS ────────────────────────────────────────────────────────────────
-function toggleFilter(key, el) {
-  filterState[key] = !filterState[key];
-  el.classList.toggle('active', filterState[key]);
-
-  if (!map) return;
-  if (key === 'pistes' && markerLayers.pistes) {
-    filterState.pistes ? markerLayers.pistes.addTo(map) : map.removeLayer(markerLayers.pistes);
-  } else if (markerLayers[key]) {
-    filterState[key] ? markerLayers[key].addTo(map) : map.removeLayer(markerLayers[key]);
-  }
-}
+function delLoc(id){fetch(`/api/locations/${id}`,{method:'DELETE'});map&&map.closePopup();loadMarkers();}
 
 // ── ADD LOCATION ───────────────────────────────────────────────────────────
-function openAddSheet() { document.getElementById('add-sheet').classList.add('visible'); }
-function closeAddSheet() { document.getElementById('add-sheet').classList.remove('visible'); }
-
-function selectType(el) {
-  document.querySelectorAll('.type-opt').forEach(o => o.classList.remove('sel'));
-  el.classList.add('sel');
-  selectedType = el.dataset.type;
-}
-
-async function submitLocation() {
-  const name = document.getElementById('loc-name').value.trim();
-  if (!name) { alert('Vul een naam in'); return; }
-
-  let lat, lng;
-  if (pendingLatLng) {
-    lat = pendingLatLng.lat;
-    lng = pendingLatLng.lng;
-  } else if (map) {
-    const c = map.getCenter();
-    lat = c.lat; lng = c.lng;
-  } else {
-    lat = 45.012; lng = 6.130;
-  }
-
-  const body = {
-    name, type: selectedType,
-    lat, lng,
-    description: document.getElementById('loc-desc').value.trim(),
-    sun: document.getElementById('loc-sun').value.trim(),
-    hours: ''
-  };
-
-  await fetch('/api/locations', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-
-  // Reset form
-  document.getElementById('loc-name').value = '';
-  document.getElementById('loc-desc').value = '';
-  document.getElementById('loc-sun').value = '';
-  pendingLatLng = null;
-  closeAddSheet();
-  loadAllMarkers();
-}
-
-async function deleteLocation(id) {
-  await fetch(`/api/locations/${id}`, { method:'DELETE' });
-  map.closePopup();
-  loadAllMarkers();
+function openAddSheet(){document.getElementById('add-sheet').classList.add('visible');}
+function closeAddSheet(){document.getElementById('add-sheet').classList.remove('visible');}
+function selType(el){document.querySelectorAll('.type-opt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel');selectedType=el.dataset.type;}
+async function submitLocation(){
+  const name=document.getElementById('loc-name').value.trim();
+  if(!name){alert('Vul een naam in');return;}
+  const latlng=pendingLatLng||(map?map.getCenter():{lat:45.012,lng:6.130});
+  await fetch('/api/locations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,type:selectedType,lat:latlng.lat,lng:latlng.lng,description:document.getElementById('loc-desc').value.trim(),sun:document.getElementById('loc-sun').value.trim(),hours:''})});
+  document.getElementById('loc-name').value='';document.getElementById('loc-desc').value='';document.getElementById('loc-sun').value='';
+  pendingLatLng=null;closeAddSheet();loadMarkers();
 }
 
 // ── BOOT ───────────────────────────────────────────────────────────────────
