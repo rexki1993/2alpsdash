@@ -182,6 +182,64 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 .load-bar{width:160px;height:2px;background:var(--border);border-radius:1px;overflow:hidden;}
 .load-fill{height:100%;background:var(--ice);animation:loadFill 2s ease forwards;}
 @keyframes loadFill{from{width:0}to{width:100%}}
+
+/* ── ROUTE PLANNER ──────────────────────────────────────────── */
+#view-route{background:var(--bg);}
+.rp-hero{padding:20px 16px 0;}
+.rp-hero-title{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;}
+.rp-hero-sub{font-size:13px;color:var(--muted);margin-top:2px;}
+.pick-row{display:flex;align-items:center;gap:10px;padding:0 16px;}
+.pick-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;width:32px;flex-shrink:0;}
+.pick-btn{flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 16px;text-align:left;cursor:pointer;transition:all .2s;font-family:'Barlow',sans-serif;}
+.pick-btn.sel{border-color:var(--ice);background:var(--ice-dim);}
+.pick-name{font-size:15px;font-weight:600;color:var(--snow);}
+.pick-alt{font-size:11px;color:var(--muted);margin-top:1px;}
+.pick-divider{display:flex;align-items:center;gap:10px;padding:8px 16px;}
+.pick-line{flex:1;height:1px;background:var(--border);}
+.swap-btn{background:var(--card);border:1px solid var(--border);border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .3s;flex-shrink:0;}
+.swap-btn:active{transform:rotate(180deg);}
+.level-row{display:flex;gap:8px;padding:12px 16px 0;}
+.lvl-pick{flex:1;padding:10px 4px;background:var(--card);border:2px solid var(--border);border-radius:10px;text-align:center;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;}
+.lvl-pick.on{color:#000;}
+.lvl-pick[data-l="novice"].on{background:var(--green);border-color:var(--green);}
+.lvl-pick[data-l="intermediate"].on{background:var(--blue);border-color:var(--blue);}
+.lvl-pick[data-l="advanced"].on{background:var(--red);border-color:var(--red);}
+.go-btn{width:calc(100% - 32px);margin:14px 16px 0;padding:16px;background:var(--ice);border:none;border-radius:14px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:1px;color:#000;cursor:pointer;transition:all .15s;}
+.go-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
+.go-btn:not(:disabled):active{transform:scale(.98);}
+.route-result{padding:14px 16px 0;}
+.route-summary{display:flex;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px;}
+.route-stat{flex:1;padding:14px 8px;text-align:center;border-right:1px solid var(--border);}
+.route-stat:last-child{border-right:none;}
+.route-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;}
+.route-stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+.step-list{display:flex;flex-direction:column;}
+.step{display:flex;gap:0;position:relative;}
+.step-spine{display:flex;flex-direction:column;align-items:center;width:46px;flex-shrink:0;padding-top:2px;}
+.step-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;border:1.5px solid transparent;}
+.step-vline{flex:1;width:2px;min-height:12px;background:var(--border);margin:3px 0;}
+.step:last-child .step-vline{display:none;}
+.step-body{flex:1;padding:0 4px 18px 0;}
+.step-kind{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-bottom:2px;}
+.step-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;line-height:1.15;}
+.step-detail{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.55;}
+.step-dur{font-size:12px;font-weight:700;margin-top:4px;}
+/* Station picker sheet */
+#stn-sheet{position:fixed;inset:0;z-index:3000;display:none;align-items:flex-end;}
+#stn-sheet.open{display:flex;}
+#stn-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);}
+#stn-box{position:relative;background:var(--surface);border-radius:20px 20px 0 0;width:100%;border-top:1px solid var(--border);max-height:80vh;display:flex;flex-direction:column;animation:slideUp .28s ease;}
+.stn-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 6px;}
+#stn-title{padding:0 16px 10px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;}
+.stn-search{padding:0 16px 10px;border-bottom:1px solid var(--border);}
+.stn-search input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--snow);font-family:'Barlow',sans-serif;font-size:16px;outline:none;}
+.stn-search input:focus{border-color:var(--ice);}
+#stn-list{overflow-y:auto;flex:1;padding:6px 0 12px;}
+.stn-item{padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .15s;}
+.stn-item:active{background:var(--card);}
+.stn-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.stn-item-name{font-weight:600;font-size:15px;}
+.stn-item-alt{font-size:12px;color:var(--muted);}
 </style>
 </head>
 <body>
@@ -210,6 +268,22 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
       <div class="tap-card-sub" id="dash-snow-sub">Laden...</div>
     </div>
     <button class="map-btn" onclick="goTo('kaart')">🗺 Pistekaart openen</button>
+
+    <!-- BIER KNOP -->
+    <div id="bier-card" style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div>
+          <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px;">🍺 Wie wil er een biertje?</div>
+          <div style="font-size:12px;color:var(--muted)">Lijst reset elke avond om 00:00</div>
+        </div>
+        <button onclick="toggleBierInput()" id="bier-toggle-btn" style="background:var(--orange);color:#000;border:none;border-radius:10px;padding:10px 16px;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;cursor:pointer;letter-spacing:1px;flex-shrink:0;">🍺 Ik wel!</button>
+      </div>
+      <div id="bier-input-row" style="display:none;gap:8px;margin-bottom:12px;align-items:center;">
+        <input id="bier-naam" placeholder="Jouw naam..." style="flex:1;background:#0a1628;border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--snow);font-family:'Barlow',sans-serif;font-size:15px;outline:none;min-width:0;" onkeydown="if(event.key==='Enter')addBier()"/>
+        <button onclick="addBier()" style="background:var(--orange);color:#000;border:none;border-radius:9px;padding:11px 16px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;cursor:pointer;flex-shrink:0;">OK</button>
+      </div>
+      <div id="bier-namen" style="display:flex;flex-wrap:wrap;gap:7px;min-height:0;"></div>
+    </div>
   </div>
 </div>
 
@@ -276,6 +350,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
   <button class="nav-btn" id="nav-weer" onclick="goTo('weer')"><div class="nav-ind"></div><span class="icon">☁️</span>Weer</button>
   <button class="nav-btn" id="nav-sneeuw" onclick="goTo('sneeuw')"><div class="nav-ind"></div><span class="icon">❄️</span>Sneeuw</button>
   <button class="nav-btn" id="nav-kaart" onclick="goTo('kaart')"><div class="nav-ind"></div><span class="icon">🗺</span>Kaart</button>
+  <button class="nav-btn" id="nav-route" onclick="goTo('route')"><div class="nav-ind"></div><span class="icon">🗺</span>Route</button>
   <button class="nav-btn" id="nav-favs" onclick="goTo('favs')"><div class="nav-ind"></div><span class="icon">⭐</span>Favs</button>
 </nav>
 </div>
@@ -301,13 +376,14 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
   </div>
 </div>
 
+<script src="/network.js"></script>
 <script>
 // ════════════════════════════════════════════════════════════════
-// LIFT GRAPH — de echte liftnetwerk van Les 2 Alpes
+// LIFT GRAPH (now in network.js — this section kept for UI only) — de echte liftnetwerk van Les 2 Alpes
 // Nodes = stations, Edges = liften (gaan OMHOOG)
 // ════════════════════════════════════════════════════════════════
 const STATIONS = {
-  aroles:   { name:'Les Aroles',         alt:1650, lat:45.003, lng:6.122 },
+  aroles:   { name:'Les Aroles',         alt:1650, lat:45.0232430, lng:6.1249131 },
   bas1650:  { name:'2 Alpes 1650m',      alt:1650, lat:45.002, lng:6.125 },
   bas1800:  { name:'2 Alpes 1800m',      alt:1800, lat:45.003, lng:6.130 },
   toura:    { name:'Toura',              alt:2600, lat:45.012, lng:6.130 },
@@ -319,6 +395,8 @@ const STATIONS = {
   vallee:   { name:'Vallée Blanche',     alt:2100, lat:45.010, lng:6.162 },
   fee:      { name:'La Fée',             alt:2440, lat:45.016, lng:6.138 },
   bellecombes: { name:'Bellecombes',     alt:2100, lat:45.006, lng:6.147 },
+  cretes:   { name:'Crêtes top',          alt:2500, lat:45.007, lng:6.152 },
+  puysalie: { name:'Puy Salié',           alt:3421, lat:45.023, lng:6.112 },
 };
 
 // Elke lift: van station → naar station, met tijden en openingstijden
@@ -507,6 +585,7 @@ function goTo(page){
   nb.classList.add('active');nb.querySelector('.nav-ind').style.display='block';
   if(page==='kaart'){if(!map)initMap();else setTimeout(()=>map.invalidateSize(),50);}
   if(page==='favs')renderFavs();
+  if(page==='route'){setPickBtn('from','aroles');refreshGoBtn();}
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -606,7 +685,7 @@ function initMap(){
 
   // Les Aroles huisje marker
   const homeIcon=L.divIcon({html:'<div class="home-marker">🏠</div>',className:'',iconSize:[42,42],iconAnchor:[21,21]});
-  L.marker([45.003,6.122],{icon:homeIcon,zIndexOffset:1000})
+  L.marker([45.0232430,6.1249131],{icon:homeIcon,zIndexOffset:1000})
     .bindPopup('<div class="popup-inner"><div class="popup-name">🏠 Les Aroles</div><div class="popup-row">Ons verblijf · 1650m</div><div class="popup-row" style="margin-top:6px;color:var(--ice);font-weight:600;">Startpunt van alle routes</div></div>')
     .addTo(map);
 
@@ -821,10 +900,196 @@ function renderFavs(){
 }
 function removeFav(id,el){delete favs[id];localStorage.setItem('ski_favs',JSON.stringify(favs));el.remove();}
 
+
+// ═══════════════════════════════════════════════════════
+// ROUTE PLANNER
+// ═══════════════════════════════════════════════════════
+let rFrom='aroles', rTo=null, rLevel='intermediate', rPickFor=null;
+
+function stationDotColor(id){
+  const s=STATIONS[id];if(!s)return'#888';
+  if(s.type==='home')return'var(--ice)';
+  if(s.alt>=3200)return'#e040fb';
+  if(s.alt>=2500)return'var(--red)';
+  if(s.alt>=2000)return'var(--orange)';
+  return'var(--green)';
+}
+function setPickBtn(which,id){
+  const s=STATIONS[id];if(!s)return;
+  document.getElementById('p'+which+'-name').textContent=(s.type==='home'?'🏠 ':'📍 ')+s.name;
+  document.getElementById('p'+which+'-alt').textContent=s.alt+'m'+(s.type==='home'?' · Vertrekpunt':'');
+  document.getElementById('pick-'+which).classList.add('sel');
+  refreshGoBtn();
+}
+function refreshGoBtn(){
+  document.getElementById('go-btn').disabled=!(rFrom&&rTo&&rFrom!==rTo);
+}
+function setRLevel(el){
+  document.querySelectorAll('.lvl-pick').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');rLevel=el.dataset.l;
+  if(document.getElementById('route-output').innerHTML)runRoute();
+}
+function swapRoute(){
+  if(!rTo)return;
+  [rFrom,rTo]=[rTo,rFrom];
+  setPickBtn('from',rFrom);setPickBtn('to',rTo);
+}
+function openPicker(which){
+  rPickFor=which;
+  document.getElementById('stn-title').textContent=which==='from'?'Van welk station?':'Naar welk station?';
+  document.getElementById('stn-q').value='';
+  document.getElementById('stn-sheet').classList.add('open');
+  renderStnList('');
+  setTimeout(()=>document.getElementById('stn-q').focus(),200);
+}
+function closePicker(){
+  document.getElementById('stn-sheet').classList.remove('open');
+}
+function filterStn(q){renderStnList(q.toLowerCase());}
+function renderStnList(q){
+  const el=document.getElementById('stn-list');
+  const entries=Object.entries(STATIONS)
+    .filter(([id,s])=>!q||s.name.toLowerCase().includes(q))
+    .sort((a,b)=>b[1].alt-a[1].alt);
+  el.innerHTML=entries.map(([id,s])=>`
+    <div class="stn-item" onclick="pickStation('${id}')">
+      <div class="stn-dot" style="background:${stationDotColor(id)}"></div>
+      <div>
+        <div class="stn-item-name">${s.type==='home'?'🏠 ':''}${s.name}</div>
+        <div class="stn-item-alt">${s.alt}m</div>
+      </div>
+    </div>`).join('');
+}
+function pickStation(id){
+  closePicker();
+  if(rPickFor==='from'){rFrom=id;setPickBtn('from',id);}
+  else{rTo=id;setPickBtn('to',id);}
+}
+
+// isOpen helper (checks against lift objects from LIFTS array in network.js)
+function isOpenLift(lift){
+  const now=new Date(),h=now.getHours()*60+now.getMinutes();
+  const[oh,om]=lift.opens.split(':').map(Number);
+  const[ch,cm]=lift.closes.split(':').map(Number);
+  return h>=oh*60+om&&h<=ch*60+cm;
+}
+
+function runRoute(){
+  if(!rFrom||!rTo)return;
+  const result=findRoute(rFrom,rTo,rLevel);
+  const el=document.getElementById('route-output');
+  if(!result||!result.path||result.path.length===0){
+    el.innerHTML=`<div style="text-align:center;padding:32px 16px;color:var(--muted)">
+      <div style="font-size:40px;margin-bottom:12px">🤔</div>
+      <div style="font-size:17px;font-weight:700;color:var(--snow);margin-bottom:8px">Geen route gevonden</div>
+      <div style="font-size:13px">Controleer start en bestemming,<br>of probeer een ander niveau.</div>
+    </div>`;
+    return;
+  }
+  const lifts=result.path.filter(s=>s.type==='lift');
+  const pistes=result.path.filter(s=>s.type==='piste');
+  const mins=result.totalTime;
+  const timeStr=mins>=60?Math.floor(mins/60)+'u '+( mins%60?mins%60+'m':''):mins+' min';
+
+  let html=`<div class="route-summary">
+    <div class="route-stat"><div class="route-stat-val">${timeStr}</div><div class="route-stat-lbl">Totaaltijd</div></div>
+    <div class="route-stat"><div class="route-stat-val">${lifts.length}</div><div class="route-stat-lbl">Lift(en)</div></div>
+    <div class="route-stat"><div class="route-stat-val">${pistes.length}</div><div class="route-stat-lbl">Piste(s)</div></div>
+  </div><div class="step-list">`;
+
+  // Start
+  const fromS=STATIONS[rFrom];
+  html+=mkStep('🏠','var(--ice-dim)','var(--ice)','Vertrek','var(--ice)',fromS.name,fromS.alt+'m · '+( fromS.type==='home'?'Jouw verblijf':'Station'),null);
+
+  result.path.forEach(step=>{
+    if(step.type==='lift'){
+      const l=step.obj;
+      const open=isOpenLift(l);
+      const emo=l.type==='gondola'?'🚡':l.type==='cable'?'🚠':l.type==='funicular'?'🛤':'🪑';
+      const detail=`${STATIONS[l.from].name} → ${STATIONS[l.to].name} &nbsp;·&nbsp; Laatste omhoog: <b style="color:var(--orange)">${l.lastUp}</b> &nbsp;·&nbsp; ${open?'<span style=\'color:var(--green)\'>✅ Open</span>':'<span style=\'color:var(--red)\'>🔴 Gesloten</span>'}`;
+      html+=mkStep(emo,'rgba(255,145,0,.15)','rgba(255,145,0,.45)','Lift omhoog','var(--orange)',l.name,detail,l.duration+' min');
+    } else if(step.type==='piste'){
+      const p=step.obj;
+      const dc={novice:'var(--green)',easy:'var(--green)',intermediate:'var(--blue)',advanced:'var(--red)',expert:'#ccc'};
+      const dl={novice:'Groen',easy:'Groen',intermediate:'Blauw',advanced:'Rood',expert:'Zwart'};
+      const c=dc[p.difficulty]||'#888';
+      const t=p.skiTime[rLevel]||p.skiTime.intermediate||p.skiTime.advanced||'?';
+      const detail=`${STATIONS[p.from].name} → ${STATIONS[p.to].name}${p.groomed?' &nbsp;·&nbsp; ✅ Gegroomed':''}`;
+      html+=mkStep('🎿',c+'22',c+'55','Piste omlaag · '+(dl[p.difficulty]||'?'),c,p.name,detail,'~'+t+' min');
+    } else if(step.type==='transfer'){
+      const detail=`${STATIONS[step.from].name} → ${STATIONS[step.to].name}`;
+      html+=mkStep('🥾','rgba(255,255,255,.05)','var(--border)','Lopen','var(--muted)',step.obj.info||'Transfer',detail,step.time+' min');
+    }
+  });
+
+  const toS=STATIONS[rTo];
+  html+=mkStep('🏁','rgba(0,230,118,.12)','rgba(0,230,118,.4)','Bestemming','var(--green)',toS.name,toS.alt+'m · Je bent er! 🎉',null);
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+function mkStep(icon,bgC,borderC,kind,kindColor,name,detail,dur){
+  return`<div class="step">
+  <div class="step-spine">
+    <div class="step-dot" style="background:${bgC};border-color:${borderC}">${icon}</div>
+    <div class="step-vline"></div>
+  </div>
+  <div class="step-body">
+    <div class="step-kind" style="color:${kindColor}">${kind}</div>
+    <div class="step-name">${name}</div>
+    <div class="step-detail">${detail}</div>
+    ${dur?`<div class="step-dur" style="color:${kindColor}">⏱ ${dur}</div>`:''}
+  </div></div>`;
+}
+
+// ════════════════════════════════════════════════════════════════
+// BIER KNOP
+// Namen worden opgeslagen in localStorage met datum-key
+// Elke dag om 00:00 vervallen ze automatisch
+// ════════════════════════════════════════════════════════════════
+function bierKey(){
+  const d=new Date();
+  return `ski_bier_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;
+}
+function getBierNamen(){
+  try{return JSON.parse(localStorage.getItem(bierKey())||'[]');}catch{return [];}
+}
+function saveBierNamen(namen){
+  localStorage.setItem(bierKey(),JSON.stringify(namen));
+}
+function renderBier(){
+  const namen=getBierNamen();
+  const el=document.getElementById('bier-namen');
+  if(!el)return;
+  el.innerHTML=namen.length
+    ?namen.map(n=>`<div style="background:rgba(255,145,0,.15);border:1px solid rgba(255,145,0,.3);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--orange);display:flex;align-items:center;gap:6px;">🍺 ${n}<button onclick="removeBier('${n}')" style="background:none;border:none;color:rgba(255,145,0,.5);font-size:14px;cursor:pointer;padding:0;margin:0;line-height:1;">✕</button></div>`).join('')
+    :'<div style="font-size:13px;color:var(--muted);padding:4px 0">Nog niemand. Jij de eerste? 🍺</div>';
+}
+function toggleBierInput(){
+  const row=document.getElementById('bier-input-row');
+  const isVisible=row.style.display==='flex';
+  row.style.display=isVisible?'none':'flex';
+  if(!isVisible)setTimeout(()=>document.getElementById('bier-naam').focus(),50);
+}
+function addBier(){
+  const naam=document.getElementById('bier-naam').value.trim();
+  if(!naam)return;
+  const namen=getBierNamen();
+  if(!namen.includes(naam)){namen.push(naam);saveBierNamen(namen);}
+  document.getElementById('bier-naam').value='';
+  document.getElementById('bier-input-row').style.display='none';
+  renderBier();
+}
+function removeBier(naam){
+  const namen=getBierNamen().filter(n=>n!==naam);
+  saveBierNamen(namen);renderBier();
+}
+
 // ════════════════════════════════════════════════════════════════
 // BOOT
 // ════════════════════════════════════════════════════════════════
 loadAll();
+renderBier();
 </script>
 </body>
 </html>
