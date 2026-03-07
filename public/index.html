@@ -215,19 +215,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
     <div class="live-badge"><div class="live-dot"></div> LIVE</div>
   </div>
   <div class="section">
-    <div class="card tap-card" onclick="goTo('weer')">
-      <div class="card-accent" style="background:linear-gradient(180deg,var(--blue),var(--ice))"></div>
-      <div class="card-label">☁ Weer nu · 2600m</div>
-      <div class="card-value" id="dash-temp">—°</div>
-      <div class="card-sub" id="dash-weather-sub">Laden...</div>
-    </div>
-    <div class="card tap-card" onclick="goTo('sneeuw')">
-      <div class="card-accent" style="background:linear-gradient(180deg,var(--ice),#fff)"></div>
-      <div class="card-label">❄ Sneeuwhoogte · Top</div>
-      <div class="card-value" style="color:var(--ice)" id="dash-snow">— cm</div>
-      <div class="card-sub" id="dash-snow-sub">Laden...</div>
-    </div>
-    <button class="map-btn" onclick="goTo('kaart')">🗺 Pistekaart openen</button>
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div>
@@ -242,6 +229,21 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
       </div>
       <div id="bier-namen" style="display:flex;flex-wrap:wrap;gap:7px;"></div>
     </div>
+
+    <div class="card tap-card" onclick="goTo('weer')">
+      <div class="card-accent" style="background:linear-gradient(180deg,var(--blue),var(--ice))"></div>
+      <div class="card-label">☁ Weer nu · 2600m</div>
+      <div class="card-value" id="dash-temp">—°</div>
+      <div class="card-sub" id="dash-weather-sub">Laden...</div>
+    </div>
+    <div class="card tap-card" onclick="goTo('sneeuw')">
+      <div class="card-accent" style="background:linear-gradient(180deg,var(--ice),#fff)"></div>
+      <div class="card-label">❄ Sneeuwhoogte · Top</div>
+      <div class="card-value" style="color:var(--ice)" id="dash-snow">— cm</div>
+      <div class="card-sub" id="dash-snow-sub">Laden...</div>
+    </div>
+    <button class="map-btn" onclick="goTo('kaart')">🗺 Pistekaart openen</button>
+
   </div>
 </div>
 
@@ -527,7 +529,7 @@ function initMap(){
   LIFTS.forEach(lift=>{
     const toSt=STATIONS[lift.to];if(!toSt)return;
     const open=isOpenLift(lift);
-    const emo=lift.type==='gondola'?'🚡':lift.type==='cable'?'🚠':lift.type==='funicular'?'🛤':'🪑';
+    const emo=lift.type==='gondola'?'🚡':lift.type==='cable'?'🚠':lift.type==='funicular'?'🛤':lift.type==='chair'?'🪑':'🎿';
     const icon=L.divIcon({html:`<div style="width:30px;height:30px;background:${open?'rgba(255,145,0,.2)':'rgba(100,100,100,.2)'};border:2px solid ${open?'#ff9100':'#555'};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px">${emo}</div>`,className:'',iconSize:[30,30],iconAnchor:[15,15]});
     L.marker([toSt.lat,toSt.lng],{icon,zIndexOffset:500}).bindPopup(liftPopup(lift)).addTo(map);
   });
@@ -555,12 +557,15 @@ function liftPopup(lift){
     <div class="popup-row" style="margin-top:6px;font-size:12px">${lift.info}</div></div>`;
 }
 function showLiftPanel(p){
+  const liftEmojiMap={gondola:'🚡',cable_car:'🚠',chair_lift:'🪑',drag_lift:'🎿',magic_carpet:'🟦',funicular:'🛤',mixed_lift:'🚡',t_bar:'🎿',j_bar:'🎿',platter:'🎿'};
+  const typeEmoji=p.liftEmoji||liftEmojiMap[p.aerialway]||'🚡';
+  const liftTypeNL={gondola:'Gondola',cable_car:'Kabelbaan',chair_lift:'Stoeltjeslift',drag_lift:'Sleeplift',magic_carpet:'Magic Carpet',funicular:'Funiculaire',mixed_lift:'Mix-lift',t_bar:'T-bar',j_bar:'J-bar',platter:'Schoteltjeslift'}[p.aerialway]||p.aerialway||'lift';
   const lift=LIFTS.find(l=>p.name&&p.name.toLowerCase().includes(l.id))||null;
   const open=lift?isOpenLift(lift):true;
   document.getElementById('sp-body').innerHTML=`
-    <div class="sp-hd"><div class="sp-name">${p.name||'Lift'}</div></div>
+    <div class="sp-hd"><div class="sp-name">${typeEmoji} ${p.name||'Lift'}</div></div>
     <div class="sp-badges">
-      <span class="sp-badge" style="background:rgba(255,145,0,.15);color:var(--orange);border:1px solid rgba(255,145,0,.3)">${p.aerialway||'lift'}</span>
+      <span class="sp-badge" style="background:rgba(255,145,0,.15);color:var(--orange);border:1px solid rgba(255,145,0,.3)">${typeEmoji} ${liftTypeNL}</span>
       <span class="sp-badge" style="background:${open?'rgba(0,230,118,.12)':'rgba(255,82,82,.12)'};color:${open?'var(--green)':'var(--red)'};border:1px solid ${open?'rgba(0,230,118,.3)':'rgba(255,82,82,.3)'}">${open?'✅ Open':'🔴 Gesloten'}</span>
     </div>
     ${lift?`<div style="background:rgba(255,145,0,.08);border:1px solid rgba(255,145,0,.2);border-radius:12px;padding:14px;margin-bottom:14px;">
@@ -680,17 +685,31 @@ function renderFavs(){
 }
 function removeFav(id,el){delete favs[id];localStorage.setItem('ski_favs',JSON.stringify(favs));el.remove();}
 
-// ─── BIER KNOP ─────────────────────────────────────────────────────────
-function bierKey(){const d=new Date();return`ski_bier_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;}
-function getBierNamen(){try{return JSON.parse(localStorage.getItem(bierKey())||'[]');}catch{return[];}}
-function saveBierNamen(n){localStorage.setItem(bierKey(),JSON.stringify(n));}
-function renderBier(){
-  const namen=getBierNamen(),el=document.getElementById('bier-namen');if(!el)return;
-  el.innerHTML=namen.length?namen.map(n=>`<div style="background:rgba(255,145,0,.15);border:1px solid rgba(255,145,0,.3);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--orange);display:flex;align-items:center;gap:6px;">🍺 ${n}<button onclick="removeBier('${n}')" style="background:none;border:none;color:rgba(255,145,0,.5);font-size:14px;cursor:pointer;padding:0;">✕</button></div>`).join(''):'<div style="font-size:13px;color:var(--muted);padding:4px 0">Nog niemand. Jij de eerste? 🍺</div>';
+// ─── BIER KNOP (gedeeld via server) ──────────────────────────────────────────
+async function renderBier(){
+  const el=document.getElementById('bier-namen');if(!el)return;
+  const namen=await fetch('/api/bier').then(r=>r.json()).catch(()=>[]);
+  el.innerHTML=namen.length
+    ?namen.map(n=>`<div style="background:rgba(255,145,0,.15);border:1px solid rgba(255,145,0,.3);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--orange);display:flex;align-items:center;gap:6px;">🍺 ${n}<button onclick="removeBier('${n}')" style="background:none;border:none;color:rgba(255,145,0,.5);font-size:14px;cursor:pointer;padding:0;">✕</button></div>`).join('')
+    :'<div style="font-size:13px;color:var(--muted);padding:4px 0">Nog niemand. Jij de eerste? 🍺</div>';
 }
-function toggleBierInput(){const row=document.getElementById('bier-input-row');const vis=row.style.display==='flex';row.style.display=vis?'none':'flex';if(!vis)setTimeout(()=>document.getElementById('bier-naam').focus(),50);}
-function addBier(){const naam=document.getElementById('bier-naam').value.trim();if(!naam)return;const namen=getBierNamen();if(!namen.includes(naam)){namen.push(naam);saveBierNamen(namen);}document.getElementById('bier-naam').value='';document.getElementById('bier-input-row').style.display='none';renderBier();}
-function removeBier(naam){saveBierNamen(getBierNamen().filter(n=>n!==naam));renderBier();}
+function toggleBierInput(){
+  const row=document.getElementById('bier-input-row');
+  const vis=row.style.display==='flex';
+  row.style.display=vis?'none':'flex';
+  if(!vis)setTimeout(()=>document.getElementById('bier-naam').focus(),50);
+}
+async function addBier(){
+  const naam=document.getElementById('bier-naam').value.trim();if(!naam)return;
+  await fetch('/api/bier',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({naam})});
+  document.getElementById('bier-naam').value='';
+  document.getElementById('bier-input-row').style.display='none';
+  renderBier();
+}
+async function removeBier(naam){
+  await fetch(`/api/bier/${encodeURIComponent(naam)}`,{method:'DELETE'});
+  renderBier();
+}
 
 // ─── ROUTE PLANNER ─────────────────────────────────────────────────────
 function stationColor(id){const s=STATIONS[id];if(!s)return'#888';if(s.type==='home')return'var(--ice)';if(s.alt>=3200)return'#e040fb';if(s.alt>=2500)return'var(--red)';if(s.alt>=2000)return'var(--orange)';return'var(--green)';}
