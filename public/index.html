@@ -10,47 +10,52 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
-:root {
+:root{
   --bg:#070c14;--surface:#0f1924;--card:#141f2e;--border:#1e2e42;
   --ice:#00d4ff;--ice-dim:rgba(0,212,255,.15);--snow:#f0f6ff;--muted:#4a6680;
   --green:#00e676;--blue:#448aff;--red:#ff5252;--orange:#ff9100;--yellow:#ffd740;
-  --nav-h:68px;--safe-bottom:env(safe-area-inset-bottom,0px);
+  --nav-h:68px;--safe-bot:env(safe-area-inset-bottom,0px);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);font-family:'Barlow',sans-serif;}
 #app{display:flex;flex-direction:column;height:100%;}
-.view{display:none;flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding-bottom:calc(var(--nav-h) + var(--safe-bottom) + 12px);scrollbar-width:none;}
+.view{display:none;flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding-bottom:calc(var(--nav-h) + var(--safe-bot) + 12px);scrollbar-width:none;}
 .view::-webkit-scrollbar{display:none;}
 .view.active{display:block;}
 #view-kaart{position:relative;padding:0;overflow:hidden;}
 #view-kaart.active{display:flex!important;flex-direction:column;}
-
-/* NAV */
-#nav{display:flex;align-items:stretch;height:calc(var(--nav-h) + var(--safe-bottom));padding-bottom:var(--safe-bottom);background:var(--surface);border-top:1px solid var(--border);position:relative;z-index:900;flex-shrink:0;}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--muted);font-family:'Barlow',sans-serif;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;transition:color .2s;padding:8px 4px 0;position:relative;}
-.nav-btn .icon{font-size:22px;line-height:1;}
+#nav{display:flex;align-items:stretch;height:calc(var(--nav-h) + var(--safe-bot));padding-bottom:var(--safe-bot);background:var(--surface);border-top:1px solid var(--border);position:relative;z-index:900;flex-shrink:0;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--muted);font-family:'Barlow',sans-serif;font-size:9px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;transition:color .2s;padding:8px 2px 0;position:relative;}
+.nav-btn .icon{font-size:20px;line-height:1;}
 .nav-btn.active{color:var(--ice);}
 .nav-ind{position:absolute;top:0;left:50%;transform:translateX(-50%);width:28px;height:2px;background:var(--ice);border-radius:0 0 2px 2px;display:none;}
 .nav-btn.active .nav-ind{display:block;}
-
+#loading{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+#loading.gone{display:none;}
+.load-title{font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:800;letter-spacing:3px;color:var(--ice);}
+.load-sub{font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;}
+.load-bar{width:160px;height:2px;background:var(--border);border-radius:1px;overflow:hidden;}
+.load-fill{height:100%;background:var(--ice);animation:loadFill 2s ease forwards;}
+@keyframes loadFill{from{width:0}to{width:100%}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.section{padding:16px 16px 0;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:12px;}
 /* DASHBOARD */
 .dash-hero{padding:24px 16px 16px;background:linear-gradient(180deg,#0a1628 0%,var(--bg) 100%);}
 .dash-resort{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:800;letter-spacing:2px;}
 .dash-date{font-size:13px;color:var(--muted);margin-top:4px;}
 .live-badge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.25);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--green);font-weight:600;letter-spacing:1px;}
 .live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.5s infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.section{padding:16px 16px 0;}
-.tap-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:12px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;}
+.tap-card{cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;}
 .tap-card::after{content:'›';position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:24px;color:var(--muted);}
 .tap-card:active{transform:scale(.98);border-color:var(--ice);}
-.tap-card-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;}
-.tap-card-value{font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:700;line-height:1;}
-.tap-card-sub{font-size:13px;color:var(--muted);}
-.tap-card-accent{position:absolute;right:0;top:0;bottom:0;width:3px;}
+.card-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;}
+.card-value{font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:700;line-height:1;}
+.card-sub{font-size:13px;color:var(--muted);}
+.card-accent{position:absolute;right:0;top:0;bottom:0;width:3px;}
 .map-btn{background:var(--ice);color:#000;border:none;border-radius:16px;padding:18px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:2px;text-transform:uppercase;width:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;transition:all .15s;}
 .map-btn:active{transform:scale(.98);}
-
 /* WEATHER */
 .day-tabs{display:flex;gap:8px;padding:16px 16px 0;}
 .day-tab{flex:1;padding:10px 4px;background:var(--card);border:1px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--muted);transition:all .2s;}
@@ -60,12 +65,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 .alt-tab.active{background:rgba(68,138,255,.15);border-color:var(--blue);color:var(--blue);}
 .timeslots{padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
 .slot-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;}
-.slot-time{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--muted);}
-.slot-details{font-size:11px;color:var(--muted);line-height:1.6;}
-.slot-right{text-align:right;}
 .slot-temp{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:700;line-height:1;}
-.slot-precip{font-size:13px;font-weight:600;color:var(--blue);}
-
 /* SNOW */
 .snow-zones{padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
 .snow-zone{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}
@@ -77,7 +77,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 .snow-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;}
 .snow-stat-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
 .snow-stat-value{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;}
-
 /* MAP */
 #map{flex:1;min-height:0;z-index:1;}
 .leaflet-container{background:#0a1422;}
@@ -90,14 +89,11 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 .popup-badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;}
 .popup-row{font-size:13px;color:var(--muted);padding:3px 0;line-height:1.5;}
 .popup-row span{color:var(--snow);font-weight:500;}
-.popup-open{font-size:13px;font-weight:700;padding:6px 0 2px;}
-.map-marker{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 12px rgba(0,0,0,.5);}
 .home-marker{width:42px;height:42px;border-radius:50%;background:rgba(0,212,255,.2);border:2.5px solid var(--ice);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 20px rgba(0,212,255,.6);animation:homePulse 3s infinite;}
 @keyframes homePulse{0%,100%{box-shadow:0 0 20px rgba(0,212,255,.6)}50%{box-shadow:0 0 32px rgba(0,212,255,.9)}}
-.meet-marker{width:38px;height:38px;border-radius:50%;background:rgba(255,215,64,.15);border:2px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 16px rgba(255,215,64,.5);animation:meetPulse 2s infinite;}
+.meet-marker{width:38px;height:38px;border-radius:50%;background:rgba(255,215,64,.15);border:2px solid var(--yellow);display:flex;align-items:center;justify-content:center;font-size:20px;animation:meetPulse 2s infinite;}
 @keyframes meetPulse{0%,100%{box-shadow:0 0 16px rgba(255,215,64,.5)}50%{box-shadow:0 0 28px rgba(255,215,64,.9)}}
-
-/* MAP CONTROLS */
+.map-marker{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 12px rgba(0,0,0,.5);}
 #map-top{position:absolute;top:12px;left:12px;right:12px;z-index:500;pointer-events:none;display:flex;gap:6px;flex-wrap:wrap;}
 .lvl-btn{pointer-events:all;padding:7px 12px;background:rgba(7,12,20,.92);border:2px solid var(--border);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;backdrop-filter:blur(10px);transition:all .2s;color:var(--muted);}
 .lvl-btn.on{color:#000;font-weight:800;}
@@ -107,45 +103,36 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 .lvl-btn[data-d="expert"].on{background:#bbb;border-color:#bbb;}
 .lvl-btn[data-d="lift"].on{background:var(--orange);border-color:var(--orange);}
 .lvl-btn:active{transform:scale(.9);}
-
-#map-bottom{position:absolute;bottom:calc(var(--nav-h) + var(--safe-bottom) + 12px);left:12px;right:12px;z-index:500;display:flex;gap:8px;pointer-events:none;}
+#map-bottom{position:absolute;bottom:calc(var(--nav-h) + var(--safe-bot) + 12px);left:12px;right:12px;z-index:500;display:flex;gap:8px;pointer-events:none;}
 .map-ctrl{pointer-events:all;flex:1;padding:11px 6px;background:rgba(7,12,20,.92);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);transition:all .2s;text-align:center;}
 .map-ctrl.active{border-color:var(--ice);color:var(--ice);background:rgba(0,212,255,.1);}
 .map-ctrl:active{transform:scale(.95);}
-#meet-btn{pointer-events:all;flex:1;padding:11px 6px;background:rgba(7,12,20,.92);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;backdrop-filter:blur(10px);transition:all .2s;text-align:center;}
-#meet-btn.active{border-color:var(--yellow);color:var(--yellow);background:rgba(255,215,64,.1);}
 #add-loc-btn{pointer-events:all;width:44px;height:44px;background:var(--ice);border:none;border-radius:50%;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,212,255,.4);flex-shrink:0;align-self:center;transition:all .2s;color:#000;}
 #add-loc-btn:active{transform:scale(.9);}
-
 #meet-hint{position:absolute;top:56px;left:12px;right:12px;z-index:500;background:rgba(255,215,64,.12);border:1px solid rgba(255,215,64,.35);border-radius:12px;padding:10px 14px;display:none;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--yellow);backdrop-filter:blur(10px);}
 #meet-hint.visible{display:flex;}
-
-/* ROUTE PANEL */
-#route-panel{position:absolute;bottom:calc(var(--nav-h) + var(--safe-bottom));left:0;right:0;z-index:600;background:rgba(9,14,23,.97);border-top:1px solid var(--border);border-radius:18px 18px 0 0;backdrop-filter:blur(20px);padding:10px 18px calc(18px + var(--safe-bottom));transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:72vh;overflow-y:auto;}
-#route-panel.open{transform:translateY(0);}
-#rp-handle{width:32px;height:3px;background:var(--border);border-radius:2px;margin:0 auto 14px;}
-#rp-close{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;}
-.rp-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;padding-right:36px;}
-.rp-name{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;line-height:1.1;flex:1;}
-.rp-fav-btn{background:none;border:none;font-size:26px;cursor:pointer;padding:0;flex-shrink:0;transition:transform .2s;}
-.rp-fav-btn:active{transform:scale(.8);}
-.rp-badges{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;}
-.rp-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
-.rp-info{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:14px;}
-.rp-section{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
-.rp-section::after{content:'';flex:1;height:1px;background:var(--border);}
-.route-steps{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
-.route-step{display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;}
-.step-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
-.step-txt strong{color:var(--snow);font-weight:600;display:block;font-size:14px;line-height:1.3;}
-.step-txt span{color:var(--muted);font-size:12px;line-height:1.4;}
-.step-connector{text-align:center;font-size:16px;color:var(--border);margin:-2px 0;}
-.rp-meta{display:flex;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:4px;}
-.rp-meta-item{flex:1;padding:12px 8px;text-align:center;border-right:1px solid var(--border);}
-.rp-meta-item:last-child{border-right:none;}
-.rp-meta-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
-.rp-meta-val{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--snow);margin-top:2px;}
-
+/* SLIDE-UP PANEL (piste/lift info op kaart) */
+#slide-panel{position:absolute;bottom:calc(var(--nav-h) + var(--safe-bot));left:0;right:0;z-index:600;background:rgba(9,14,23,.97);border-top:1px solid var(--border);border-radius:18px 18px 0 0;backdrop-filter:blur(20px);padding:10px 18px calc(18px + var(--safe-bot));transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:72vh;overflow-y:auto;}
+#slide-panel.open{transform:translateY(0);}
+#sp-handle{width:32px;height:3px;background:var(--border);border-radius:2px;margin:0 auto 14px;}
+#sp-close{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;}
+.sp-hd{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;padding-right:36px;}
+.sp-name{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;line-height:1.1;flex:1;}
+.fav-btn{background:none;border:none;font-size:26px;cursor:pointer;padding:0;flex-shrink:0;}
+.sp-badges{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;}
+.sp-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.sp-section{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.sp-section::after{content:'';flex:1;height:1px;background:var(--border);}
+.sp-steps{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+.sp-step{display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;}
+.sp-step-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.sp-step-txt strong{color:var(--snow);font-weight:600;display:block;font-size:14px;line-height:1.3;}
+.sp-step-txt span{color:var(--muted);font-size:12px;line-height:1.4;}
+.sp-meta{display:flex;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:4px;}
+.sp-meta-item{flex:1;padding:12px 8px;text-align:center;border-right:1px solid var(--border);}
+.sp-meta-item:last-child{border-right:none;}
+.sp-meta-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.sp-meta-val{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;margin-top:2px;}
 /* FAVS */
 #fav-list{padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
 .fav-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
@@ -153,16 +140,47 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 .fav-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;flex:1;}
 .fav-sub{font-size:12px;color:var(--muted);}
 .fav-del{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;}
-
-/* ADD SHEET */
-#add-sheet{position:fixed;inset:0;z-index:2000;display:none;align-items:flex-end;}
-#add-sheet.visible{display:flex;}
-#add-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);}
-#add-form{position:relative;background:var(--surface);border-radius:20px 20px 0 0;padding:24px 20px calc(24px + var(--safe-bottom));width:100%;border-top:1px solid var(--border);max-height:82vh;overflow-y:auto;animation:slideUp .3s ease;}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;}
-.sheet-title{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;margin-bottom:6px;}
-.sheet-sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
+/* ROUTE PLANNER */
+.pick-row{display:flex;align-items:center;gap:10px;padding:0 16px;}
+.pick-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;width:32px;flex-shrink:0;}
+.pick-btn{flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 16px;text-align:left;cursor:pointer;transition:all .2s;font-family:'Barlow',sans-serif;}
+.pick-btn.sel{border-color:var(--ice);background:var(--ice-dim);}
+.pick-name{font-size:15px;font-weight:600;color:var(--snow);}
+.pick-alt{font-size:11px;color:var(--muted);margin-top:1px;}
+.swap-btn{background:var(--card);border:1px solid var(--border);border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .3s;flex-shrink:0;}
+.swap-btn:active{transform:rotate(180deg);}
+.lvl-row{display:flex;gap:8px;}
+.lvl-pick{flex:1;padding:10px 4px;background:var(--card);border:2px solid var(--border);border-radius:10px;text-align:center;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;}
+.lvl-pick.on{color:#000;}
+.lvl-pick[data-l="novice"].on{background:var(--green);border-color:var(--green);}
+.lvl-pick[data-l="intermediate"].on{background:var(--blue);border-color:var(--blue);}
+.lvl-pick[data-l="advanced"].on{background:var(--red);border-color:var(--red);}
+.go-btn{width:calc(100% - 32px);margin:14px 16px 0;padding:16px;background:var(--ice);border:none;border-radius:14px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:1px;color:#000;cursor:pointer;transition:all .15s;}
+.go-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
+.go-btn:not(:disabled):active{transform:scale(.98);}
+.route-summary{display:flex;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px;}
+.rsm-stat{flex:1;padding:14px 8px;text-align:center;border-right:1px solid var(--border);}
+.rsm-stat:last-child{border-right:none;}
+.rsm-val{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;}
+.rsm-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+.step-list{display:flex;flex-direction:column;}
+.nstep{display:flex;}
+.nstep-spine{display:flex;flex-direction:column;align-items:center;width:46px;flex-shrink:0;padding-top:2px;}
+.nstep-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;border:1.5px solid transparent;flex-shrink:0;}
+.nstep-line{flex:1;width:2px;min-height:12px;background:var(--border);margin:3px 0;}
+.nstep:last-child .nstep-line{display:none;}
+.nstep-body{flex:1;padding:0 4px 18px 0;}
+.nstep-kind{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-bottom:2px;}
+.nstep-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;line-height:1.15;}
+.nstep-detail{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.55;}
+.nstep-dur{font-size:12px;font-weight:700;margin-top:4px;}
+/* SHEETS */
+.sheet-wrap{position:fixed;inset:0;z-index:2000;display:none;align-items:flex-end;}
+.sheet-wrap.open{display:flex;}
+.sheet-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);}
+.sheet-box{position:relative;background:var(--surface);border-radius:20px 20px 0 0;width:100%;border-top:1px solid var(--border);animation:slideUp .28s ease;}
+.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 6px;}
+/* forms */
 .form-field{margin-bottom:14px;}
 .form-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px;display:block;}
 .form-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 14px;color:var(--snow);font-family:'Barlow',sans-serif;font-size:16px;outline:none;transition:border .2s;}
@@ -173,68 +191,11 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 .type-opt.sel{border-color:var(--ice);color:var(--ice);background:var(--ice-dim);}
 .btn-primary{width:100%;padding:16px;background:var(--ice);border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;letter-spacing:1px;color:#000;cursor:pointer;margin-top:4px;}
 .btn-primary:active{filter:brightness(.9);}
-
-/* LOADING */
-#loading{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
-#loading.gone{display:none;}
-.load-title{font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:800;letter-spacing:3px;color:var(--ice);}
-.load-sub{font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;}
-.load-bar{width:160px;height:2px;background:var(--border);border-radius:1px;overflow:hidden;}
-.load-fill{height:100%;background:var(--ice);animation:loadFill 2s ease forwards;}
-@keyframes loadFill{from{width:0}to{width:100%}}
-
-/* ── ROUTE PLANNER ──────────────────────────────────────────── */
-#view-route{background:var(--bg);}
-.rp-hero{padding:20px 16px 0;}
-.rp-hero-title{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;}
-.rp-hero-sub{font-size:13px;color:var(--muted);margin-top:2px;}
-.pick-row{display:flex;align-items:center;gap:10px;padding:0 16px;}
-.pick-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;width:32px;flex-shrink:0;}
-.pick-btn{flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 16px;text-align:left;cursor:pointer;transition:all .2s;font-family:'Barlow',sans-serif;}
-.pick-btn.sel{border-color:var(--ice);background:var(--ice-dim);}
-.pick-name{font-size:15px;font-weight:600;color:var(--snow);}
-.pick-alt{font-size:11px;color:var(--muted);margin-top:1px;}
-.pick-divider{display:flex;align-items:center;gap:10px;padding:8px 16px;}
-.pick-line{flex:1;height:1px;background:var(--border);}
-.swap-btn{background:var(--card);border:1px solid var(--border);border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .3s;flex-shrink:0;}
-.swap-btn:active{transform:rotate(180deg);}
-.level-row{display:flex;gap:8px;padding:12px 16px 0;}
-.lvl-pick{flex:1;padding:10px 4px;background:var(--card);border:2px solid var(--border);border-radius:10px;text-align:center;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;}
-.lvl-pick.on{color:#000;}
-.lvl-pick[data-l="novice"].on{background:var(--green);border-color:var(--green);}
-.lvl-pick[data-l="intermediate"].on{background:var(--blue);border-color:var(--blue);}
-.lvl-pick[data-l="advanced"].on{background:var(--red);border-color:var(--red);}
-.go-btn{width:calc(100% - 32px);margin:14px 16px 0;padding:16px;background:var(--ice);border:none;border-radius:14px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:1px;color:#000;cursor:pointer;transition:all .15s;}
-.go-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
-.go-btn:not(:disabled):active{transform:scale(.98);}
-.route-result{padding:14px 16px 0;}
-.route-summary{display:flex;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px;}
-.route-stat{flex:1;padding:14px 8px;text-align:center;border-right:1px solid var(--border);}
-.route-stat:last-child{border-right:none;}
-.route-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;}
-.route-stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
-.step-list{display:flex;flex-direction:column;}
-.step{display:flex;gap:0;position:relative;}
-.step-spine{display:flex;flex-direction:column;align-items:center;width:46px;flex-shrink:0;padding-top:2px;}
-.step-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;border:1.5px solid transparent;}
-.step-vline{flex:1;width:2px;min-height:12px;background:var(--border);margin:3px 0;}
-.step:last-child .step-vline{display:none;}
-.step-body{flex:1;padding:0 4px 18px 0;}
-.step-kind{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-bottom:2px;}
-.step-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;line-height:1.15;}
-.step-detail{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.55;}
-.step-dur{font-size:12px;font-weight:700;margin-top:4px;}
-/* Station picker sheet */
-#stn-sheet{position:fixed;inset:0;z-index:3000;display:none;align-items:flex-end;}
-#stn-sheet.open{display:flex;}
-#stn-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);}
-#stn-box{position:relative;background:var(--surface);border-radius:20px 20px 0 0;width:100%;border-top:1px solid var(--border);max-height:80vh;display:flex;flex-direction:column;animation:slideUp .28s ease;}
-.stn-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 6px;}
-#stn-title{padding:0 16px 10px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;}
+/* station picker */
 .stn-search{padding:0 16px 10px;border-bottom:1px solid var(--border);}
 .stn-search input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--snow);font-family:'Barlow',sans-serif;font-size:16px;outline:none;}
 .stn-search input:focus{border-color:var(--ice);}
-#stn-list{overflow-y:auto;flex:1;padding:6px 0 12px;}
+#stn-list{overflow-y:auto;max-height:52vh;padding:6px 0 12px;}
 .stn-item{padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .15s;}
 .stn-item:active{background:var(--card);}
 .stn-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
@@ -244,7 +205,6 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 </head>
 <body>
 <div id="loading"><div class="load-title">LES 2 ALPES</div><div class="load-sub">Laden...</div><div class="load-bar"><div class="load-fill"></div></div></div>
-
 <div id="app">
 
 <!-- DASHBOARD -->
@@ -255,34 +215,32 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
     <div class="live-badge"><div class="live-dot"></div> LIVE</div>
   </div>
   <div class="section">
-    <div class="tap-card" onclick="goTo('weer')">
-      <div class="tap-card-accent" style="background:linear-gradient(180deg,var(--blue),var(--ice))"></div>
-      <div class="tap-card-label">☁ Weer nu · 2600m</div>
-      <div class="tap-card-value" id="dash-temp">—°</div>
-      <div class="tap-card-sub" id="dash-weather-sub">Laden...</div>
+    <div class="card tap-card" onclick="goTo('weer')">
+      <div class="card-accent" style="background:linear-gradient(180deg,var(--blue),var(--ice))"></div>
+      <div class="card-label">☁ Weer nu · 2600m</div>
+      <div class="card-value" id="dash-temp">—°</div>
+      <div class="card-sub" id="dash-weather-sub">Laden...</div>
     </div>
-    <div class="tap-card" onclick="goTo('sneeuw')">
-      <div class="tap-card-accent" style="background:linear-gradient(180deg,var(--ice),#fff)"></div>
-      <div class="tap-card-label">❄ Sneeuwhoogte · Top</div>
-      <div class="tap-card-value" style="color:var(--ice)" id="dash-snow">— cm</div>
-      <div class="tap-card-sub" id="dash-snow-sub">Laden...</div>
+    <div class="card tap-card" onclick="goTo('sneeuw')">
+      <div class="card-accent" style="background:linear-gradient(180deg,var(--ice),#fff)"></div>
+      <div class="card-label">❄ Sneeuwhoogte · Top</div>
+      <div class="card-value" style="color:var(--ice)" id="dash-snow">— cm</div>
+      <div class="card-sub" id="dash-snow-sub">Laden...</div>
     </div>
     <button class="map-btn" onclick="goTo('kaart')">🗺 Pistekaart openen</button>
-
-    <!-- BIER KNOP -->
-    <div id="bier-card" style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:12px;">
+    <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div>
           <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px;">🍺 Wie wil er een biertje?</div>
           <div style="font-size:12px;color:var(--muted)">Lijst reset elke avond om 00:00</div>
         </div>
-        <button onclick="toggleBierInput()" id="bier-toggle-btn" style="background:var(--orange);color:#000;border:none;border-radius:10px;padding:10px 16px;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;cursor:pointer;letter-spacing:1px;flex-shrink:0;">🍺 Ik wel!</button>
+        <button onclick="toggleBierInput()" style="background:var(--orange);color:#000;border:none;border-radius:10px;padding:10px 16px;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;cursor:pointer;flex-shrink:0;">🍺 Ik wel!</button>
       </div>
-      <div id="bier-input-row" style="display:none;gap:8px;margin-bottom:12px;align-items:center;">
-        <input id="bier-naam" placeholder="Jouw naam..." style="flex:1;background:#0a1628;border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--snow);font-family:'Barlow',sans-serif;font-size:15px;outline:none;min-width:0;" onkeydown="if(event.key==='Enter')addBier()"/>
+      <div id="bier-input-row" style="display:none;gap:8px;align-items:center;margin-bottom:12px;">
+        <input id="bier-naam" class="form-input" placeholder="Jouw naam..." style="flex:1;" onkeydown="if(event.key==='Enter')addBier()"/>
         <button onclick="addBier()" style="background:var(--orange);color:#000;border:none;border-radius:9px;padding:11px 16px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;cursor:pointer;flex-shrink:0;">OK</button>
       </div>
-      <div id="bier-namen" style="display:flex;flex-wrap:wrap;gap:7px;min-height:0;"></div>
+      <div id="bier-namen" style="display:flex;flex-wrap:wrap;gap:7px;"></div>
     </div>
   </div>
 </div>
@@ -318,279 +276,159 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
 <div id="view-kaart" class="view">
   <div id="map"></div>
   <div id="map-top">
-    <button class="lvl-btn on" data-d="novice" onclick="toggleLevel(this)">🟢</button>
+    <button class="lvl-btn on" data-d="novice"       onclick="toggleLevel(this)">🟢</button>
     <button class="lvl-btn on" data-d="intermediate" onclick="toggleLevel(this)">🔵</button>
-    <button class="lvl-btn on" data-d="advanced" onclick="toggleLevel(this)">🔴</button>
-    <button class="lvl-btn on" data-d="expert" onclick="toggleLevel(this)">⚫</button>
-    <button class="lvl-btn on" data-d="lift" onclick="toggleLevel(this)">🚡</button>
+    <button class="lvl-btn on" data-d="advanced"     onclick="toggleLevel(this)">🔴</button>
+    <button class="lvl-btn on" data-d="expert"       onclick="toggleLevel(this)">⚫</button>
+    <button class="lvl-btn on" data-d="lift"         onclick="toggleLevel(this)">🚡</button>
   </div>
-  <div id="meet-hint">📍 Tik op kaart om afspraakpunt te zetten <button onclick="cancelMeetMode()" style="margin-left:auto;background:none;border:none;color:var(--yellow);font-size:16px;cursor:pointer;">✕</button></div>
+  <div id="meet-hint">📍 Tik op kaart voor afspraakpunt
+    <button onclick="cancelMeetMode()" style="margin-left:auto;background:none;border:none;color:var(--yellow);font-size:16px;cursor:pointer;">✕</button>
+  </div>
   <div id="map-bottom">
     <div class="map-ctrl active" id="btn-resto" onclick="toggleLayer('resto',this)">🍽 Eten</div>
     <div class="map-ctrl active" id="btn-chill" onclick="toggleLayer('chill',this)">☀ Chill</div>
-    <div id="meet-btn" class="map-ctrl" onclick="startMeetMode()">📍 Meet</div>
+    <div class="map-ctrl" id="meet-btn"         onclick="startMeetMode()">📍 Meet</div>
     <button id="add-loc-btn" onclick="openAddSheet()">＋</button>
   </div>
-  <div id="route-panel">
-    <div id="rp-handle"></div>
-    <button id="rp-close" onclick="closePanel()">✕</button>
-    <div id="rp-body"></div>
+  <div id="slide-panel">
+    <div id="sp-handle"></div>
+    <button id="sp-close" onclick="closePanel()">✕</button>
+    <div id="sp-body"></div>
   </div>
 </div>
 
-<!-- FAVS -->
+<!-- ROUTE PLANNER -->
+<div id="view-route" class="view">
+  <div style="padding:20px 16px 0;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;">🧭 ROUTEPLANNER</div>
+    <div style="font-size:13px;color:var(--muted);margin-top:2px;">Plan je route van A naar B</div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="pick-row">
+    <div class="pick-label">VAN</div>
+    <button class="pick-btn sel" id="pick-from" onclick="openPicker('from')">
+      <div class="pick-name" id="pfrom-name">🏠 Chalet Les Aroles</div>
+      <div class="pick-alt"  id="pfrom-alt">1650m · Vertrekpunt</div>
+    </button>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;padding:8px 16px;">
+    <div style="width:42px"></div>
+    <div style="flex:1;height:1px;background:var(--border)"></div>
+    <button class="swap-btn" onclick="swapRoute()">⇅</button>
+    <div style="flex:1;height:1px;background:var(--border)"></div>
+  </div>
+  <div class="pick-row">
+    <div class="pick-label">NAAR</div>
+    <button class="pick-btn" id="pick-to" onclick="openPicker('to')">
+      <div class="pick-name" id="pto-name">Kies bestemming…</div>
+      <div class="pick-alt"  id="pto-alt">Tik om een station te kiezen</div>
+    </button>
+  </div>
+  <div style="padding:14px 16px 0;">
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-bottom:8px;">Jouw niveau</div>
+    <div class="lvl-row">
+      <div class="lvl-pick"    data-l="novice"       onclick="setRLevel(this)">🟢 Beginner</div>
+      <div class="lvl-pick on" data-l="intermediate" onclick="setRLevel(this)">🔵 Gevorderd</div>
+      <div class="lvl-pick"    data-l="advanced"     onclick="setRLevel(this)">🔴 Expert</div>
+    </div>
+  </div>
+  <button class="go-btn" id="go-btn" disabled onclick="runRoute()">Bereken route →</button>
+  <div id="route-output" style="padding:14px 16px 0;"></div>
+</div>
+
+<!-- FAVORIETEN -->
 <div id="view-favs" class="view">
-  <div style="padding:20px 16px 8px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;">⭐ FAVORIETEN</div><div style="font-size:13px;color:var(--muted);margin-top:4px">Tik ☆ op een piste op de kaart</div></div>
+  <div style="padding:20px 16px 8px;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;">⭐ FAVORIETEN</div>
+    <div style="font-size:13px;color:var(--muted);margin-top:4px;">Tik ☆ op een piste op de kaart</div>
+  </div>
   <div id="fav-list"></div>
 </div>
 
 <!-- NAV -->
 <nav id="nav">
-  <button class="nav-btn active" id="nav-dash" onclick="goTo('dash')"><div class="nav-ind"></div><span class="icon">🏔</span>Dashboard</button>
-  <button class="nav-btn" id="nav-weer" onclick="goTo('weer')"><div class="nav-ind"></div><span class="icon">☁️</span>Weer</button>
-  <button class="nav-btn" id="nav-sneeuw" onclick="goTo('sneeuw')"><div class="nav-ind"></div><span class="icon">❄️</span>Sneeuw</button>
-  <button class="nav-btn" id="nav-kaart" onclick="goTo('kaart')"><div class="nav-ind"></div><span class="icon">🗺</span>Kaart</button>
-  <button class="nav-btn" id="nav-route" onclick="goTo('route')"><div class="nav-ind"></div><span class="icon">🗺</span>Route</button>
-  <button class="nav-btn" id="nav-favs" onclick="goTo('favs')"><div class="nav-ind"></div><span class="icon">⭐</span>Favs</button>
+  <button class="nav-btn active" id="nav-dash"   onclick="goTo('dash')">  <div class="nav-ind"></div><span class="icon">🏔</span>Dashboard</button>
+  <button class="nav-btn"        id="nav-weer"   onclick="goTo('weer')">  <div class="nav-ind"></div><span class="icon">☁️</span>Weer</button>
+  <button class="nav-btn"        id="nav-kaart"  onclick="goTo('kaart')"> <div class="nav-ind"></div><span class="icon">🗺</span>Kaart</button>
+  <button class="nav-btn"        id="nav-route"  onclick="goTo('route')"> <div class="nav-ind"></div><span class="icon">🧭</span>Route</button>
+  <button class="nav-btn"        id="nav-sneeuw" onclick="goTo('sneeuw')"><div class="nav-ind"></div><span class="icon">❄️</span>Sneeuw</button>
+  <button class="nav-btn"        id="nav-favs"   onclick="goTo('favs')">  <div class="nav-ind"></div><span class="icon">⭐</span>Favs</button>
 </nav>
 </div>
 
-<!-- ADD SHEET -->
-<div id="add-sheet">
-  <div id="add-backdrop" onclick="closeAddSheet()"></div>
-  <div id="add-form">
+<!-- ADD LOCATION SHEET -->
+<div id="add-sheet" class="sheet-wrap">
+  <div class="sheet-backdrop" onclick="closeAddSheet()"></div>
+  <div class="sheet-box">
     <div class="sheet-handle"></div>
-    <div class="sheet-title">Locatie toevoegen</div>
-    <div class="sheet-sub">Tik eerst op de kaart om te pinnen, dan ＋</div>
-    <div class="form-field"><label class="form-label">Naam</label><input id="loc-name" class="form-input" type="text" placeholder="bv. Zonnige picknicktafel"/></div>
-    <div class="form-field"><label class="form-label">Type</label>
-      <div class="type-row">
-        <div class="type-opt sel" data-type="chill" onclick="selType(this)">☀ Chill</div>
-        <div class="type-opt" data-type="restaurant" onclick="selType(this)">🍽 Eten</div>
-        <div class="type-opt" data-type="bar" onclick="selType(this)">🍺 Bar</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;padding:0 20px 4px;">Locatie toevoegen</div>
+    <div style="font-size:13px;color:var(--muted);padding:0 20px 14px;">Tik eerst op de kaart om te pinnen</div>
+    <div style="padding:0 20px calc(24px + var(--safe-bot));">
+      <div class="form-field"><label class="form-label">Naam</label><input id="loc-name" class="form-input" type="text" placeholder="bv. Zonnige picknicktafel"/></div>
+      <div class="form-field"><label class="form-label">Type</label>
+        <div class="type-row">
+          <div class="type-opt sel" data-type="chill"      onclick="selType(this)">☀ Chill</div>
+          <div class="type-opt"     data-type="restaurant" onclick="selType(this)">🍽 Eten</div>
+          <div class="type-opt"     data-type="bar"        onclick="selType(this)">🍺 Bar</div>
+        </div>
       </div>
+      <div class="form-field"><label class="form-label">Omschrijving</label><input id="loc-desc" class="form-input" type="text" placeholder="bv. Beste zon 12–14u"/></div>
+      <div class="form-field"><label class="form-label">Beste zonmoment</label><input id="loc-sun" class="form-input" type="text" placeholder="bv. 11:00 – 14:00"/></div>
+      <button class="btn-primary" onclick="submitLocation()">📍 Opslaan</button>
     </div>
-    <div class="form-field"><label class="form-label">Omschrijving</label><input id="loc-desc" class="form-input" type="text" placeholder="bv. Beste zon 12–14u"/></div>
-    <div class="form-field"><label class="form-label">Beste zonmoment</label><input id="loc-sun" class="form-input" type="text" placeholder="bv. 11:00 – 14:00"/></div>
-    <button class="btn-primary" onclick="submitLocation()">📍 Opslaan</button>
+  </div>
+</div>
+
+<!-- STATION PICKER SHEET -->
+<div id="stn-sheet" class="sheet-wrap">
+  <div class="sheet-backdrop" onclick="closePicker()"></div>
+  <div class="sheet-box">
+    <div class="sheet-handle"></div>
+    <div id="stn-title" style="padding:0 16px 10px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;">Kies station</div>
+    <div class="stn-search"><input id="stn-q" type="text" placeholder="Zoek station…" oninput="filterStn(this.value)"/></div>
+    <div id="stn-list"></div>
   </div>
 </div>
 
 <script src="/network.js"></script>
 <script>
-// ════════════════════════════════════════════════════════════════
-// LIFT GRAPH (now in network.js — this section kept for UI only) — de echte liftnetwerk van Les 2 Alpes
-// Nodes = stations, Edges = liften (gaan OMHOOG)
-// ════════════════════════════════════════════════════════════════
-const STATIONS = {
-  aroles:   { name:'Les Aroles',         alt:1650, lat:45.0232430, lng:6.1249131 },
-  bas1650:  { name:'2 Alpes 1650m',      alt:1650, lat:45.002, lng:6.125 },
-  bas1800:  { name:'2 Alpes 1800m',      alt:1800, lat:45.003, lng:6.130 },
-  toura:    { name:'Toura',              alt:2600, lat:45.012, lng:6.130 },
-  top3200:  { name:'Top Jandri',         alt:3200, lat:45.019, lng:6.128 },
-  glacier:  { name:'Gletsjer 3400m',     alt:3400, lat:45.022, lng:6.120 },
-  signal:   { name:'Signal',             alt:3000, lat:45.018, lng:6.115 },
-  diable:   { name:'Diable',             alt:2400, lat:45.007, lng:6.148 },
-  cretes:   { name:'Crêtes',             alt:2100, lat:45.005, lng:6.150 },
-  vallee:   { name:'Vallée Blanche',     alt:2100, lat:45.010, lng:6.162 },
-  fee:      { name:'La Fée',             alt:2440, lat:45.016, lng:6.138 },
-  bellecombes: { name:'Bellecombes',     alt:2100, lat:45.006, lng:6.147 },
-  cretes:   { name:'Crêtes top',          alt:2500, lat:45.007, lng:6.152 },
-  puysalie: { name:'Puy Salié',           alt:3421, lat:45.023, lng:6.112 },
-};
-
-// Elke lift: van station → naar station, met tijden en openingstijden
-// Laatste lift (sluitingstijd) is het cruciale getal
-const LIFTS = [
-  {
-    id:'jandri1', name:'Jandri Express 1 🚡', type:'gondola',
-    from:'aroles', to:'toura', duration:12,
-    opens:'08:45', closes:'17:15', lastUp:'17:00',
-    info:'Hoofdgondola van het dorp naar Toura (2600m). Capaciteit 200 pers/uur.'
-  },
-  {
-    id:'jandri2', name:'Jandri Express 2 🚡', type:'gondola',
-    from:'toura', to:'top3200', duration:10,
-    opens:'09:00', closes:'16:30', lastUp:'16:15',
-    info:'Van Toura naar de top op 3200m. Sluit eerder dan Jandri 1.'
-  },
-  {
-    id:'funiculaire', name:'Funiculaire sous-glaciaire 🛤', type:'funicular',
-    from:'top3200', to:'glacier', duration:7,
-    opens:'09:00', closes:'16:00', lastUp:'15:45',
-    info:'Rijdt onder het ijs door naar 3400m. Vroegste sluitingstijd van het resort.'
-  },
-  {
-    id:'signal', name:'Signal stoeltjeslift 🪑', type:'chair',
-    from:'top3200', to:'signal', duration:8,
-    opens:'09:00', closes:'16:00', lastUp:'15:50',
-    info:'Stoeltjeslift op de gletsjer, bereikt Signal-pistes op 3000m+.'
-  },
-  {
-    id:'diable', name:'Diable gondola 🚡', type:'gondola',
-    from:'aroles', to:'diable', duration:11,
-    opens:'09:00', closes:'16:45', lastUp:'16:30',
-    info:'Gondola naar de Diable-sector op 2400m. Mooie oost-expositie.'
-  },
-  {
-    id:'bellecombes', name:'Bellecombes stoeltjeslift 🪑', type:'chair',
-    from:'bas1650', to:'bellecombes', duration:10,
-    opens:'09:00', closes:'16:45', lastUp:'16:30',
-    info:'Stoeltjeslift naar de Crêtes-sector. Vertrek iets buiten dorp.'
-  },
-  {
-    id:'supervenosc', name:'Super-Venosc kabelbaan 🚠', type:'cable',
-    from:'bas1650', to:'vallee', duration:12,
-    opens:'08:30', closes:'17:30', lastUp:'17:15',
-    info:'Kabelbaan naar Vallée Blanche. Langste openingstijd, ideaal voor laatste run.'
-  },
-  {
-    id:'fee', name:'Fée stoeltjeslift 🪑', type:'chair',
-    from:'toura', to:'fee', duration:9,
-    opens:'09:00', closes:'16:30', lastUp:'16:15',
-    info:'Stoeltjeslift vanuit Toura naar La Fée sector op 2440m.'
-  },
+// ─── PRESETS ───────────────────────────────────────────────────────────
+const PRESETS=[
+  {id:-1,name:'Chalet de la Toura / PanoBar',type:'restaurant',lat:45.0115,lng:6.1295,description:'Bergrestaurant + après-ski. PanoBar DJ vanaf 14:30.',hours:'09:00–16:45',sun:'11:00–14:30'},
+  {id:-2,name:'Le Diable au Cœur',type:'restaurant',lat:45.008,lng:6.125,description:'Tafelservice 2400m. Oisans-producten.',hours:'09:00–17:00',sun:'12:00–15:00'},
+  {id:-3,name:'La Fée Hut',type:'restaurant',lat:45.016,lng:6.138,description:'Crêpes & tafelservice 2440m.',hours:'10:00–16:00',sun:'10:00–13:00'},
+  {id:-4,name:'Le 3200',type:'bar',lat:45.022,lng:6.142,description:'Apero bij zonsondergang 3200m.',hours:'09:00–19:00',sun:'15:00–17:30'},
+  {id:-5,name:'Umbrella Bar',type:'bar',lat:44.999,lng:6.120,description:'Après-ski hotspot. Live muziek.',hours:'08:00–17:00',sun:'13:00–17:00'},
+  {id:-6,name:'Vallée Blanche Restaurant',type:'restaurant',lat:45.019,lng:6.137,description:'Huisgemaakte keuken op de gletsjer.',hours:'10:00–15:30',sun:'10:00–13:00'},
+  {id:-7,name:'Snowpark zone',type:'chill',lat:45.013,lng:6.133,description:'Snowparkers spotten.',sun:'12:00–15:00'},
+  {id:-8,name:'Panorama 360° rustplek',type:'chill',lat:45.020,lng:6.128,description:'3421m, 360° uitzicht.',sun:'10:00–14:00'},
 ];
 
-// ════════════════════════════════════════════════════════════════
-// ROUTING ENGINE
-// BFS door het liftnetwerk van Les Aroles naar dichtstbijzijnde station
-// bij de aangeklikte piste
-// ════════════════════════════════════════════════════════════════
-
-// Bouw adjacency list: van elk station, welke liften gaan er omhoog?
-function buildGraph() {
-  const g = {};
-  Object.keys(STATIONS).forEach(k => g[k] = []);
-  LIFTS.forEach(l => g[l.from].push(l));
-  return g;
-}
-const GRAPH = buildGraph();
-
-// Bereken afstand in km tussen twee lat/lng punten
-function dist(lat1,lng1,lat2,lng2){
-  const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLng=(lng2-lng1)*Math.PI/180;
-  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
-
-// Vind het dichtstbijzijnde liftstation bij een lat/lng punt
-// Alleen stations die HOGER zijn dan de start (want pistes liggen boven de start)
-function nearestStation(lat, lng) {
-  let best = null, bestDist = Infinity;
-  Object.entries(STATIONS).forEach(([id, s]) => {
-    if(id === 'aroles') return;
-    const d = dist(lat, lng, s.lat, s.lng);
-    if(d < bestDist) { bestDist = d; best = id; }
-  });
-  return best;
-}
-
-// BFS: vind kortste liftroute van 'aroles' naar doelstation
-function findRoute(targetStationId) {
-  if(targetStationId === 'aroles') return [];
-  const visited = new Set(['aroles']);
-  const queue = [{ station:'aroles', path:[] }];
-  while(queue.length) {
-    const { station, path } = queue.shift();
-    const lifts = GRAPH[station] || [];
-    for(const lift of lifts) {
-      if(visited.has(lift.to)) continue;
-      const newPath = [...path, lift];
-      if(lift.to === targetStationId) return newPath;
-      visited.add(lift.to);
-      queue.push({ station:lift.to, path:newPath });
-    }
-  }
-  return null; // geen route gevonden
-}
-
-// Hoofd-routefunctie: gegeven lat/lng van de piste, geef route terug
-function getRoute(pisteLat, pisteLng) {
-  const targetId = nearestStation(pisteLat, pisteLng);
-  const targetStation = STATIONS[targetId];
-  const route = findRoute(targetId);
-  if(!route || route.length === 0) {
-    return {
-      station: targetStation,
-      lifts: [],
-      totalTime: 2,
-      steps: [{ i:'🥾', t:'Direct vanuit Les Aroles', s:'De piste ligt dicht bij het dorp — 2 min lopen.' }]
-    };
-  }
-  const totalTime = route.reduce((s,l) => s + l.duration, 0) + 2; // +2 min lopen
-  const steps = [
-    { i:'🥾', t:'Loop naar '+route[0].name.split(' ')[0]+' '+route[0].name.split(' ')[1], s:'~2 min lopen vanuit Les Aroles' },
-    ...route.map((l,i) => ({
-      i: l.type==='gondola'?'🚡':l.type==='cable'?'🚠':l.type==='funicular'?'🛤':'🪑',
-      t: l.name,
-      s: `${STATIONS[l.from].name} → ${STATIONS[l.to].name} · ${l.duration} min · Laatste omhoog: ${l.lastUp}`
-    }))
-  ];
-  // Laatste stap: skiën naar de piste
-  steps.push({ i:'🎿', t:'Skiën naar de piste', s:`Je bent nu bij ${targetStation.name} (${targetStation.alt}m)` });
-  return { station: targetStation, lifts: route, totalTime, steps };
-}
-
-// Controleer of een lift nu open is
-function isOpen(lift) {
-  const now = new Date();
-  const h = now.getHours()*60 + now.getMinutes();
-  const [oh,om] = lift.opens.split(':').map(Number);
-  const [ch,cm] = lift.closes.split(':').map(Number);
-  return h >= oh*60+om && h <= ch*60+cm;
-}
-
-// ════════════════════════════════════════════════════════════════
-// APP STATE & HELPERS
-// ════════════════════════════════════════════════════════════════
-let weatherData=null, snowData=null, currentDay=0, currentAlt=2;
-let map=null, pisteLayer=null, liftLayer=null;
+// ─── STATE ─────────────────────────────────────────────────────────────
+let weatherData=null,snowData=null,currentDay=0,currentAlt=2;
+let map=null,pisteLayer=null;
 let markerGroups={resto:null,chill:null,meet:null};
 let layerState={resto:true,chill:true};
 let levelState={novice:true,easy:true,intermediate:true,advanced:true,expert:true,lift:true};
-let pendingLatLng=null, selectedType='chill';
-let meetMode=false, meetMarker=null;
-let favs = JSON.parse(localStorage.getItem('ski_favs')||'{}');
+let pendingLatLng=null,selectedType='chill';
+let meetMode=false,meetMarker=null;
+let favs=JSON.parse(localStorage.getItem('ski_favs')||'{}');
+let rFrom='aroles',rTo=null,rLevel='intermediate',rPickFor=null;
 
-// Persisteer afspraakpunt
-function saveMeetPoint(latlng) {
-  if(latlng) localStorage.setItem('ski_meet', JSON.stringify({lat:latlng.lat,lng:latlng.lng}));
-  else localStorage.removeItem('ski_meet');
-}
-function loadMeetPoint() {
-  try { return JSON.parse(localStorage.getItem('ski_meet')); } catch{ return null; }
-}
-
-// Preset locaties
-const PRESETS=[
-  {id:-1,name:'Chalet de la Toura / PanoBar',type:'restaurant',lat:45.0115,lng:6.1295,description:'Bergrestaurant + après-ski bar op 2600m. PanoBar DJ vanaf 14:30.',hours:'09:00–16:45',sun:'11:00–14:30'},
-  {id:-2,name:'Le Diable au Cœur',type:'restaurant',lat:45.008,lng:6.125,description:'Tafelservice op 2400m. Oisans-producten, goede wijnkaart.',hours:'09:00–17:00',sun:'12:00–15:00'},
-  {id:-3,name:'La Fée Hut',type:'restaurant',lat:45.016,lng:6.138,description:'Crêpes & tafelservice op 2440m. Rustig zonnig terras.',hours:'10:00–16:00',sun:'10:00–13:00'},
-  {id:-4,name:'Le 3200',type:'bar',lat:45.022,lng:6.142,description:'Apero bij zonsondergang op 3200m. Uniek uitzicht over de Écrins.',hours:'09:00–19:00',sun:'15:00–17:30'},
-  {id:-5,name:'Umbrella Bar',type:'bar',lat:44.999,lng:6.120,description:'Après-ski hotspot aan de pistvoet. Live muziek, 250 plaatsen.',hours:'08:00–17:00',sun:'13:00–17:00'},
-  {id:-6,name:'Vallée Blanche Restaurant',type:'restaurant',lat:45.019,lng:6.137,description:'Huisgemaakte keuken op de gletsjerhellingen.',hours:'10:00–15:30',sun:'10:00–13:00'},
-  {id:-7,name:'Snowpark zone',type:'chill',lat:45.013,lng:6.133,description:'Beste plek om snowparkers te spotten. Eigen eten meenemen.',sun:'12:00–15:00'},
-  {id:-8,name:'Panorama 360° rustplek',type:'chill',lat:45.020,lng:6.128,description:'Zitgelegenheid op 3421m, 360° uitzicht richting Écrins.',sun:'10:00–14:00'},
-];
-
-// ════════════════════════════════════════════════════════════════
-// NAVIGATION
-// ════════════════════════════════════════════════════════════════
+// ─── NAV ───────────────────────────────────────────────────────────────
 function goTo(page){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>{b.classList.remove('active');b.querySelector('.nav-ind').style.display='none';});
   document.getElementById('view-'+page).classList.add('active');
   const nb=document.getElementById('nav-'+page);
-  nb.classList.add('active');nb.querySelector('.nav-ind').style.display='block';
+  if(nb){nb.classList.add('active');nb.querySelector('.nav-ind').style.display='block';}
   if(page==='kaart'){if(!map)initMap();else setTimeout(()=>map.invalidateSize(),50);}
   if(page==='favs')renderFavs();
   if(page==='route'){setPickBtn('from','aroles');refreshGoBtn();}
 }
 
-// ════════════════════════════════════════════════════════════════
-// WMO / WEATHER
-// ════════════════════════════════════════════════════════════════
+// ─── WEATHER ───────────────────────────────────────────────────────────
 const WMO={0:['☀️','Helder'],1:['🌤','Grotendeels helder'],2:['⛅','Bewolkt'],3:['☁️','Zwaar bewolkt'],45:['🌫','Mist'],51:['🌦','Motregen'],61:['🌧','Regen'],71:['🌨','Lichte sneeuw'],73:['❄️','Sneeuw'],75:['❄️','Zware sneeuw'],80:['🌦','Regenbuien'],85:['🌨','Sneeuwbuien'],95:['⛈','Onweer']};
 function wmo(c){return WMO[c]||WMO[Math.round(c/10)*10]||['🌡','—'];}
 const DAY_NL=['zo','ma','di','wo','do','vr','za'];
@@ -598,10 +436,7 @@ const MON=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','de
 const SLOTS=[{label:'🌙 Nacht',hours:[0,1,2,3,4,5]},{label:'🌄 Ochtend',hours:[6,7,8,9,10,11]},{label:'☀️ Middag',hours:[12,13,14,15]},{label:'🌆 Avond',hours:[16,17,18,19,20,21]}];
 
 async function loadAll(){
-  const[w,s]=await Promise.all([
-    fetch('/api/weather').then(r=>r.json()).catch(()=>null),
-    fetch('/api/snowreport').then(r=>r.json()).catch(()=>null)
-  ]);
+  const [w,s]=await Promise.all([fetch('/api/weather').then(r=>r.json()).catch(()=>null),fetch('/api/snowreport').then(r=>r.json()).catch(()=>null)]);
   weatherData=w;snowData=s;
   if(w){updateDashWeather();renderWeather();}
   if(s){updateDashSnow();renderSnow();}
@@ -623,8 +458,7 @@ function setDay(i,el){currentDay=i;document.querySelectorAll('.day-tab').forEach
 function setAlt(i,el){currentAlt=i;document.querySelectorAll('.alt-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderWeather();}
 function renderWeather(){
   if(!weatherData)return;
-  const z=weatherData[currentAlt],h=z.data.hourly,c=document.getElementById('timeslots');
-  c.innerHTML='';
+  const z=weatherData[currentAlt],h=z.data.hourly,c=document.getElementById('timeslots');c.innerHTML='';
   const today=new Date();today.setHours(0,0,0,0);
   SLOTS.forEach(slot=>{
     const td=new Date(today);td.setDate(today.getDate()+currentDay);
@@ -633,11 +467,11 @@ function renderWeather(){
     const avgT=Math.round(idx.reduce((s,i)=>s+h.temperature_2m[i],0)/idx.length);
     const totSnow=idx.reduce((s,i)=>s+(h.snowfall[i]||0),0);
     const totPrecip=idx.reduce((s,i)=>s+(h.precipitation[i]||0),0);
-    const[icon,desc]=wmo(h.weather_code[idx[Math.floor(idx.length/2)]]);
+    const [icon,desc]=wmo(h.weather_code[idx[Math.floor(idx.length/2)]]);
     const wind=Math.round(h.wind_speed_10m[idx[Math.floor(idx.length/2)]]||0);
     const precStr=totSnow>0.1?`❄ ${totSnow.toFixed(1)} cm`:totPrecip>0?`💧 ${totPrecip.toFixed(1)} mm`:'Droog';
     const tc=avgT<-5?'#a8d8ff':avgT<0?'var(--ice)':avgT<5?'#7ec8e3':'#ffb74d';
-    c.innerHTML+=`<div class="slot-card"><div class="slot-time">${slot.label}</div><div><div style="font-size:26px">${icon}</div><div class="slot-details">${desc}<br>💨 ${wind} km/u</div></div><div class="slot-right"><div class="slot-temp" style="color:${tc}">${avgT}°</div><div class="slot-precip">${precStr}</div></div></div>`;
+    c.innerHTML+=`<div class="slot-card"><div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--muted)">${slot.label}</div><div><div style="font-size:26px">${icon}</div><div style="font-size:11px;color:var(--muted);line-height:1.6">${desc}<br>💨 ${wind} km/u</div></div><div style="text-align:right"><div class="slot-temp" style="color:${tc}">${avgT}°</div><div style="font-size:13px;font-weight:600;color:var(--blue)">${precStr}</div></div></div>`;
   });
 }
 function renderSnow(){
@@ -645,26 +479,19 @@ function renderSnow(){
   document.getElementById('snow-stats').innerHTML=`
     <div class="snow-stat"><div class="snow-stat-label">Open pistes</div><div class="snow-stat-value" style="color:var(--green)">${snowData.pistsOpen}/${snowData.pistsTotal}</div></div>
     <div class="snow-stat"><div class="snow-stat-label">Open liften</div><div class="snow-stat-value" style="color:var(--green)">${snowData.liftsOpen}/${snowData.liftsTotal}</div></div>
-    <div class="snow-stat"><div class="snow-stat-label">Vers sneeuw 48u</div><div class="snow-stat-value" style="color:var(--ice)">${snowData.freshSnow48h>0?snowData.freshSnow48h+' cm':'—'}</div></div>
+    <div class="snow-stat"><div class="snow-stat-label">Vers 48u</div><div class="snow-stat-value" style="color:var(--ice)">${snowData.freshSnow48h>0?snowData.freshSnow48h+' cm':'—'}</div></div>
     <div class="snow-stat"><div class="snow-stat-label">Conditie</div><div class="snow-stat-value" style="font-size:14px;padding-top:6px">${snowData.pistCondition}</div></div>`;
   const z=document.getElementById('snow-zones');z.innerHTML='';
   snowData.zones.forEach(z2=>{
     const pct=Math.min(100,z2.depth/2);
-    z.innerHTML+=`<div class="snow-zone"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><div><div class="snow-zone-name">${z2.label}</div><div style="font-size:12px;color:var(--muted)">${z2.alt}m hoogte</div></div><div style="text-align:right"><div class="snow-zone-depth">${z2.depth}</div><div style="font-size:14px;color:var(--muted)">cm</div></div></div><div class="snow-bar"><div class="snow-bar-fill" style="width:${pct}%"></div></div></div>`;
+    z.innerHTML+=`<div class="snow-zone"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><div><div class="snow-zone-name">${z2.label}</div><div style="font-size:12px;color:var(--muted)">${z2.alt}m</div></div><div style="text-align:right"><div class="snow-zone-depth">${z2.depth}</div><div style="font-size:14px;color:var(--muted)">cm</div></div></div><div class="snow-bar"><div class="snow-bar-fill" style="width:${pct}%"></div></div></div>`;
   });
 }
 
-// ════════════════════════════════════════════════════════════════
-// MAP
-// ════════════════════════════════════════════════════════════════
-function diffColor(d,isLift){
-  if(isLift)return'#ff9100';
-  return{novice:'#00e676',easy:'#00e676',intermediate:'#448aff',advanced:'#ff5252',expert:'#cccccc',freeride:'#e040fb'}[d]||'#888';
-}
+// ─── MAP ───────────────────────────────────────────────────────────────
+function diffColor(d){return{novice:'#00e676',easy:'#00e676',intermediate:'#448aff',advanced:'#ff5252',expert:'#cccccc',freeride:'#e040fb'}[d]||'#888';}
 function crowdLabel(id){
-  const h=new Date().getHours();
-  const isWknd=[0,6].includes(new Date().getDay());
-  const peak=h>=10&&h<=14;
+  const h=new Date().getHours(),isWknd=[0,6].includes(new Date().getDay()),peak=h>=10&&h<=14;
   const v=((Math.abs(id||1)*2654435761+h*99991)%100+100)%100;
   const base=isWknd?(peak?72:48):(peak?48:28);
   const lvl=Math.min(100,base+(v%30)-8);
@@ -672,166 +499,133 @@ function crowdLabel(id){
   if(lvl<65)return{t:'🟡 Normaal',c:'var(--yellow)'};
   return{t:'🔴 Druk',c:'var(--red)'};
 }
+function isOpenLift(lift){
+  const now=new Date(),h=now.getHours()*60+now.getMinutes();
+  const[oh,om]=lift.opens.split(':').map(Number);
+  const[ch,cm]=lift.closes.split(':').map(Number);
+  return h>=oh*60+om&&h<=ch*60+cm;
+}
 
 function initMap(){
   map=L.map('map',{center:[45.010,6.130],zoom:13,zoomControl:true});
   setTimeout(()=>map.invalidateSize(),100);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19,opacity:0.25}).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:19,opacity:0.25}).addTo(map);
   L.tileLayer('https://tiles.opensnowmap.org/pistes/{z}/{x}/{y}.png',{maxZoom:18,opacity:0.9}).addTo(map);
-
   markerGroups.resto=L.layerGroup().addTo(map);
   markerGroups.chill=L.layerGroup().addTo(map);
   markerGroups.meet=L.layerGroup().addTo(map);
-
-  // Les Aroles huisje marker
+  // 🏠 Chalet Les Aroles
   const homeIcon=L.divIcon({html:'<div class="home-marker">🏠</div>',className:'',iconSize:[42,42],iconAnchor:[21,21]});
   L.marker([45.0232430,6.1249131],{icon:homeIcon,zIndexOffset:1000})
-    .bindPopup('<div class="popup-inner"><div class="popup-name">🏠 Les Aroles</div><div class="popup-row">Ons verblijf · 1650m</div><div class="popup-row" style="margin-top:6px;color:var(--ice);font-weight:600;">Startpunt van alle routes</div></div>')
+    .bindPopup('<div class="popup-inner"><div class="popup-name">🏠 Chalet Les Aroles</div><div class="popup-row">Ons verblijf · 1650m</div><div class="popup-row" style="margin-top:6px;color:var(--ice);font-weight:600">Startpunt van alle routes</div></div>')
     .addTo(map);
-
-  // Herstel opgeslagen afspraakpunt
-  const savedMeet=loadMeetPoint();
-  if(savedMeet)placeMeetPoint({lat:savedMeet.lat,lng:savedMeet.lng},false);
-
+  // Herstel afspraakpunt
+  const sm=loadMeetPoint();if(sm)placeMeetPoint({lat:sm.lat,lng:sm.lng},false);
   loadMarkers();
-  map.on('click',e=>{
-    pendingLatLng=e.latlng;
-    if(meetMode)placeMeetPoint(e.latlng,true);
-  });
-
-  // Klikbare liftmarkers (cirkel op stations)
+  map.on('click',e=>{pendingLatLng=e.latlng;if(meetMode)placeMeetPoint(e.latlng,true);});
+  // Liftstation markers
   LIFTS.forEach(lift=>{
-    const toSt=STATIONS[lift.to];
-    if(!toSt)return;
-    const open=isOpen(lift);
-    const liftIcon=L.divIcon({
-      html:`<div style="width:28px;height:28px;background:${open?'rgba(255,145,0,.25)':'rgba(100,100,100,.25)'};border:2px solid ${open?'#ff9100':'#666'};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;">${lift.type==='gondola'?'🚡':lift.type==='cable'?'🚠':lift.type==='funicular'?'🛤':'🪑'}</div>`,
-      className:'',iconSize:[28,28],iconAnchor:[14,14]
-    });
-    const m=L.marker([toSt.lat,toSt.lng],{icon:liftIcon,zIndexOffset:500});
-    m.bindPopup(liftPopupHtml(lift));
-    m.addTo(map);
+    const toSt=STATIONS[lift.to];if(!toSt)return;
+    const open=isOpenLift(lift);
+    const emo=lift.type==='gondola'?'🚡':lift.type==='cable'?'🚠':lift.type==='funicular'?'🛤':'🪑';
+    const icon=L.divIcon({html:`<div style="width:30px;height:30px;background:${open?'rgba(255,145,0,.2)':'rgba(100,100,100,.2)'};border:2px solid ${open?'#ff9100':'#555'};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px">${emo}</div>`,className:'',iconSize:[30,30],iconAnchor:[15,15]});
+    L.marker([toSt.lat,toSt.lng],{icon,zIndexOffset:500}).bindPopup(liftPopup(lift)).addTo(map);
   });
-
-  // GeoJSON pistes
+  // Pistes van Overpass
   fetch('/api/pistes').then(r=>r.json()).then(geo=>{
     if(!geo.features)return;
     pisteLayer=L.geoJSON(geo,{
-      style:f=>{
-        const p=f.properties,c=diffColor(p.difficulty,p.isLift);
-        return{color:c,weight:p.isLift?3:4,opacity:0.85,dashArray:p.isLift?'7 5':null};
-      },
+      style:f=>{const p=f.properties,c=p.isLift?'#ff9100':diffColor(p.difficulty);return{color:c,weight:p.isLift?3:4,opacity:0.85,dashArray:p.isLift?'7 5':null};},
       onEachFeature:(f,layer)=>{
         const p=f.properties;
         layer.on('mouseover',function(){this.setStyle({weight:p.isLift?5:7,opacity:1});});
-        layer.on('mouseout',function(){this.setStyle({weight:p.isLift?3:4,opacity:0.85});});
-        layer.on('click',e=>{
-          L.DomEvent.stopPropagation(e);
-          if(p.isLift) showLiftPanel(p,e.latlng);
-          else showPistePanel(p,e.latlng);
-        });
+        layer.on('mouseout', function(){this.setStyle({weight:p.isLift?3:4,opacity:0.85});});
+        layer.on('click',e=>{L.DomEvent.stopPropagation(e);p.isLift?showLiftPanel(p):showPistePanel(p,e.latlng);});
       }
     }).addTo(map);
   }).catch(console.error);
 }
 
-function liftPopupHtml(lift){
-  const open=isOpen(lift);
-  return`<div class="popup-inner">
-    <div class="popup-name">${lift.name}</div>
-    <div class="popup-open" style="color:${open?'var(--green)':'var(--red)'}">${open?'✅ Nu open':'🔴 Gesloten'}</div>
+function liftPopup(lift){
+  const open=isOpenLift(lift);
+  return`<div class="popup-inner"><div class="popup-name">${lift.name}</div>
+    <div style="font-size:13px;font-weight:700;color:${open?'var(--green)':'var(--red)'};">${open?'✅ Nu open':'🔴 Gesloten'}</div>
     <div class="popup-row">Open: <span>${lift.opens} – ${lift.closes}</span></div>
-    <div class="popup-row">⚠️ Laatste rit omhoog: <span style="color:var(--orange);font-weight:700">${lift.lastUp}</span></div>
-    <div class="popup-row" style="margin-top:6px;font-size:12px">${lift.info}</div>
-  </div>`;
+    <div class="popup-row">⚠️ Laatste omhoog: <span style="color:var(--orange);font-weight:700">${lift.lastUp}</span></div>
+    <div class="popup-row" style="margin-top:6px;font-size:12px">${lift.info}</div></div>`;
 }
-
-function showLiftPanel(p,latlng){
-  // Zoek bijpassende lift definitie op naam
-  const lift=LIFTS.find(l=>p.name&&p.name.toLowerCase().includes(l.id.toLowerCase().split('-')[0]))||null;
-  const open=lift?isOpen(lift):true;
-  const c='#ff9100';
-  document.getElementById('rp-body').innerHTML=`
-    <div class="rp-header">
-      <div class="rp-name">${p.name||'Lift'}</div>
+function showLiftPanel(p){
+  const lift=LIFTS.find(l=>p.name&&p.name.toLowerCase().includes(l.id))||null;
+  const open=lift?isOpenLift(lift):true;
+  document.getElementById('sp-body').innerHTML=`
+    <div class="sp-hd"><div class="sp-name">${p.name||'Lift'}</div></div>
+    <div class="sp-badges">
+      <span class="sp-badge" style="background:rgba(255,145,0,.15);color:var(--orange);border:1px solid rgba(255,145,0,.3)">${p.aerialway||'lift'}</span>
+      <span class="sp-badge" style="background:${open?'rgba(0,230,118,.12)':'rgba(255,82,82,.12)'};color:${open?'var(--green)':'var(--red)'};border:1px solid ${open?'rgba(0,230,118,.3)':'rgba(255,82,82,.3)'}">${open?'✅ Open':'🔴 Gesloten'}</span>
     </div>
-    <div class="rp-badges">
-      <span class="rp-badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${p.aerialway||'lift'}</span>
-      <span class="rp-badge" style="background:${open?'rgba(0,230,118,.12)':'rgba(255,82,82,.12)'};color:${open?'var(--green)':'var(--red)'};border:1px solid ${open?'rgba(0,230,118,.3)':'rgba(255,82,82,.3)'}">${open?'✅ Open':'🔴 Gesloten'}</span>
-    </div>
-    ${lift?`
-    <div style="background:rgba(255,145,0,.08);border:1px solid rgba(255,145,0,.2);border-radius:12px;padding:14px;margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Opens</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--snow)">${lift.opens}</div></div>
-        <div style="text-align:center"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Duur</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--snow)">${lift.duration} min</div></div>
-        <div style="text-align:right"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Sluit</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--snow)">${lift.closes}</div></div>
+    ${lift?`<div style="background:rgba(255,145,0,.08);border:1px solid rgba(255,145,0,.2);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Opens</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700">${lift.opens}</div></div>
+        <div style="text-align:center"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Duur</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700">${lift.duration} min</div></div>
+        <div style="text-align:right"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Sluit</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700">${lift.closes}</div></div>
       </div>
       <div style="background:rgba(255,145,0,.15);border:1px solid rgba(255,145,0,.35);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;">
         <span style="font-size:18px">⚠️</span>
         <div><div style="font-size:11px;color:var(--muted)">Laatste rit omhoog</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--orange)">${lift.lastUp}</div></div>
       </div>
-    </div>
-    <div class="rp-info">${lift.info}</div>`:'<div class="rp-info">Selecteer een lift voor openingstijden.</div>'}`;
-  document.getElementById('route-panel').classList.add('open');
+    </div><div style="font-size:13px;color:var(--muted);line-height:1.55">${lift.info}</div>`:'<div style="font-size:13px;color:var(--muted)">Liftinfo niet beschikbaar.</div>'}`;
+  document.getElementById('slide-panel').classList.add('open');
 }
-
 function showPistePanel(p,latlng){
-  const c=diffColor(p.difficulty,false);
-  const crowd=crowdLabel(p.id);
-  const route=getRoute(latlng.lat,latlng.lng);
-  const isFav=!!favs[p.id];
+  const c=diffColor(p.difficulty),crowd=crowdLabel(p.id),isFav=!!favs[p.id];
   const diffLabel={novice:'Groen 🟢',easy:'Groen 🟢',intermediate:'Blauw 🔵',advanced:'Rood 🔴',expert:'Zwart ⚫',freeride:'Freeride 🟣'}[p.difficulty]||p.difficulty||'—';
-
-  const steps=route.steps.map((s,i)=>`
-    ${i>0&&i<route.steps.length?'<div class="step-connector">↓</div>':''}
-    <div class="route-step">
-      <div class="step-icon">${s.i}</div>
-      <div class="step-txt"><strong>${s.t}</strong><span>${s.s}</span></div>
-    </div>`).join('');
-
-  document.getElementById('rp-body').innerHTML=`
-    <div class="rp-header">
-      <div class="rp-name">${p.name||'Piste'}</div>
-      <button class="rp-fav-btn" onclick="toggleFav(${JSON.stringify(p.id)},${JSON.stringify(p.name||'Piste')},${JSON.stringify(p.difficulty||'')},${JSON.stringify(c)})">${isFav?'⭐':'☆'}</button>
+  const route=getSimpleRoute(latlng.lat,latlng.lng);
+  const steps=route.steps.map((s,i)=>`${i>0?'<div style="text-align:center;font-size:16px;color:var(--border);margin:-2px 0">↓</div>':''}<div class="sp-step"><div class="sp-step-icon">${s.i}</div><div class="sp-step-txt"><strong>${s.t}</strong><span>${s.s}</span></div></div>`).join('');
+  document.getElementById('sp-body').innerHTML=`
+    <div class="sp-hd">
+      <div class="sp-name">${p.name||'Piste'}</div>
+      <button class="fav-btn" onclick="toggleFav(${JSON.stringify(p.id)},${JSON.stringify(p.name||'Piste')},${JSON.stringify(p.difficulty||'')},${JSON.stringify(c)})">${isFav?'⭐':'☆'}</button>
     </div>
-    <div class="rp-badges">
-      <span class="rp-badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${diffLabel}</span>
-      <span class="rp-badge" style="color:${crowd.c};background:${crowd.c}18;border:1px solid ${crowd.c}44">${crowd.t}</span>
-      ${p.groomed?'<span class="rp-badge" style="background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.25)">✅ Gegroomed</span>':''}
+    <div class="sp-badges">
+      <span class="sp-badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${diffLabel}</span>
+      <span class="sp-badge" style="color:${crowd.c};background:${crowd.c}18;border:1px solid ${crowd.c}44">${crowd.t}</span>
+      ${p.groomed?'<span class="sp-badge" style="background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.25)">✅ Gegroomed</span>':''}
     </div>
-    <div class="rp-section">Route vanuit 🏠 Les Aroles → ${route.station?.name||'?'} (${route.station?.alt||'?'}m)</div>
-    <div class="route-steps">${steps}</div>
-    <div class="rp-meta">
-      <div class="rp-meta-item"><div class="rp-meta-label">Reistijd</div><div class="rp-meta-val">~${route.totalTime} min</div></div>
-      <div class="rp-meta-item"><div class="rp-meta-label">Liften</div><div class="rp-meta-val">${route.lifts.length}</div></div>
-      <div class="rp-meta-item"><div class="rp-meta-label">Drukte</div><div class="rp-meta-val" style="font-size:14px;margin-top:4px">${crowd.t}</div></div>
+    <div class="sp-section">Route vanuit 🏠 Les Aroles</div>
+    <div class="sp-steps">${steps}</div>
+    <div class="sp-meta">
+      <div class="sp-meta-item"><div class="sp-meta-label">Reistijd</div><div class="sp-meta-val">~${route.totalTime} min</div></div>
+      <div class="sp-meta-item"><div class="sp-meta-label">Liften</div><div class="sp-meta-val">${route.lifts}</div></div>
+      <div class="sp-meta-item"><div class="sp-meta-label">Drukte</div><div class="sp-meta-val" style="font-size:14px;margin-top:4px">${crowd.t}</div></div>
     </div>`;
-  document.getElementById('route-panel').classList.add('open');
+  document.getElementById('slide-panel').classList.add('open');
 }
-
-function closePanel(){document.getElementById('route-panel').classList.remove('open');}
-
+function getSimpleRoute(lat,lng){
+  if(lat>45.020)return{totalTime:38,lifts:3,steps:[{i:'🥾',t:'Naar Jandri gondola',s:'~2 min lopen'},{i:'🚡',t:'Jandri Express 1',s:'Dorp → Toura · 12 min · Laatste: 17:00'},{i:'🚡',t:'Jandri Express 2',s:'Toura → 3200m · 10 min · Laatste: 16:15'},{i:'🛤',t:'Funiculaire',s:'3200m → Gletsjer 3400m · 7 min · Laatste: 15:45'},{i:'🎿',t:'Skiën naar de piste',s:'Gletsjer (3400m)'}]};
+  if(lat>45.012)return{totalTime:26,lifts:2,steps:[{i:'🥾',t:'Naar Jandri gondola',s:'~2 min lopen'},{i:'🚡',t:'Jandri Express 1',s:'Dorp → Toura · 12 min · Laatste: 17:00'},{i:'🚡',t:'Jandri Express 2',s:'Toura → 3200m · 10 min · Laatste: 16:15'},{i:'🎿',t:'Skiën naar de piste',s:'3200m'}]};
+  if(lng>6.145)return{totalTime:19,lifts:1,steps:[{i:'🥾',t:'Naar Super-Venosc',s:'~7 min lopen'},{i:'🚠',t:'Super-Venosc',s:'Dorp → Vallée Blanche · 12 min · Laatste: 17:15'},{i:'🎿',t:'Skiën naar de piste',s:'Vallée Blanche (2100m)'}]};
+  if(lng>6.135)return{totalTime:15,lifts:1,steps:[{i:'🥾',t:'Naar Diable gondola',s:'~5 min lopen'},{i:'🚡',t:'Diable gondola',s:'Dorp → Diable · 11 min · Laatste: 16:30'},{i:'🎿',t:'Skiën naar de piste',s:'Diable (2400m)'}]};
+  return{totalTime:16,lifts:1,steps:[{i:'🥾',t:'Naar Jandri gondola',s:'~2 min lopen'},{i:'🚡',t:'Jandri Express 1',s:'Dorp → Toura · 12 min · Laatste: 17:00'},{i:'🎿',t:'Skiën naar de piste',s:'Toura (2600m)'}]};
+}
+function closePanel(){document.getElementById('slide-panel').classList.remove('open');}
 function applyLevelFilters(){
   if(!pisteLayer)return;
   pisteLayer.eachLayer(layer=>{
     const p=layer.feature?.properties;if(!p)return;
     const d=p.isLift?'lift':(p.difficulty||'unknown');
-    const show=levelState[d]!==false;
-    layer.setStyle({opacity:show?0.85:0,interactive:show});
+    layer.setStyle({opacity:levelState[d]!==false?0.85:0,interactive:levelState[d]!==false});
   });
 }
-function toggleLevel(btn){
-  const d=btn.dataset.d;levelState[d]=!levelState[d];btn.classList.toggle('on',levelState[d]);applyLevelFilters();
-}
+function toggleLevel(btn){const d=btn.dataset.d;levelState[d]=!levelState[d];btn.classList.toggle('on',levelState[d]);applyLevelFilters();}
 function toggleLayer(key,el){
   layerState[key]=!layerState[key];el.classList.toggle('active',layerState[key]);
   if(!map||!markerGroups[key])return;
   layerState[key]?markerGroups[key].addTo(map):map.removeLayer(markerGroups[key]);
 }
 
-// ════════════════════════════════════════════════════════════════
-// MEET POINT
-// ════════════════════════════════════════════════════════════════
+// ─── MEET POINT ────────────────────────────────────────────────────────
+function saveMeetPoint(ll){ll?localStorage.setItem('ski_meet',JSON.stringify({lat:ll.lat,lng:ll.lng})):localStorage.removeItem('ski_meet');}
+function loadMeetPoint(){try{return JSON.parse(localStorage.getItem('ski_meet'));}catch{return null;}}
 function startMeetMode(){meetMode=true;document.getElementById('meet-hint').classList.add('visible');document.getElementById('meet-btn').classList.add('active');}
 function cancelMeetMode(){meetMode=false;document.getElementById('meet-hint').classList.remove('visible');document.getElementById('meet-btn').classList.remove('active');}
 function placeMeetPoint(latlng,save){
@@ -843,14 +637,9 @@ function placeMeetPoint(latlng,save){
   markerGroups.meet.addLayer(meetMarker);
   if(save){meetMarker.openPopup();saveMeetPoint(latlng);}
 }
-function removeMeetPoint(){
-  if(meetMarker){markerGroups.meet.removeLayer(meetMarker);meetMarker=null;}
-  saveMeetPoint(null);map&&map.closePopup();
-}
+function removeMeetPoint(){if(meetMarker){markerGroups.meet.removeLayer(meetMarker);meetMarker=null;}saveMeetPoint(null);map&&map.closePopup();}
 
-// ════════════════════════════════════════════════════════════════
-// MARKERS
-// ════════════════════════════════════════════════════════════════
+// ─── LOCATIES ──────────────────────────────────────────────────────────
 async function loadMarkers(){
   markerGroups.resto.clearLayers();markerGroups.chill.clearLayers();
   const userLocs=await fetch('/api/locations').then(r=>r.json()).catch(()=>[]);
@@ -858,21 +647,16 @@ async function loadMarkers(){
     const isResto=loc.type==='restaurant'||loc.type==='bar';
     const emoji=loc.type==='restaurant'?'🍽':loc.type==='bar'?'🍺':'☀️';
     const color=loc.type==='restaurant'?'#ff9100':loc.type==='bar'?'#ff5252':'#ffd740';
-    const isUser=loc.addedBy==='user';
     const icon=L.divIcon({html:`<div class="map-marker" style="background:${color}22;border:2px solid ${color}66">${emoji}</div>`,className:'',iconSize:[38,38],iconAnchor:[19,19]});
     const m=L.marker([loc.lat,loc.lng],{icon});
-    const del=isUser?`<div style="margin-top:10px"><button onclick="delLoc(${loc.id})" style="background:rgba(255,82,82,.15);border:1px solid rgba(255,82,82,.3);color:var(--red);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:Barlow,sans-serif;font-weight:600">🗑 Verwijder</button></div>`:'';
-    m.bindPopup(`<div class="popup-inner"><div class="popup-name">${loc.name}</div><span class="popup-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${loc.type}</span>${loc.description?`<div class="popup-row" style="margin-top:4px">${loc.description}</div>`:''}${loc.hours?`<div class="popup-row">Open: <span>${loc.hours}</span></div>`:''}${loc.sun?`<div class="popup-row">☀️ Beste zon: <span>${loc.sun}</span></div>`:''}${del}</div>`);
+    const del=loc.addedBy==='user'?`<div style="margin-top:10px"><button onclick="delLoc(${loc.id})" style="background:rgba(255,82,82,.15);border:1px solid rgba(255,82,82,.3);color:var(--red);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:Barlow,sans-serif;font-weight:600">🗑 Verwijder</button></div>`:'';
+    m.bindPopup(`<div class="popup-inner"><div class="popup-name">${loc.name}</div><span class="popup-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${loc.type}</span>${loc.description?`<div class="popup-row" style="margin-top:4px">${loc.description}</div>`:''}${loc.hours?`<div class="popup-row">Open: <span>${loc.hours}</span></div>`:''}${loc.sun?`<div class="popup-row">☀️ <span>${loc.sun}</span></div>`:''}${del}</div>`);
     markerGroups[isResto?'resto':'chill'].addLayer(m);
   });
 }
 function delLoc(id){fetch(`/api/locations/${id}`,{method:'DELETE'});map&&map.closePopup();loadMarkers();}
-
-// ════════════════════════════════════════════════════════════════
-// ADD LOCATION
-// ════════════════════════════════════════════════════════════════
-function openAddSheet(){document.getElementById('add-sheet').classList.add('visible');}
-function closeAddSheet(){document.getElementById('add-sheet').classList.remove('visible');}
+function openAddSheet(){document.getElementById('add-sheet').classList.add('open');}
+function closeAddSheet(){document.getElementById('add-sheet').classList.remove('open');}
 function selType(el){document.querySelectorAll('.type-opt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel');selectedType=el.dataset.type;}
 async function submitLocation(){
   const name=document.getElementById('loc-name').value.trim();if(!name){alert('Vul een naam in');return;}
@@ -882,38 +666,34 @@ async function submitLocation(){
   pendingLatLng=null;closeAddSheet();loadMarkers();
 }
 
-// ════════════════════════════════════════════════════════════════
-// FAVOURITES — opgeslagen in localStorage, blijft bewaard
-// ════════════════════════════════════════════════════════════════
+// ─── FAVORIETEN ────────────────────────────────────────────────────────
 function toggleFav(id,name,diff,color){
-  if(favs[id])delete favs[id];
-  else favs[id]={name,diff,color,ts:Date.now()};
+  if(favs[id])delete favs[id];else favs[id]={name,diff,color,ts:Date.now()};
   localStorage.setItem('ski_favs',JSON.stringify(favs));
-  const btn=document.querySelector('.rp-fav-btn');
-  if(btn)btn.textContent=favs[id]?'⭐':'☆';
+  const btn=document.querySelector('.fav-btn');if(btn)btn.textContent=favs[id]?'⭐':'☆';
 }
 function renderFavs(){
   const el=document.getElementById('fav-list'),keys=Object.keys(favs);
-  if(!keys.length){el.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);line-height:1.8">Nog geen favorieten.<br>Tik ☆ op een piste op de kaart.<br><br><span style="font-size:28px">🎿</span></div>';return;}
-  const diffLabel={novice:'Groen',easy:'Groen',intermediate:'Blauw',advanced:'Rood',expert:'Zwart'};
-  el.innerHTML=keys.map(id=>{const f=favs[id];return`<div class="fav-item"><div class="fav-dot" style="background:${f.color||'var(--muted)'}"></div><div style="flex:1"><div class="fav-name">${f.name}</div><div class="fav-sub">${diffLabel[f.diff]||f.diff||'Piste'}</div></div><button class="fav-del" onclick="removeFav('${id}',this.closest('.fav-item'))">✕</button></div>`;}).join('');
+  if(!keys.length){el.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);line-height:1.8">Nog geen favorieten.<br>Tik ☆ op een piste.<br><br><span style="font-size:28px">🎿</span></div>';return;}
+  const dl={novice:'Groen',easy:'Groen',intermediate:'Blauw',advanced:'Rood',expert:'Zwart'};
+  el.innerHTML=keys.map(id=>{const f=favs[id];return`<div class="fav-item"><div class="fav-dot" style="background:${f.color||'var(--muted)'}"></div><div style="flex:1"><div class="fav-name">${f.name}</div><div class="fav-sub">${dl[f.diff]||f.diff||'Piste'}</div></div><button class="fav-del" onclick="removeFav('${id}',this.closest('.fav-item'))">✕</button></div>`;}).join('');
 }
 function removeFav(id,el){delete favs[id];localStorage.setItem('ski_favs',JSON.stringify(favs));el.remove();}
 
-
-// ═══════════════════════════════════════════════════════
-// ROUTE PLANNER
-// ═══════════════════════════════════════════════════════
-let rFrom='aroles', rTo=null, rLevel='intermediate', rPickFor=null;
-
-function stationDotColor(id){
-  const s=STATIONS[id];if(!s)return'#888';
-  if(s.type==='home')return'var(--ice)';
-  if(s.alt>=3200)return'#e040fb';
-  if(s.alt>=2500)return'var(--red)';
-  if(s.alt>=2000)return'var(--orange)';
-  return'var(--green)';
+// ─── BIER KNOP ─────────────────────────────────────────────────────────
+function bierKey(){const d=new Date();return`ski_bier_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;}
+function getBierNamen(){try{return JSON.parse(localStorage.getItem(bierKey())||'[]');}catch{return[];}}
+function saveBierNamen(n){localStorage.setItem(bierKey(),JSON.stringify(n));}
+function renderBier(){
+  const namen=getBierNamen(),el=document.getElementById('bier-namen');if(!el)return;
+  el.innerHTML=namen.length?namen.map(n=>`<div style="background:rgba(255,145,0,.15);border:1px solid rgba(255,145,0,.3);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--orange);display:flex;align-items:center;gap:6px;">🍺 ${n}<button onclick="removeBier('${n}')" style="background:none;border:none;color:rgba(255,145,0,.5);font-size:14px;cursor:pointer;padding:0;">✕</button></div>`).join(''):'<div style="font-size:13px;color:var(--muted);padding:4px 0">Nog niemand. Jij de eerste? 🍺</div>';
 }
+function toggleBierInput(){const row=document.getElementById('bier-input-row');const vis=row.style.display==='flex';row.style.display=vis?'none':'flex';if(!vis)setTimeout(()=>document.getElementById('bier-naam').focus(),50);}
+function addBier(){const naam=document.getElementById('bier-naam').value.trim();if(!naam)return;const namen=getBierNamen();if(!namen.includes(naam)){namen.push(naam);saveBierNamen(namen);}document.getElementById('bier-naam').value='';document.getElementById('bier-input-row').style.display='none';renderBier();}
+function removeBier(naam){saveBierNamen(getBierNamen().filter(n=>n!==naam));renderBier();}
+
+// ─── ROUTE PLANNER ─────────────────────────────────────────────────────
+function stationColor(id){const s=STATIONS[id];if(!s)return'#888';if(s.type==='home')return'var(--ice)';if(s.alt>=3200)return'#e040fb';if(s.alt>=2500)return'var(--red)';if(s.alt>=2000)return'var(--orange)';return'var(--green)';}
 function setPickBtn(which,id){
   const s=STATIONS[id];if(!s)return;
   document.getElementById('p'+which+'-name').textContent=(s.type==='home'?'🏠 ':'📍 ')+s.name;
@@ -921,19 +701,9 @@ function setPickBtn(which,id){
   document.getElementById('pick-'+which).classList.add('sel');
   refreshGoBtn();
 }
-function refreshGoBtn(){
-  document.getElementById('go-btn').disabled=!(rFrom&&rTo&&rFrom!==rTo);
-}
-function setRLevel(el){
-  document.querySelectorAll('.lvl-pick').forEach(b=>b.classList.remove('on'));
-  el.classList.add('on');rLevel=el.dataset.l;
-  if(document.getElementById('route-output').innerHTML)runRoute();
-}
-function swapRoute(){
-  if(!rTo)return;
-  [rFrom,rTo]=[rTo,rFrom];
-  setPickBtn('from',rFrom);setPickBtn('to',rTo);
-}
+function refreshGoBtn(){document.getElementById('go-btn').disabled=!(rFrom&&rTo&&rFrom!==rTo);}
+function setRLevel(el){document.querySelectorAll('.lvl-pick').forEach(b=>b.classList.remove('on'));el.classList.add('on');rLevel=el.dataset.l;if(document.getElementById('route-output').innerHTML)runRoute();}
+function swapRoute(){if(!rTo)return;[rFrom,rTo]=[rTo,rFrom];setPickBtn('from',rFrom);setPickBtn('to',rTo);}
 function openPicker(which){
   rPickFor=which;
   document.getElementById('stn-title').textContent=which==='from'?'Van welk station?':'Naar welk station?';
@@ -942,152 +712,56 @@ function openPicker(which){
   renderStnList('');
   setTimeout(()=>document.getElementById('stn-q').focus(),200);
 }
-function closePicker(){
-  document.getElementById('stn-sheet').classList.remove('open');
-}
+function closePicker(){document.getElementById('stn-sheet').classList.remove('open');}
 function filterStn(q){renderStnList(q.toLowerCase());}
 function renderStnList(q){
   const el=document.getElementById('stn-list');
-  const entries=Object.entries(STATIONS)
-    .filter(([id,s])=>!q||s.name.toLowerCase().includes(q))
-    .sort((a,b)=>b[1].alt-a[1].alt);
-  el.innerHTML=entries.map(([id,s])=>`
-    <div class="stn-item" onclick="pickStation('${id}')">
-      <div class="stn-dot" style="background:${stationDotColor(id)}"></div>
-      <div>
-        <div class="stn-item-name">${s.type==='home'?'🏠 ':''}${s.name}</div>
-        <div class="stn-item-alt">${s.alt}m</div>
-      </div>
-    </div>`).join('');
+  el.innerHTML=Object.entries(STATIONS).filter(([id,s])=>!q||s.name.toLowerCase().includes(q)).sort((a,b)=>b[1].alt-a[1].alt)
+    .map(([id,s])=>`<div class="stn-item" onclick="pickStation('${id}')"><div class="stn-dot" style="background:${stationColor(id)}"></div><div><div class="stn-item-name">${s.type==='home'?'🏠 ':''}${s.name}</div><div class="stn-item-alt">${s.alt}m</div></div></div>`).join('');
 }
-function pickStation(id){
-  closePicker();
-  if(rPickFor==='from'){rFrom=id;setPickBtn('from',id);}
-  else{rTo=id;setPickBtn('to',id);}
-}
-
-// isOpen helper (checks against lift objects from LIFTS array in network.js)
-function isOpenLift(lift){
-  const now=new Date(),h=now.getHours()*60+now.getMinutes();
-  const[oh,om]=lift.opens.split(':').map(Number);
-  const[ch,cm]=lift.closes.split(':').map(Number);
-  return h>=oh*60+om&&h<=ch*60+cm;
-}
+function pickStation(id){closePicker();if(rPickFor==='from'){rFrom=id;setPickBtn('from',id);}else{rTo=id;setPickBtn('to',id);}}
 
 function runRoute(){
   if(!rFrom||!rTo)return;
   const result=findRoute(rFrom,rTo,rLevel);
   const el=document.getElementById('route-output');
   if(!result||!result.path||result.path.length===0){
-    el.innerHTML=`<div style="text-align:center;padding:32px 16px;color:var(--muted)">
-      <div style="font-size:40px;margin-bottom:12px">🤔</div>
-      <div style="font-size:17px;font-weight:700;color:var(--snow);margin-bottom:8px">Geen route gevonden</div>
-      <div style="font-size:13px">Controleer start en bestemming,<br>of probeer een ander niveau.</div>
-    </div>`;
+    el.innerHTML=`<div style="text-align:center;padding:32px 16px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">🤔</div><div style="font-size:17px;font-weight:700;color:var(--snow);margin-bottom:8px">Geen route gevonden</div><div style="font-size:13px">Probeer een andere combinatie.</div></div>`;
     return;
   }
-  const lifts=result.path.filter(s=>s.type==='lift');
-  const pistes=result.path.filter(s=>s.type==='piste');
-  const mins=result.totalTime;
-  const timeStr=mins>=60?Math.floor(mins/60)+'u '+( mins%60?mins%60+'m':''):mins+' min';
-
-  let html=`<div class="route-summary">
-    <div class="route-stat"><div class="route-stat-val">${timeStr}</div><div class="route-stat-lbl">Totaaltijd</div></div>
-    <div class="route-stat"><div class="route-stat-val">${lifts.length}</div><div class="route-stat-lbl">Lift(en)</div></div>
-    <div class="route-stat"><div class="route-stat-val">${pistes.length}</div><div class="route-stat-lbl">Piste(s)</div></div>
-  </div><div class="step-list">`;
-
-  // Start
+  const liftSteps=result.path.filter(s=>s.type==='lift'),pisteSteps=result.path.filter(s=>s.type==='piste');
+  const mins=result.totalTime,timeStr=mins>=60?Math.floor(mins/60)+'u '+(mins%60?mins%60+'m':''):mins+' min';
+  let out=`<div class="route-summary"><div class="rsm-stat"><div class="rsm-val">${timeStr}</div><div class="rsm-lbl">Totaaltijd</div></div><div class="rsm-stat"><div class="rsm-val">${liftSteps.length}</div><div class="rsm-lbl">Lift(en)</div></div><div class="rsm-stat"><div class="rsm-val">${pisteSteps.length}</div><div class="rsm-lbl">Piste(s)</div></div></div><div class="step-list">`;
   const fromS=STATIONS[rFrom];
-  html+=mkStep('🏠','var(--ice-dim)','var(--ice)','Vertrek','var(--ice)',fromS.name,fromS.alt+'m · '+( fromS.type==='home'?'Jouw verblijf':'Station'),null);
-
+  out+=mkStep('🏠','var(--ice-dim)','var(--ice)','Vertrek','var(--ice)',fromS.name,fromS.alt+'m'+(fromS.type==='home'?' · Jouw verblijf':''),null);
   result.path.forEach(step=>{
     if(step.type==='lift'){
-      const l=step.obj;
-      const open=isOpenLift(l);
+      const l=step.obj,open=isOpenLift(l);
       const emo=l.type==='gondola'?'🚡':l.type==='cable'?'🚠':l.type==='funicular'?'🛤':'🪑';
-      const detail=`${STATIONS[l.from].name} → ${STATIONS[l.to].name} &nbsp;·&nbsp; Laatste omhoog: <b style="color:var(--orange)">${l.lastUp}</b> &nbsp;·&nbsp; ${open?'<span style=\'color:var(--green)\'>✅ Open</span>':'<span style=\'color:var(--red)\'>🔴 Gesloten</span>'}`;
-      html+=mkStep(emo,'rgba(255,145,0,.15)','rgba(255,145,0,.45)','Lift omhoog','var(--orange)',l.name,detail,l.duration+' min');
+      const fS=STATIONS[l.from],tS=STATIONS[l.to];
+      out+=mkStep(emo,'rgba(255,145,0,.15)','rgba(255,145,0,.45)','Lift omhoog','var(--orange)',l.name,`${fS?fS.name:'?'} → ${tS?tS.name:'?'} · Laatste: <b style="color:var(--orange)">${l.lastUp}</b> · ${open?'<span style="color:var(--green)">✅ Open</span>':'<span style="color:var(--red)">🔴 Gesloten</span>'}`,l.duration+' min');
     } else if(step.type==='piste'){
       const p=step.obj;
       const dc={novice:'var(--green)',easy:'var(--green)',intermediate:'var(--blue)',advanced:'var(--red)',expert:'#ccc'};
       const dl={novice:'Groen',easy:'Groen',intermediate:'Blauw',advanced:'Rood',expert:'Zwart'};
-      const c=dc[p.difficulty]||'#888';
-      const t=p.skiTime[rLevel]||p.skiTime.intermediate||p.skiTime.advanced||'?';
-      const detail=`${STATIONS[p.from].name} → ${STATIONS[p.to].name}${p.groomed?' &nbsp;·&nbsp; ✅ Gegroomed':''}`;
-      html+=mkStep('🎿',c+'22',c+'55','Piste omlaag · '+(dl[p.difficulty]||'?'),c,p.name,detail,'~'+t+' min');
+      const c=dc[p.difficulty]||'#888',t=p.skiTime[rLevel]||p.skiTime.intermediate||p.skiTime.advanced||'?';
+      const fS=STATIONS[p.from],tS=STATIONS[p.to];
+      out+=mkStep('🎿',c+'22',c+'55','Piste omlaag · '+(dl[p.difficulty]||'?'),c,p.name,`${fS?fS.name:'?'} → ${tS?tS.name:'?'}${p.groomed?' · ✅ Gegroomed':''}`, '~'+t+' min');
     } else if(step.type==='transfer'){
-      const detail=`${STATIONS[step.from].name} → ${STATIONS[step.to].name}`;
-      html+=mkStep('🥾','rgba(255,255,255,.05)','var(--border)','Lopen','var(--muted)',step.obj.info||'Transfer',detail,step.time+' min');
+      const fS=STATIONS[step.from],tS=STATIONS[step.to];
+      out+=mkStep('🥾','rgba(255,255,255,.05)','var(--border)','Lopen','var(--muted)',step.obj.info||'Transfer',`${fS?fS.name:'?'} → ${tS?tS.name:'?'}`,step.time+' min');
     }
   });
-
   const toS=STATIONS[rTo];
-  html+=mkStep('🏁','rgba(0,230,118,.12)','rgba(0,230,118,.4)','Bestemming','var(--green)',toS.name,toS.alt+'m · Je bent er! 🎉',null);
-  html+='</div>';
-  el.innerHTML=html;
+  out+=mkStep('🏁','rgba(0,230,118,.12)','rgba(0,230,118,.4)','Bestemming','var(--green)',toS.name,toS.alt+'m · Je bent er! 🎉',null);
+  out+='</div>';
+  el.innerHTML=out;
+}
+function mkStep(icon,bgC,brdC,kind,kc,name,detail,dur){
+  return`<div class="nstep"><div class="nstep-spine"><div class="nstep-dot" style="background:${bgC};border-color:${brdC}">${icon}</div><div class="nstep-line"></div></div><div class="nstep-body"><div class="nstep-kind" style="color:${kc}">${kind}</div><div class="nstep-name">${name}</div><div class="nstep-detail">${detail}</div>${dur?`<div class="nstep-dur" style="color:${kc}">⏱ ${dur}</div>`:''}</div></div>`;
 }
 
-function mkStep(icon,bgC,borderC,kind,kindColor,name,detail,dur){
-  return`<div class="step">
-  <div class="step-spine">
-    <div class="step-dot" style="background:${bgC};border-color:${borderC}">${icon}</div>
-    <div class="step-vline"></div>
-  </div>
-  <div class="step-body">
-    <div class="step-kind" style="color:${kindColor}">${kind}</div>
-    <div class="step-name">${name}</div>
-    <div class="step-detail">${detail}</div>
-    ${dur?`<div class="step-dur" style="color:${kindColor}">⏱ ${dur}</div>`:''}
-  </div></div>`;
-}
-
-// ════════════════════════════════════════════════════════════════
-// BIER KNOP
-// Namen worden opgeslagen in localStorage met datum-key
-// Elke dag om 00:00 vervallen ze automatisch
-// ════════════════════════════════════════════════════════════════
-function bierKey(){
-  const d=new Date();
-  return `ski_bier_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;
-}
-function getBierNamen(){
-  try{return JSON.parse(localStorage.getItem(bierKey())||'[]');}catch{return [];}
-}
-function saveBierNamen(namen){
-  localStorage.setItem(bierKey(),JSON.stringify(namen));
-}
-function renderBier(){
-  const namen=getBierNamen();
-  const el=document.getElementById('bier-namen');
-  if(!el)return;
-  el.innerHTML=namen.length
-    ?namen.map(n=>`<div style="background:rgba(255,145,0,.15);border:1px solid rgba(255,145,0,.3);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--orange);display:flex;align-items:center;gap:6px;">🍺 ${n}<button onclick="removeBier('${n}')" style="background:none;border:none;color:rgba(255,145,0,.5);font-size:14px;cursor:pointer;padding:0;margin:0;line-height:1;">✕</button></div>`).join('')
-    :'<div style="font-size:13px;color:var(--muted);padding:4px 0">Nog niemand. Jij de eerste? 🍺</div>';
-}
-function toggleBierInput(){
-  const row=document.getElementById('bier-input-row');
-  const isVisible=row.style.display==='flex';
-  row.style.display=isVisible?'none':'flex';
-  if(!isVisible)setTimeout(()=>document.getElementById('bier-naam').focus(),50);
-}
-function addBier(){
-  const naam=document.getElementById('bier-naam').value.trim();
-  if(!naam)return;
-  const namen=getBierNamen();
-  if(!namen.includes(naam)){namen.push(naam);saveBierNamen(namen);}
-  document.getElementById('bier-naam').value='';
-  document.getElementById('bier-input-row').style.display='none';
-  renderBier();
-}
-function removeBier(naam){
-  const namen=getBierNamen().filter(n=>n!==naam);
-  saveBierNamen(namen);renderBier();
-}
-
-// ════════════════════════════════════════════════════════════════
-// BOOT
-// ════════════════════════════════════════════════════════════════
+// ─── BOOT ──────────────────────────────────────────────────────────────
 loadAll();
 renderBier();
 </script>
