@@ -1,0 +1,178 @@
+════════════════════════════════════════════════════════════
+LES 2 ALPES SKI APP — DATA BRONNEN & UPDATE FREQUENTIE
+════════════════════════════════════════════════════════════
+
+────────────────────────────────────────────────────────────
+1. WEER
+────────────────────────────────────────────────────────────
+Bron:       Open-Meteo  (https://open-meteo.com)
+Gratis:     Ja — geen API key nodig
+Endpoint:   https://api.open-meteo.com/v1/forecast
+
+Wat we ophalen:
+  - Actueel weer (temperatuur, wind, weercode, sneeuwval)
+  - Uurlijkse forecast voor 3 dagen
+  - Dagelijkse min/max + neerslagsom
+
+4 hoogtezones (aparte API-call per zone):
+  Zone 1: Dorp       1300m  lat 44.998, lng 6.121
+  Zone 2: Midden     1800m  lat 45.005, lng 6.128
+  Zone 3: Hoog       2600m  lat 45.012, lng 6.135
+  Zone 4: Gletsjer   3200m  lat 45.019, lng 6.140
+
+Verversing:
+  - Bij elke pageload van de app
+  - Bij elke keer dat de Weer-tab geopend wordt
+  - Automatisch elke ~1 uur als de browser tabblad actief is
+
+Nauwkeurigheid:
+  Open-Meteo gebruikt modeldata (ECMWF + GFS), geen echte
+  weerstations op die hoogtes. Temperatuur op gletsjer is
+  een modelschatting, geen meting.
+
+────────────────────────────────────────────────────────────
+2. PISTEKAART (lijnen op de kaart)
+────────────────────────────────────────────────────────────
+Bron:       OpenStreetMap via Overpass API
+            (https://overpass-api.de)
+Gratis:     Ja — open data, geen API key
+Endpoint:   https://overpass-api.de/api/interpreter
+
+Wat we ophalen:
+  - Alle pistes (piste:type=downhill) in de bounding box
+  - Alle liften (aerialway=*) in de bounding box
+  Bounding box: lat 44.98–45.05, lng 6.09–6.18
+
+OSM tags die we gebruiken:
+  piste:difficulty  → kleur (groen/blauw/rood/zwart)
+  aerialway         → type lift (gondola, chair_lift, etc.)
+  name / piste:name → naam van de piste/lift
+  piste:grooming    → of de piste gegroomed is
+  ref               → pistenummer
+
+Lift-types uit OSM (met emoji):
+  gondola       🚡
+  cable_car     🚠
+  chair_lift    🪑
+  drag_lift     🎿
+  magic_carpet  🟦
+  funicular     🛤
+  mixed_lift    🚡
+  t_bar / j_bar 🎿
+
+Verversing:
+  - Eén keer per pageload (~15-30 seconden bij eerste load)
+  - Daarna gecached door browser (~1 uur)
+  NOTA: Overpass heeft een gratis ratelimit. Bij veel gebruik
+  kan dit vertragen. Overweeg eigen caching toe te voegen.
+
+Nauwkeurigheid:
+  OSM-data is bijgehouden door vrijwilligers. Les 2 Alpes is
+  goed gedocumenteerd maar namen/moeilijkheidsgraad kunnen
+  afwijken van officiële pistekaart. Liftnamen soms in het
+  Frans of met afwijkende spelling.
+
+────────────────────────────────────────────────────────────
+3. KAART TILES (achtergrondkaart)
+────────────────────────────────────────────────────────────
+Bron 1:     OpenStreetMap tiles
+            https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
+            Opacity: 0.25 (vage basislaag)
+
+Bron 2:     OpenSnowMap tiles
+            https://tiles.opensnowmap.org/pistes/{z}/{x}/{y}.png
+            Opacity: 0.9 (piste-overlay)
+            (https://www.opensnowmap.org)
+Gratis:     Ja, beide — geen API key nodig
+Verversing: Real-time bij inzoomen/pannen
+
+────────────────────────────────────────────────────────────
+4. SNEEUWRAPPORT (hoogtemeters, pistenummers)
+────────────────────────────────────────────────────────────
+Bron:       ⚠️  STATISCH — handmatig ingevuld in server.js
+            Momenteel GEEN live koppeling
+
+Huidige waarden (hardcoded in /server.js, regel ~75):
+  Sneeuwdiepte top:       185 cm
+  Sneeuwdiepte bodem:     60 cm
+  Vers sneeuw (48u):      12 cm
+  Pistes open:            89 van 96
+  Liften open:            40 van 42
+  Conditie:               "Goed geprepareerd"
+
+Om dit live te maken, opties:
+  A) Skipass Les 2 Alpes website scrapen
+     https://www.les2alpes.com/weather-snow/snow-report.html
+     (wisselvallig qua structuur, breekt snel)
+
+  B) SnowForecast API (betaald, ~$50/jaar)
+     https://www.snowforecast.com/api
+
+  C) Ski-resort.info / OnTheSnow API (betaald)
+
+  D) Elke dag handmatig aanpassen in server.js
+     (simpelste en meest betrouwbare optie voor 1 vakantie)
+
+────────────────────────────────────────────────────────────
+5. OPENINGSTIJDEN LIFTEN
+────────────────────────────────────────────────────────────
+Bron:       ⚠️  HANDMATIG — gedefinieerd in /public/network.js
+
+Liften met openingstijden (in network.js, LIFTS array):
+  Jandri Express 1        08:45 – 17:15  (laatste omhoog 17:00)
+  Jandri Express 2        09:00 – 16:30  (laatste omhoog 16:15)
+  Funiculaire             09:00 – 16:00  (laatste omhoog 15:45)
+  Signal I & II           09:00 – 16:00  (laatste omhoog 15:50)
+  Diable gondola          09:00 – 16:45  (laatste omhoog 16:30)
+  Bellecombes             09:00 – 16:45  (laatste omhoog 16:30)
+  Crête stoeltjeslift     09:00 – 16:30  (laatste omhoog 16:15)
+  Super-Venosc            08:30 – 17:30  (laatste omhoog 17:15)
+  Fée stoeltjeslift       09:00 – 16:30  (laatste omhoog 16:15)
+  Puy Salié I & II        09:00 – 15:45  (laatste omhoog 15:30)
+
+Controleer deze tijden op:
+  https://www.les2alpes.com/winter/ski-lifts.html
+
+NOTA: Tijden kunnen wijzigen door weersomstandigheden,
+slecht weer of sluitingsdagen. App geeft geen garantie.
+
+────────────────────────────────────────────────────────────
+6. BIER KNOP (gedeelde namen)
+────────────────────────────────────────────────────────────
+Opslag:     Server-side bestand: /bier.json
+            Key = datum (YYYY-MM-DD)
+Gedeeld:    Ja — iedereen op dezelfde server ziet dezelfde namen
+Reset:      Automatisch — elke dag om 00:00 (nieuwe datumkey)
+Endpoint:   GET  /api/bier          → huidige namen
+            POST /api/bier          → naam toevoegen
+            DELETE /api/bier/:naam  → naam verwijderen
+
+────────────────────────────────────────────────────────────
+7. CUSTOM LOCATIES (eten, chill, meet-punt)
+────────────────────────────────────────────────────────────
+Opslag:     Server-side bestand: /locations.json
+Gedeeld:    Ja — iedereen op dezelfde server ziet toegevoegde locaties
+Persistent: Blijft bewaard zolang de server draait
+            (op Railway: blijft bewaard tenzij redeployment)
+
+Meet-punt:  Opgeslagen in localStorage van de browser
+            Wordt NIET gedeeld tussen gebruikers
+
+Favorieten: Opgeslagen in localStorage van de browser
+            Wordt NIET gedeeld tussen gebruikers
+
+════════════════════════════════════════════════════════════
+SAMENVATTING: WAT IS LIVE VS HANDMATIG
+════════════════════════════════════════════════════════════
+
+  ✅ LIVE (automatisch):
+     Weer (4 zones, elke ~uur)
+     Pistekaart lijnen (OpenStreetMap data)
+     Kaart tiles (OpenSnowMap)
+
+  ⚠️  HANDMATIG (aanpassen in code):
+     Sneeuwrapport (diepte, open pistes)
+     Openingstijden liften
+     Liftnetwerk coördinaten (network.js)
+
+════════════════════════════════════════════════════════════
