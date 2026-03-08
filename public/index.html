@@ -259,10 +259,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--snow);fon
     <div class="day-tab" onclick="setDay(2,this)">Overmorgen</div>
   </div>
   <div class="alt-tabs">
-    <div class="alt-tab" onclick="setAlt(0,this)">1300m Dorp</div>
-    <div class="alt-tab" onclick="setAlt(1,this)">1800m Midden</div>
-    <div class="alt-tab active" onclick="setAlt(2,this)">2600m Hoog</div>
-    <div class="alt-tab" onclick="setAlt(3,this)">3200m Gletsjer</div>
+    <div class="alt-tab" onclick="setAlt(0,this)">1600m Dorp</div>
+    <div class="alt-tab active" onclick="setAlt(1,this)">2600m Hoog</div>
+    <div class="alt-tab" onclick="setAlt(2,this)">3600m Gletsjer</div>
   </div>
   <div class="timeslots" id="timeslots"></div>
 </div>
@@ -408,7 +407,7 @@ const PRESETS=[
 ];
 
 // ─── STATE ─────────────────────────────────────────────────────────────
-let weatherData=null,snowData=null,currentDay=0,currentAlt=2;
+let weatherData=null,snowData=null,currentDay=0,currentAlt=1;
 let map=null,pisteLayer=null;
 let markerGroups={resto:null,chill:null,meet:null};
 let layerState={resto:true,chill:true};
@@ -435,7 +434,12 @@ const WMO={0:['☀️','Helder'],1:['🌤','Grotendeels helder'],2:['⛅','Bewol
 function wmo(c){return WMO[c]||WMO[Math.round(c/10)*10]||['🌡','—'];}
 const DAY_NL=['zo','ma','di','wo','do','vr','za'];
 const MON=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
-const SLOTS=[{label:'🌙 Nacht',hours:[0,1,2,3,4,5]},{label:'🌄 Ochtend',hours:[6,7,8,9,10,11]},{label:'☀️ Middag',hours:[12,13,14,15]},{label:'🌆 Avond',hours:[16,17,18,19,20,21]}];
+const SLOTS=[
+  {label:'🌙 Nacht',   hours:[0,1,2,3,4,5,6,7,8]},
+  {label:'🌄 Ochtend', hours:[9,10,11]},
+  {label:'☀️ Middag',  hours:[12,13,14,15]},
+  {label:'🌆 Avond',   hours:[16,17,18,19,20,21,22,23]}
+];
 
 async function loadAll(){
   const [w,s]=await Promise.all([fetch('/api/weather').then(r=>r.json()).catch(()=>null),fetch('/api/snowreport').then(r=>r.json()).catch(()=>null)]);
@@ -447,7 +451,7 @@ async function loadAll(){
   document.getElementById('loading').classList.add('gone');
 }
 function updateDashWeather(){
-  const z=weatherData[2],c=z.data.current,[icon,desc]=wmo(c.weather_code);
+  const z=weatherData[1],c=z.data.current,[icon,desc]=wmo(c.weather_code);
   document.getElementById('dash-temp').textContent=`${Math.round(c.temperature_2m)}°`;
   document.getElementById('dash-weather-sub').textContent=`${icon} ${desc} · 💨 ${Math.round(c.wind_speed_10m)} km/u`;
   const d=new Date();document.getElementById('weer-updated').textContent=`${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
@@ -469,11 +473,26 @@ function renderWeather(){
     const avgT=Math.round(idx.reduce((s,i)=>s+h.temperature_2m[i],0)/idx.length);
     const totSnow=idx.reduce((s,i)=>s+(h.snowfall[i]||0),0);
     const totPrecip=idx.reduce((s,i)=>s+(h.precipitation[i]||0),0);
-    const [icon,desc]=wmo(h.weather_code[idx[Math.floor(idx.length/2)]]);
-    const wind=Math.round(h.wind_speed_10m[idx[Math.floor(idx.length/2)]]||0);
-    const precStr=totSnow>0.1?`❄ ${totSnow.toFixed(1)} cm`:totPrecip>0?`💧 ${totPrecip.toFixed(1)} mm`:'Droog';
-    const tc=avgT<-5?'#a8d8ff':avgT<0?'var(--ice)':avgT<5?'#7ec8e3':'#ffb74d';
-    c.innerHTML+=`<div class="slot-card"><div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--muted)">${slot.label}</div><div><div style="font-size:26px">${icon}</div><div style="font-size:11px;color:var(--muted);line-height:1.6">${desc}<br>💨 ${wind} km/u</div></div><div style="text-align:right"><div class="slot-temp" style="color:${tc}">${avgT}°</div><div style="font-size:13px;font-weight:600;color:var(--blue)">${precStr}</div></div></div>`;
+    const midIdx=idx[Math.floor(idx.length/2)];
+    const [icon,desc]=wmo(h.weather_code[midIdx]);
+    const wind=Math.round(h.wind_speed_10m[midIdx]||0);
+    const gusts=Math.round(h.wind_gusts_10m?.[midIdx]||0);
+    // snow_depth in meters → cm, take middle-of-slot value
+    const depthCm=Math.round((h.snow_depth?.[midIdx]||0)*100);
+    const precStr=totSnow>0.1?`❄ ${totSnow.toFixed(1)} cm val`:totPrecip>0.1?`💧 ${totPrecip.toFixed(1)} mm`:'Droog';
+    const depthStr=depthCm>0?`📏 ${depthCm} cm dek`:'';
+    const tc=avgT<-10?'#c8e6ff':avgT<-5?'#a8d8ff':avgT<0?'var(--ice)':avgT<5?'#7ec8e3':'#ffb74d';
+    c.innerHTML+=`<div class="slot-card">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--muted);min-width:72px">${slot.label}</div>
+      <div>
+        <div style="font-size:26px;line-height:1">${icon}</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.7;margin-top:3px">${desc}<br>💨 ${wind} <span style="color:var(--muted);font-size:10px">(${gusts}) km/u</span></div>
+      </div>
+      <div style="text-align:right">
+        <div class="slot-temp" style="color:${tc}">${avgT}°</div>
+        <div style="font-size:12px;font-weight:600;color:var(--blue);line-height:1.7">${precStr}${depthStr?`<br><span style="color:var(--muted);font-weight:500">${depthStr}</span>`:''}</div>
+      </div>
+    </div>`;
   });
 }
 function renderSnow(){
@@ -484,9 +503,23 @@ function renderSnow(){
     <div class="snow-stat"><div class="snow-stat-label">Vers 48u</div><div class="snow-stat-value" style="color:var(--ice)">${snowData.freshSnow48h>0?snowData.freshSnow48h+' cm':'—'}</div></div>
     <div class="snow-stat"><div class="snow-stat-label">Conditie</div><div class="snow-stat-value" style="font-size:14px;padding-top:6px">${snowData.pistCondition}</div></div>`;
   const z=document.getElementById('snow-zones');z.innerHTML='';
-  snowData.zones.forEach(z2=>{
-    const pct=Math.min(100,z2.depth/2);
-    z.innerHTML+=`<div class="snow-zone"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><div><div class="snow-zone-name">${z2.label}</div><div style="font-size:12px;color:var(--muted)">${z2.alt}m</div></div><div style="text-align:right"><div class="snow-zone-depth">${z2.depth}</div><div style="font-size:14px;color:var(--muted)">cm</div></div></div><div class="snow-bar"><div class="snow-bar-fill" style="width:${pct}%"></div></div></div>`;
+  const maxDepth=Math.max(...snowData.zones.map(z2=>z2.depth),1);
+  snowData.zones.slice().reverse().forEach(z2=>{
+    const pct=Math.min(100,Math.round((z2.depth/maxDepth)*100));
+    const freshTag=z2.fresh48h>0?`<span style="background:rgba(0,212,255,.15);border:1px solid rgba(0,212,255,.3);border-radius:10px;padding:2px 8px;font-size:11px;color:var(--ice);margin-left:8px">❄ +${z2.fresh48h} cm</span>`:'';
+    z.innerHTML+=`<div class="snow-zone">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px">
+        <div>
+          <div class="snow-zone-name">${z2.label} ${freshTag}</div>
+          <div style="font-size:12px;color:var(--muted)">${z2.alt}m</div>
+        </div>
+        <div style="text-align:right">
+          <div class="snow-zone-depth">${z2.depth}</div>
+          <div style="font-size:14px;color:var(--muted)">cm</div>
+        </div>
+      </div>
+      <div class="snow-bar"><div class="snow-bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
   });
 }
 
