@@ -441,19 +441,27 @@ const SLOTS=[
   {label:'🌆 Avond',   hours:[16,17,18,19,20,21,22,23]}
 ];
 
+function hideLoading(){document.getElementById('loading').classList.add('gone');}
+setTimeout(hideLoading,8000);
 async function loadAll(){
-  const [w,s]=await Promise.all([fetch('/api/weather').then(r=>r.json()).catch(()=>null),fetch('/api/snowreport').then(r=>r.json()).catch(()=>null)]);
-  weatherData=w;snowData=s;
-  if(w){updateDashWeather();renderWeather();}
-  if(s){updateDashSnow();renderSnow();}
-  const d=new Date();
-  document.getElementById('dash-date').textContent=`${DAY_NL[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
-  document.getElementById('loading').classList.add('gone');
+  try{
+    const [w,s]=await Promise.all([
+      fetch('/api/weather').then(r=>r.json()).catch(()=>null),
+      fetch('/api/snowreport').then(r=>r.json()).catch(()=>null)
+    ]);
+    weatherData=w;snowData=s;
+    const d=new Date();
+    document.getElementById('dash-date').textContent=`${DAY_NL[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
+    if(w&&Array.isArray(w)&&w.length>0){try{updateDashWeather();}catch(e){console.warn('dashW',e);}try{renderWeather();}catch(e){console.warn('renderW',e);}}
+    if(s&&s.zones){try{updateDashSnow();}catch(e){console.warn('dashS',e);}try{renderSnow();}catch(e){console.warn('renderS',e);}}
+  }catch(err){console.error('loadAll',err);}finally{hideLoading();}
 }
 function updateDashWeather(){
-  const z=weatherData[1],c=z.data.current,[icon,desc]=wmo(c.weather_code);
-  document.getElementById('dash-temp').textContent=`${Math.round(c.temperature_2m)}°`;
-  document.getElementById('dash-weather-sub').textContent=`${icon} ${desc} · 💨 ${Math.round(c.wind_speed_10m)} km/u`;
+  const z=weatherData[1]||weatherData[0];if(!z||!z.data)return;
+  const c=z.data.current||{};
+  const [icon,desc]=wmo(c.weather_code||0);
+  document.getElementById('dash-temp').textContent=`${Math.round(c.temperature_2m||0)}°`;
+  document.getElementById('dash-weather-sub').textContent=`${icon} ${desc} · 💨 ${Math.round(c.wind_speed_10m||0)} km/u`;
   const d=new Date();document.getElementById('weer-updated').textContent=`${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 function updateDashSnow(){
