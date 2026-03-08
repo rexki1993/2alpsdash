@@ -14,19 +14,18 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ─── WEATHER ──────────────────────────────────────────────────────────────────
 // Bron: Open-Meteo (gratis, geen API key nodig)
 // Endpoint: https://api.open-meteo.com/v1/forecast
-// 4 hoogtezones: dorp (1300m), midden (1800m), hoog (2600m), gletsjer (3200m)
-// Data: actueel weer + uurlijkse forecast (3 dagen) + dagelijkse samenvatting
+// 3 hoogtezones: dorp (1600m), hoog (2600m), gletsjer (3600m)
+// Data: actueel weer + uurlijkse forecast (3 dagen) + sneeuwhoogte
 // Verversing: elke keer dat de gebruiker de Weer-tab opent (live fetch)
 app.get('/api/weather', async (req, res) => {
   try {
     const zones = [
-      { name: 'Dorp',     alt: 1300, lat: 44.998, lng: 6.121 },
-      { name: 'Midden',   alt: 1800, lat: 45.005, lng: 6.128 },
+      { name: 'Dorp',     alt: 1600, lat: 44.998, lng: 6.121 },
       { name: 'Hoog',     alt: 2600, lat: 45.012, lng: 6.135 },
-      { name: 'Gletsjer', alt: 3200, lat: 45.019, lng: 6.140 }
+      { name: 'Gletsjer', alt: 3600, lat: 45.022, lng: 6.143 }
     ];
     const results = await Promise.all(zones.map(async (z) => {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${z.lat}&longitude=${z.lng}&current=temperature_2m,wind_speed_10m,weather_code,snowfall,apparent_temperature,relative_humidity_2m&hourly=temperature_2m,weather_code,precipitation,snowfall,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,snowfall_sum,weather_code&timezone=Europe%2FParis&forecast_days=3`;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${z.lat}&longitude=${z.lng}&elevation=${z.alt}&current=temperature_2m,wind_speed_10m,wind_gusts_10m,weather_code,snowfall,snow_depth&hourly=temperature_2m,weather_code,precipitation,snowfall,snow_depth,wind_speed_10m,wind_gusts_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,snowfall_sum,weather_code&timezone=Europe%2FParis&forecast_days=3`;
       const r = await fetch(url);
       const d = await r.json();
       return { ...z, data: d };
@@ -92,22 +91,41 @@ app.get('/api/pistes', async (req, res) => {
 });
 
 // ─── SNOW REPORT ──────────────────────────────────────────────────────────────
-// Bron: STATISCH / handmatig bijhouden
-// TODO: vervangen door scraper van skipass-2alpes.com of skiresort.de
-// Verversing: handmatig aanpassen in deze code
-app.get('/api/snowreport', (req, res) => {
-  res.json({
-    snowDepthTop: 185, snowDepthBottom: 60, freshSnow48h: 12,
-    pistsOpen: 89, pistsTotal: 96, liftsOpen: 40, liftsTotal: 42,
-    pistCondition: 'Goed geprepareerd',
-    lastUpdated: new Date().toISOString(),
-    zones: [
-      { alt: 1300, label: 'Dorp',     depth: 60  },
-      { alt: 1800, label: 'Midden',   depth: 105 },
-      { alt: 2600, label: 'Hoog',     depth: 155 },
-      { alt: 3200, label: 'Gletsjer', depth: 185 }
-    ]
-  });
+// Bron: Open-Meteo (live snow_depth + snowfall per hoogtezone)
+// snow_depth is in meters → we convert to cm
+// past_days=2 geeft sneeuwval afgelopen 48 uur via daily snowfall_sum
+app.get('/api/snowreport', async (req, res) => {
+  try {
+    const zones = [
+      { alt: 1600, label: 'Dorp',     lat: 44.998, lng: 6.121 },
+      { alt: 2600, label: 'Hoog',     lat: 45.012, lng: 6.135 },
+      { alt: 3600, label: 'Gletsjer', lat: 45.022, lng: 6.143 }
+    ];
+    const fetched = await Promise.all(zones.map(async (z) => {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${z.lat}&longitude=${z.lng}&elevation=${z.alt}&current=snow_depth,snowfall&daily=snowfall_sum&timezone=Europe%2FParis&forecast_days=1&past_days=2`;
+      const r = await fetch(url);
+      const d = await r.json();
+      const depthCm = Math.round((d.current?.snow_depth || 0) * 100);
+      // sum of past 2 days snowfall_sum for fresh snow 48h
+      const sums = d.daily?.snowfall_sum || [];
+      const fresh48h = Math.round((sums[0] || 0) + (sums[1] || 0));
+      return { ...z, depth: depthCm, fresh48h };
+    }));
+    const topZone = fetched[fetched.length - 1];
+    const fresh48h = Math.max(...fetched.map(z => z.fresh48h));
+    res.json({
+      snowDepthTop: topZone.depth,
+      snowDepthBottom: fetched[0].depth,
+      freshSnow48h: fresh48h,
+      pistsOpen: 40, pistsTotal: 42,
+      liftsOpen: 38, liftsTotal: 42,
+      pistCondition: 'Goed geprepareerd',
+      lastUpdated: new Date().toISOString(),
+      zones: fetched.map(z => ({ alt: z.alt, label: z.label, depth: z.depth, fresh48h: z.fresh48h }))
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Snowreport failed' });
+  }
 });
 
 // ─── CUSTOM LOCATIONS ─────────────────────────────────────────────────────────
